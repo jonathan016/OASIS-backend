@@ -18,8 +18,7 @@ public class LoginController {
     private LoginService loginService;
 
     @RequestMapping(value = LOGIN_MAPPING_VALUE, method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
-    public @ResponseBody
-    LoginResponseModel callLoginService(@RequestBody LoginRequestModel loginRequestModel){
+    public LoginResponseModel callLoginService(@RequestBody LoginRequestModel loginRequestModel){
         return loginService.findLoginCredentials(loginRequestModel.getUsername(), loginRequestModel.getPassword());
     }
 }
