@@ -1,4 +1,4 @@
-package com.example.webmodel.response;
+package com.oasis.webmodel.response;
 
 import lombok.Getter;
 import lombok.Setter;

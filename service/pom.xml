@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
+    <groupId>com.oasis</groupId>
     <artifactId>service</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
@@ -26,22 +26,15 @@
 
         <!--Repository Dependency-->
         <dependency>
-            <groupId>com.example</groupId>
+            <groupId>com.oasis</groupId>
             <artifactId>repository</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!--Web Model Dependency-->
         <dependency>
-            <groupId>com.example</groupId>
+            <groupId>com.oasis</groupId>
             <artifactId>webmodel</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
-        <!--Exceptions Dependency-->
-        <dependency>
-            <groupId>com.example</groupId>
-            <artifactId>exceptions</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

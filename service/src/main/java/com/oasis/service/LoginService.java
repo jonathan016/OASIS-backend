@@ -1,9 +1,9 @@
-package com.example.service;
+package com.oasis.service;
 
-import com.example.exception.UserNotFoundException;
-import com.example.model.EmployeeModel;
-import com.example.repository.LoginRepository;
-import com.example.webmodel.response.LoginResponseModel;
+import com.oasis.exception.UserNotFoundException;
+import com.oasis.model.EmployeeModel;
+import com.oasis.repository.LoginRepository;
+import com.oasis.webmodel.response.LoginResponseModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

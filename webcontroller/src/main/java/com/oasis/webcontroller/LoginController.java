@@ -1,8 +1,8 @@
-package com.example.webcontroller;
+package com.oasis.webcontroller;
 
-import com.example.service.LoginService;
-import com.example.webmodel.request.LoginRequestModel;
-import com.example.webmodel.response.LoginResponseModel;
+import com.oasis.service.LoginService;
+import com.oasis.webmodel.request.LoginRequestModel;
+import com.oasis.webmodel.response.LoginResponseModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

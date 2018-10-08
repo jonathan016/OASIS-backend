@@ -1,4 +1,4 @@
-package com.example.model;
+package com.oasis.model;
 
 import lombok.AccessLevel;
 import lombok.Getter;
