@@ -10,7 +10,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.math.BigInteger;
 import java.util.Date;
 
-@Document(collection = "employees")
+import static com.oasis.model.CollectionNames.EMPLOYEE_COLLECTION_NAME;
+
+@Document(collection = EMPLOYEE_COLLECTION_NAME)
 @Data
 public class EmployeeModel {
     @Id
