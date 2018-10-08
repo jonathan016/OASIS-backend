@@ -1,7 +1,7 @@
 package com.oasis.model;
 
 import lombok.AccessLevel;
-import lombok.Getter;
+import lombok.Data;
 import lombok.Setter;
 import org.bson.BsonTimestamp;
 import org.springframework.data.annotation.Id;
@@ -11,7 +11,7 @@ import java.math.BigInteger;
 import java.util.Date;
 
 @Document(collection = "employees")
-@Getter @Setter
+@Data
 public class EmployeeModel {
     @Id
     @Setter(AccessLevel.PRIVATE)
