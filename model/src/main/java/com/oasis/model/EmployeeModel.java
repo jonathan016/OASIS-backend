@@ -7,7 +7,6 @@ import org.bson.BsonTimestamp;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.math.BigInteger;
 import java.util.Date;
 
 import static com.oasis.model.CollectionNames.EMPLOYEE_COLLECTION_NAME;
@@ -17,7 +16,7 @@ import static com.oasis.model.CollectionNames.EMPLOYEE_COLLECTION_NAME;
 public class EmployeeModel {
     @Id
     @Setter(AccessLevel.PRIVATE)
-    private BigInteger _id;
+    private String _id;
 
     private String employeeFullname;
     private Date employeeDOB;
@@ -27,9 +26,9 @@ public class EmployeeModel {
     private String employeeJobTitle;
     private String employeeDivision;
     private Integer employeeSupervisingCount;
-    private BigInteger supervisionId;
+    private String supervisionId;
     private BsonTimestamp createdDate;
     private BsonTimestamp updatedDate;
-    private BigInteger createdBy;
-    private BigInteger updatedBy;
+    private String createdBy;
+    private String updatedBy;
 }
