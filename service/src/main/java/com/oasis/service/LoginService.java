@@ -18,7 +18,7 @@ public class LoginService {
         if (result == null) throw new UserNotFoundException("User not found!");
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        if (!encoder.matches(password, result.getEmployeePassword())) throw new UserNotFoundException("Incorrect password!");
+        if (!encoder.matches(password, result.getPassword())) throw new UserNotFoundException("Incorrect password!");
 
         LoginResponseModel response = new LoginResponseModel();
         response.set_id(result.get_id());

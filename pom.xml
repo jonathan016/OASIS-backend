@@ -13,7 +13,6 @@
         <module>service</module>
         <module>web-controller</module>
         <module>web-model</module>
-        <module>web-controller</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -46,6 +45,13 @@
                     <version>5.1.0.RELEASE</version>
                 </dependency>
 
+                <!--Spring Context Dependency-->
+                <dependency>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-context</artifactId>
+                    <version>5.0.8.RELEASE</version>
+                </dependency>
+
                 <!--Spring Security Dependency-->
                 <dependency>
                     <groupId>org.springframework.security</groupId>
@@ -58,6 +64,13 @@
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-mongodb</artifactId>
                     <version>2.1.0.RELEASE</version>
+                </dependency>
+
+                <!--Jackson Dependency-->
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                    <version>2.9.4</version>
                 </dependency>
 
                 <!--Lombok Dependency-->
@@ -99,7 +112,7 @@
                 <!--Web Controller Module Dependency-->
                 <dependency>
                     <groupId>com.oasis</groupId>
-                    <artifactId>webcontroller</artifactId>
+                    <artifactId>web-controller</artifactId>
                     <version>1.0.0-SNAPSHOT</version>
                 </dependency>
         </dependencies>

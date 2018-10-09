@@ -18,14 +18,14 @@ public class EmployeeModel {
     @Setter(AccessLevel.PRIVATE)
     private String _id;
 
-    private String employeeFullname;
-    private Date employeeDOB;
-    private String employeeUsername;
-    private String employeePassword;
-    private String employeePhone;
-    private String employeeJobTitle;
-    private String employeeDivision;
-    private Integer employeeSupervisingCount;
+    private String fullname;
+    private Date dob;
+    private String username;
+    private String password;
+    private String phone;
+    private String jobTitle;
+    private String division;
+    private Integer supervisingCount;
     private String supervisionId;
     private BsonTimestamp createdDate;
     private BsonTimestamp updatedDate;
