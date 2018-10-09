@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.oasis</groupId>
+    <artifactId>oasis</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <modules>
+        <module>model</module>
+        <module>repository</module>
+        <module>service</module>
+        <module>web-controller</module>
+        <module>web-model</module>
+    </modules>
+    <packaging>pom</packaging>
+
+    <name>OASIS</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>spring-libs-release</id>
+            <name>Spring Releases</name>
+            <url>https://repo.spring.io/libs-release</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!--External Dependency-->
+                <!--Spring Web MVC Dependency-->
+                <dependency>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-webmvc</artifactId>
+                    <version>5.1.0.RELEASE</version>
+                </dependency>
+
+                <!--Spring Context Dependency-->
+                <dependency>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-context</artifactId>
+                    <version>5.0.8.RELEASE</version>
+                </dependency>
+
+                <!--Spring Security Dependency-->
+                <dependency>
+                    <groupId>org.springframework.security</groupId>
+                    <artifactId>spring-security-crypto</artifactId>
+                    <version>3.1.0.RELEASE</version>
+                </dependency>
+
+                <!--Spring MongoDB Data Dependency-->
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-mongodb</artifactId>
+                    <version>2.1.0.RELEASE</version>
+                </dependency>
+
+                <!--Jackson Dependency-->
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                    <version>2.9.4</version>
+                </dependency>
+
+                <!--Lombok Dependency-->
+                <dependency>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                    <version>1.18.2</version>
+                </dependency>
+
+            <!--Module Dependency-->
+                <!--Model Module Dependency-->
+                <dependency>
+                    <groupId>com.oasis</groupId>
+                    <artifactId>model</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+
+                <!--Repository Module Dependency-->
+                <dependency>
+                    <groupId>com.oasis</groupId>
+                    <artifactId>repository</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+
+                <!--Service Module Dependency-->
+                <dependency>
+                    <groupId>com.oasis</groupId>
+                    <artifactId>service</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+
+                <!--Web Model Module Dependency-->
+                <dependency>
+                    <groupId>com.oasis</groupId>
+                    <artifactId>web-model</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+
+                <!--Web Controller Module Dependency-->
+                <dependency>
+                    <groupId>com.oasis</groupId>
+                    <artifactId>web-controller</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <finalName>oasis</finalName>
+    </build>
+</project>
