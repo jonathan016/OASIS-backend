@@ -2,11 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.oasis</groupId>
+        <artifactId>oasis</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.oasis</groupId>
-    <artifactId>webcontroller</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>web-controller</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <dependencies>
@@ -14,21 +18,22 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
-            <version>5.1.0.RELEASE</version>
         </dependency>
 
         <!--Service Dependency-->
         <dependency>
             <groupId>com.oasis</groupId>
             <artifactId>service</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!--Web Model Dependency-->
         <dependency>
             <groupId>com.oasis</groupId>
-            <artifactId>webmodel</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>web-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oasis</groupId>
+            <artifactId>web-model</artifactId>
         </dependency>
     </dependencies>
 </project>
