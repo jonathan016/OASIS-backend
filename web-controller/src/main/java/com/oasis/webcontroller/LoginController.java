@@ -3,11 +3,11 @@ package com.oasis.webcontroller;
 import com.oasis.MappingValue;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.service.implementation.LoginServiceImpl;
-import com.oasis.webmodel.request.LoginRequestModel;
+import com.oasis.webmodel.request.LoginRequest;
 import com.oasis.webmodel.response.BaseResponse;
-import com.oasis.webmodel.response.ResponseStatuses;
-import com.oasis.webmodel.response.fail.LoginResponseModelFAIL;
-import com.oasis.webmodel.response.ok.LoginResponseModelOK;
+import com.oasis.webmodel.response.ResponseStatus;
+import com.oasis.webmodel.response.failed.LoginFailedResponse;
+import com.oasis.webmodel.response.success.LoginSuccessResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.oasis.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
 import static com.oasis.ErrorCodeAndMessage.USER_NOT_FOUND;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 public class LoginController {
@@ -23,8 +24,8 @@ public class LoginController {
     private LoginServiceImpl loginServiceImpl;
 
     @PostMapping(value = MappingValue.API_LOGIN,
-            produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public BaseResponse<?> callLoginService(@RequestBody LoginRequestModel model) {
+            produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public BaseResponse<?> callLoginService(@RequestBody LoginRequest model) {
         EmployeeModel result =
                 loginServiceImpl.checkLoginCredentials(
                         model.getUsername().toLowerCase(),
@@ -40,27 +41,27 @@ public class LoginController {
         return produceOKResponse(result);
     }
 
-    private BaseResponse<LoginResponseModelOK> produceOKResponse(EmployeeModel result) {
-        BaseResponse<LoginResponseModelOK> okResponse = new BaseResponse<>();
+    private BaseResponse<LoginSuccessResponse> produceOKResponse(EmployeeModel result) {
+        BaseResponse<LoginSuccessResponse> successResponse = new BaseResponse<>();
 
-        okResponse.setCode("200");
-        okResponse.setStatus(ResponseStatuses.SUCCESS_STATUS);
-        okResponse.setValue(
-                new LoginResponseModelOK(
+        successResponse.setCode("200");
+        successResponse.setStatus(ResponseStatus.SUCCESS);
+        successResponse.setValue(
+                new LoginSuccessResponse(
                         result.get_id()
                 )
         );
 
-        return okResponse;
+        return successResponse;
     }
 
-    private BaseResponse<LoginResponseModelFAIL> produceFailedResponse(String errorCode, String errorMessage) {
-        BaseResponse<LoginResponseModelFAIL> failedResponse = new BaseResponse<>();
+    private BaseResponse<LoginFailedResponse> produceFailedResponse(String errorCode, String errorMessage) {
+        BaseResponse<LoginFailedResponse> failedResponse = new BaseResponse<>();
 
         failedResponse.setCode("404");
-        failedResponse.setStatus(ResponseStatuses.FAILED_STATUS);
+        failedResponse.setStatus(ResponseStatus.FAILED);
         failedResponse.setValue(
-                new LoginResponseModelFAIL(
+                new LoginFailedResponse(
                         errorCode,
                         errorMessage
                 )

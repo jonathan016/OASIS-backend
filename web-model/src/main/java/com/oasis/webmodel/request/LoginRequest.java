@@ -1,9 +1,9 @@
 package com.oasis.webmodel.request;
 
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
-public class LoginRequestModel {
+@Data
+public class LoginRequest {
     private String username;
     private String password;
 }
