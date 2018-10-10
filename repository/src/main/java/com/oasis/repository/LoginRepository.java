@@ -1,6 +1,6 @@
 package com.oasis.repository;
 
-import com.oasis.model.EmployeeModel;
+import com.oasis.model.entity.EmployeeModel;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

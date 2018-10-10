@@ -1,6 +1,6 @@
 package com.oasis.service;
 
-import com.oasis.model.EmployeeModel;
+import com.oasis.model.entity.EmployeeModel;
 import com.oasis.repository.LoginRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

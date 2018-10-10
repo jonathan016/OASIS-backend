@@ -1,7 +1,7 @@
 package com.oasis.webcontroller;
 
 import com.oasis.MappingValues;
-import com.oasis.model.EmployeeModel;
+import com.oasis.model.entity.EmployeeModel;
 import com.oasis.service.LoginService;
 import com.oasis.webmodel.request.LoginRequestModel;
 import com.oasis.webmodel.response.BaseResponse;
@@ -19,24 +19,38 @@ public class LoginController {
     @Autowired
     private LoginService loginService;
 
-    @RequestMapping(value = MappingValues.LOGIN_MAPPING_VALUE, method = RequestMethod.POST, produces = "application/json", consumes = "application/json")
-    public BaseResponse callLoginService(@RequestBody LoginRequestModel loginRequestModel){
-        EmployeeModel result = loginService.checkLoginCredentials(loginRequestModel.getUsername(), loginRequestModel.getPassword());
+    @RequestMapping(value = MappingValues.LOGIN_MAPPING_VALUE, method = RequestMethod.POST,
+                    produces = "application/json", consumes = "application/json")
+    public BaseResponse<?> callLoginService(@RequestBody LoginRequestModel model){
+        EmployeeModel result = loginService.checkLoginCredentials(model.getUsername(), model.getPassword());
 
-        if(result == null) {
-            BaseResponse<LoginResponseModelFAIL> response = new BaseResponse<>();
-            response.setCode("404");
-            response.setStatus(ResponseStatuses.FAILED_STATUS);
-            response.setValue(new LoginResponseModelFAIL("USER_NOT_FOUND", "User with specified username could not be found in database"));
+        if(result == null) return produceFailedResponse();
 
-            return response;
-        }
+        return produceOKResponse(result);
+    }
 
-        BaseResponse response = new BaseResponse();
-        response.setCode("200");
-        response.setStatus(ResponseStatuses.SUCCESS_STATUS);
-        response.setValue(new LoginResponseModelOK(result.get_id()));
+    private BaseResponse<LoginResponseModelOK> produceOKResponse(EmployeeModel result){
+        BaseResponse<LoginResponseModelOK> okResponse = new BaseResponse<>();
 
-        return response;
+        okResponse.setCode("200");
+        okResponse.setStatus(ResponseStatuses.SUCCESS_STATUS);
+        okResponse.setValue(
+                new LoginResponseModelOK(
+                        result.get_id()));
+
+        return okResponse;
+    }
+
+    private BaseResponse<LoginResponseModelFAIL> produceFailedResponse(){
+        BaseResponse<LoginResponseModelFAIL> failedResponse = new BaseResponse<>();
+
+        failedResponse.setCode("404");
+        failedResponse.setStatus(ResponseStatuses.FAILED_STATUS);
+        failedResponse.setValue(
+                new LoginResponseModelFAIL(
+                        "USER_NOT_FOUND",
+                        "User with specified username could not be found in database"));
+
+        return failedResponse;
     }
 }

@@ -1,20 +1,19 @@
-package com.oasis.model;
+package com.oasis.model.entity;
 
+import com.oasis.model.BaseEntity;
+import com.oasis.model.CollectionNames;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
-import org.bson.BsonTimestamp;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Date;
 
-import static com.oasis.model.CollectionNames.EMPLOYEE_COLLECTION_NAME;
-
-@Document(collection = EMPLOYEE_COLLECTION_NAME)
+@Document(collection = CollectionNames.EMPLOYEE_COLLECTION_NAME)
 @Data
-public class EmployeeModel {
+public class EmployeeModel extends BaseEntity {
     @Id
     @Setter(AccessLevel.PRIVATE)
     private String _id;
@@ -44,8 +43,4 @@ public class EmployeeModel {
     private Integer supervisingCount;
 
     private String supervisionId;
-    private BsonTimestamp createdDate;
-    private BsonTimestamp updatedDate;
-    private String createdBy;
-    private String updatedBy;
 }
