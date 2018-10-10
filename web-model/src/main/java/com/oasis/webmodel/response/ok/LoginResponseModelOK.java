@@ -1,8 +1,8 @@
-package com.oasis.webmodel.response;
+package com.oasis.webmodel.response.ok;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class LoginResponseModelOK {
     private String employeeId;
 

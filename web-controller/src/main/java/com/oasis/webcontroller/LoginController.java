@@ -1,11 +1,12 @@
 package com.oasis.webcontroller;
 
+import com.oasis.MappingValues;
 import com.oasis.model.EmployeeModel;
 import com.oasis.service.LoginService;
 import com.oasis.webmodel.request.LoginRequestModel;
 import com.oasis.webmodel.response.BaseResponse;
-import com.oasis.webmodel.response.LoginResponseModelFAIL;
-import com.oasis.webmodel.response.LoginResponseModelOK;
+import com.oasis.webmodel.response.fail.LoginResponseModelFAIL;
+import com.oasis.webmodel.response.ok.LoginResponseModelOK;
 import com.oasis.webmodel.response.ResponseStatuses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;

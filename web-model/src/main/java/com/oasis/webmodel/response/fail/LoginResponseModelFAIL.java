@@ -1,4 +1,4 @@
-package com.oasis.webmodel.response;
+package com.oasis.webmodel.response.fail;
 
 import lombok.Getter;
 

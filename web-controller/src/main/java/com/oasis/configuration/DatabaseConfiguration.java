@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @Configuration
 @EnableWebMvc
-public class OASISConfiguration {
+public class DatabaseConfiguration {
     @Bean
     public MongoDbFactory mongoDbFactory() {
         MongoClient mongoClient = new MongoClient("localhost", 27017);
