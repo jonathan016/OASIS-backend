@@ -9,8 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Date;
 
-@Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 @Data
+@Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 public class EmployeeModel extends BaseEntity {
     @Field(FieldName.EMPLOYEE_FULLNAME)
     private String fullname;

@@ -9,7 +9,6 @@ import com.oasis.webmodel.response.ResponseStatus;
 import com.oasis.webmodel.response.failed.LoginFailedResponse;
 import com.oasis.webmodel.response.success.LoginSuccessResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
