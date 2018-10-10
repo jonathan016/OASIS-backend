@@ -10,29 +10,21 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>web-controller</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <dependencies>
-        <!--Spring Web MVC Dependency-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
         </dependency>
-
-        <!--Jackson Dependency-->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-
-        <!--Service Dependency-->
         <dependency>
             <groupId>com.oasis</groupId>
             <artifactId>service</artifactId>
         </dependency>
-
-        <!--Web Model Dependency-->
         <dependency>
             <groupId>com.oasis</groupId>
             <artifactId>web-model</artifactId>

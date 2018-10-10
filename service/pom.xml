@@ -10,34 +10,25 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>service</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <dependencies>
-        <!--Spring Web MVC Dependency-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
         </dependency>
-
-        <!--Spring Security Dependency-->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
-
-        <!--Repository Dependency-->
         <dependency>
             <groupId>com.oasis</groupId>
             <artifactId>repository</artifactId>
         </dependency>
-
-        <!--Model Dependency-->
         <dependency>
             <groupId>com.oasis</groupId>
             <artifactId>model</artifactId>
         </dependency>
-
-        <!--Web Model Dependency-->
         <dependency>
             <groupId>com.oasis</groupId>
             <artifactId>web-model</artifactId>

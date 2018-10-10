@@ -10,16 +10,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>repository</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <dependencies>
-        <!--Spring MongoDB Data Dependency-->
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-mongodb</artifactId>
         </dependency>
-
-        <!--Model Dependency-->
         <dependency>
             <groupId>com.oasis</groupId>
             <artifactId>model</artifactId>
