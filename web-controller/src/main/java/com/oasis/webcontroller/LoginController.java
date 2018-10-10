@@ -2,7 +2,7 @@ package com.oasis.webcontroller;
 
 import com.oasis.MappingValues;
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.service.LoginService;
+import com.oasis.service.implementation.LoginServiceImpl;
 import com.oasis.webmodel.request.LoginRequestModel;
 import com.oasis.webmodel.response.BaseResponse;
 import com.oasis.webmodel.response.fail.LoginResponseModelFAIL;
@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class LoginController {
     @Autowired
-    private LoginService loginService;
+    private LoginServiceImpl loginServiceImpl;
 
     @RequestMapping(value = MappingValues.LOGIN_MAPPING_VALUE, method = RequestMethod.POST,
                     produces = "application/json", consumes = "application/json")
     public BaseResponse<?> callLoginService(@RequestBody LoginRequestModel model){
-        EmployeeModel result = loginService.checkLoginCredentials(model.getUsername(), model.getPassword());
+        EmployeeModel result = loginServiceImpl.checkLoginCredentials(model.getUsername(), model.getPassword());
 
         if(result == null) return produceFailedResponse();
 
