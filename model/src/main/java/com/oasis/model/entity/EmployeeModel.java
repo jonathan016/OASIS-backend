@@ -2,10 +2,8 @@ package com.oasis.model.entity;
 
 import com.oasis.model.BaseEntity;
 import com.oasis.model.CollectionNames;
-import lombok.AccessLevel;
+import com.oasis.model.FieldName;
 import lombok.Data;
-import lombok.Setter;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -14,32 +12,28 @@ import java.util.Date;
 @Document(collection = CollectionNames.EMPLOYEE_COLLECTION_NAME)
 @Data
 public class EmployeeModel extends BaseEntity {
-    @Id
-    @Setter(AccessLevel.PRIVATE)
-    private String _id;
-
-    @Field("employeeFullname")
+    @Field(FieldName.EMPLOYEE_FULLNAME)
     private String fullname;
 
-    @Field("employeeDOB")
+    @Field(FieldName.EMPLOYEE_DOB)
     private Date dob;
 
-    @Field("employeeUsername")
+    @Field(FieldName.EMPLOYEE_USERNAME)
     private String username;
 
-    @Field("employeePassword")
+    @Field(FieldName.EMPLOYEE_PASSWORD)
     private String password;
 
-    @Field("employeePhone")
+    @Field(FieldName.EMPLOYEE_PHONE)
     private String phone;
 
-    @Field("employeeJobTitle")
+    @Field(FieldName.EMPLOYEE_JOB_TITLE)
     private String jobTitle;
 
-    @Field("employeeDivision")
+    @Field(FieldName.EMPLOYEE_DIVISION)
     private String division;
 
-    @Field("employeeSupervisingCount")
+    @Field(FieldName.EMPLOYEE_SUPERVISING_COUNT)
     private Integer supervisingCount;
 
     private String supervisionId;
