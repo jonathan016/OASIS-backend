@@ -18,7 +18,11 @@ public class LoginServiceImpl implements LoginServiceApi {
 
         if (result != null){
             BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-            if (!encoder.matches(password, result.getPassword())) return null;
+            if (!encoder.matches(password, result.getPassword())) {
+                result.setPassword(null);
+
+                return result;
+            }
         }
 
         return result;

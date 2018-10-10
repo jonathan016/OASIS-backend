@@ -1,7 +1,7 @@
 package com.oasis.model.entity;
 
 import com.oasis.model.BaseEntity;
-import com.oasis.model.CollectionNames;
+import com.oasis.model.CollectionName;
 import com.oasis.model.FieldName;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Date;
 
-@Document(collection = CollectionNames.EMPLOYEE_COLLECTION_NAME)
+@Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 @Data
 public class EmployeeModel extends BaseEntity {
     @Field(FieldName.EMPLOYEE_FULLNAME)
