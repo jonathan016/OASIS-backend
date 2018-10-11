@@ -3,8 +3,9 @@ package com.oasis.model;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
-import org.bson.BsonTimestamp;
 import org.springframework.data.annotation.Id;
+
+import java.util.Date;
 
 @Data
 public class BaseEntity {
@@ -12,8 +13,8 @@ public class BaseEntity {
     @Setter(AccessLevel.PRIVATE)
     private String _id;
 
-    private BsonTimestamp createdDate;
-    private BsonTimestamp updatedDate;
+    private Date createdDate;
+    private Date updatedDate;
     private String createdBy;
     private String updatedBy;
 }

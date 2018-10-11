@@ -36,5 +36,6 @@ public class EmployeeModel extends BaseEntity {
     @Field(FieldName.EMPLOYEE_SUPERVISING_COUNT)
     private Integer supervisingCount;
 
+    @Field(FieldName.EMPLOYEE_SUPERVISION_ID)
     private String supervisionId;
 }
