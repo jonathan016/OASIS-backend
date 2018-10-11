@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class BaseResponse<T> {
     private String code;
-    private String status;
+    private String success;
     private T value;
     private Paging paging;
 

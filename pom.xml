@@ -6,7 +6,7 @@
 
     <groupId>com.oasis</groupId>
     <artifactId>oasis</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${oasis.version}</version>
     <modules>
         <module>model</module>
         <module>repository</module>
@@ -22,6 +22,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
+
+        <oasis.version>1.0.0-SNAPSHOT</oasis.version>
+        <springwebmvc.version>5.1.0.RELEASE</springwebmvc.version>
+        <springcontext.version>5.0.8.RELEASE</springcontext.version>
+        <springsecurity.version>3.1.0.RELEASE</springsecurity.version>
+        <mongodb.version>2.1.0.RELEASE</mongodb.version>
+        <jackson.version>2.9.4</jackson.version>
+        <lombok.version>1.18.2</lombok.version>
     </properties>
 
     <repositories>
@@ -38,83 +46,63 @@
     <dependencyManagement>
         <dependencies>
             <!--External Dependency-->
-                <!--Spring Web MVC Dependency-->
-                <dependency>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-webmvc</artifactId>
-                    <version>5.1.0.RELEASE</version>
-                </dependency>
-
-                <!--Spring Context Dependency-->
-                <dependency>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-context</artifactId>
-                    <version>5.0.8.RELEASE</version>
-                </dependency>
-
-                <!--Spring Security Dependency-->
-                <dependency>
-                    <groupId>org.springframework.security</groupId>
-                    <artifactId>spring-security-crypto</artifactId>
-                    <version>3.1.0.RELEASE</version>
-                </dependency>
-
-                <!--Spring MongoDB Data Dependency-->
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-mongodb</artifactId>
-                    <version>2.1.0.RELEASE</version>
-                </dependency>
-
-                <!--Jackson Dependency-->
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.9.4</version>
-                </dependency>
-
-                <!--Lombok Dependency-->
-                <dependency>
-                    <groupId>org.projectlombok</groupId>
-                    <artifactId>lombok</artifactId>
-                    <version>1.18.2</version>
-                </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${springwebmvc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${springcontext.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-crypto</artifactId>
+                <version>${springsecurity.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-mongodb</artifactId>
+                <version>${mongodb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
 
             <!--Module Dependency-->
-                <!--Model Module Dependency-->
-                <dependency>
-                    <groupId>com.oasis</groupId>
-                    <artifactId>model</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-
-                <!--Repository Module Dependency-->
-                <dependency>
-                    <groupId>com.oasis</groupId>
-                    <artifactId>repository</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-
-                <!--Service Module Dependency-->
-                <dependency>
-                    <groupId>com.oasis</groupId>
-                    <artifactId>service</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-
-                <!--Web Model Module Dependency-->
-                <dependency>
-                    <groupId>com.oasis</groupId>
-                    <artifactId>web-model</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-
-                <!--Web Controller Module Dependency-->
-                <dependency>
-                    <groupId>com.oasis</groupId>
-                    <artifactId>web-controller</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
+            <dependency>
+                <groupId>com.oasis</groupId>
+                <artifactId>model</artifactId>
+                <version>${oasis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oasis</groupId>
+                <artifactId>repository</artifactId>
+                <version>${oasis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oasis</groupId>
+                <artifactId>service</artifactId>
+                <version>${oasis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oasis</groupId>
+                <artifactId>web-controller</artifactId>
+                <version>${oasis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oasis</groupId>
+                <artifactId>web-model</artifactId>
+                <version>${oasis.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

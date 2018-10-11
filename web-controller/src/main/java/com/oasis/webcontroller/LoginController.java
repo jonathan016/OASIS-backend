@@ -9,6 +9,7 @@ import com.oasis.webmodel.response.ResponseStatus;
 import com.oasis.webmodel.response.failed.LoginFailedResponse;
 import com.oasis.webmodel.response.success.LoginSuccessResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +23,7 @@ public class LoginController {
     @Autowired
     private LoginServiceImpl loginServiceImpl;
 
+    @CrossOrigin(origins = "http://localhost")
     @PostMapping(value = MappingValue.API_LOGIN,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public BaseResponse<?> callLoginService(@RequestBody LoginRequest model) {
@@ -44,7 +46,7 @@ public class LoginController {
         BaseResponse<LoginSuccessResponse> successResponse = new BaseResponse<>();
 
         successResponse.setCode("200");
-        successResponse.setStatus(ResponseStatus.SUCCESS);
+        successResponse.setSuccess(ResponseStatus.SUCCESS);
         successResponse.setValue(
                 new LoginSuccessResponse(
                         result.get_id()
@@ -58,7 +60,7 @@ public class LoginController {
         BaseResponse<LoginFailedResponse> failedResponse = new BaseResponse<>();
 
         failedResponse.setCode("404");
-        failedResponse.setStatus(ResponseStatus.FAILED);
+        failedResponse.setSuccess(ResponseStatus.FAILED);
         failedResponse.setValue(
                 new LoginFailedResponse(
                         errorCode,
