@@ -23,13 +23,18 @@
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
 
-        <oasis.version>1.0.0-SNAPSHOT</oasis.version>
+        <oasis.version>1.1.0-SNAPSHOT</oasis.version>
         <springwebmvc.version>5.1.0.RELEASE</springwebmvc.version>
         <springcontext.version>5.0.8.RELEASE</springcontext.version>
         <springsecurity.version>3.1.0.RELEASE</springsecurity.version>
         <mongodb.version>2.1.0.RELEASE</mongodb.version>
         <jackson.version>2.9.4</jackson.version>
         <lombok.version>1.18.2</lombok.version>
+        <model.version>${oasis.version}</model.version>
+        <repository.version>${oasis.version}</repository.version>
+        <service.version>${oasis.version}</service.version>
+        <web-controller.version>${oasis.version}</web-controller.version>
+        <web-model.version>${oasis.version}</web-model.version>
     </properties>
 
     <repositories>
@@ -81,12 +86,12 @@
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>model</artifactId>
-                <version>${oasis.version}</version>
+                <version>${model.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>repository</artifactId>
-                <version>${oasis.version}</version>
+                <version>${repository.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oasis</groupId>
