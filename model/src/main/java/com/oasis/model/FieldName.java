@@ -27,4 +27,8 @@ public class FieldName {
     public static final String REQUEST_STATUS = "status";
     public static final String REQUEST_REQUEST_NOTE = "requestNote";
     public static final String REQUEST_TRANSACTION_NOTE = "transactionNote";
+
+    //Field names for SupervisionModel
+    public static final String SUPERVISION_SUPERVISOR_ID = "supervisorId";
+    public static final String SUPERVISION_EMPLOYEE_ID = "employeeId";
 }

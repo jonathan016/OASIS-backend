@@ -6,7 +6,7 @@ import com.oasis.service.implementation.LoginServiceImpl;
 import com.oasis.webmodel.request.LoginRequest;
 import com.oasis.webmodel.response.BaseResponse;
 import com.oasis.webmodel.response.ResponseStatus;
-import com.oasis.webmodel.response.failed.LoginFailedResponse;
+import com.oasis.webmodel.response.failed.FailedResponse;
 import com.oasis.webmodel.response.success.LoginSuccessResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,30 +39,33 @@ public class LoginController {
         if (result.getPassword() == null)
             return produceFailedResponse(PASSWORD_DOES_NOT_MATCH[0], PASSWORD_DOES_NOT_MATCH[1]);
 
-        return produceOKResponse(result);
+        return produceSuccessResponse(result);
     }
 
-    private BaseResponse<LoginSuccessResponse> produceOKResponse(EmployeeModel result) {
+    private BaseResponse<LoginSuccessResponse> produceSuccessResponse(EmployeeModel result) {
         BaseResponse<LoginSuccessResponse> successResponse = new BaseResponse<>();
+
+        String role = loginServiceImpl.determineUserRole(result.get_id());
 
         successResponse.setCode("200");
         successResponse.setSuccess(ResponseStatus.SUCCESS);
         successResponse.setValue(
                 new LoginSuccessResponse(
-                        result.get_id()
+                        result.get_id(),
+                        role
                 )
         );
 
         return successResponse;
     }
 
-    private BaseResponse<LoginFailedResponse> produceFailedResponse(String errorCode, String errorMessage) {
-        BaseResponse<LoginFailedResponse> failedResponse = new BaseResponse<>();
+    private BaseResponse<FailedResponse> produceFailedResponse(String errorCode, String errorMessage) {
+        BaseResponse<FailedResponse> failedResponse = new BaseResponse<>();
 
         failedResponse.setCode("404");
         failedResponse.setSuccess(ResponseStatus.FAILED);
         failedResponse.setValue(
-                new LoginFailedResponse(
+                new FailedResponse(
                         errorCode,
                         errorMessage
                 )

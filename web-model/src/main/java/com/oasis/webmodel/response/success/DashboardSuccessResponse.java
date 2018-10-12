@@ -7,7 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginSuccessResponse {
+public class DashboardSuccessResponse {
     private String employeeId;
     private String role;
+    private Integer requestedRequests;
+    private Integer pendingHandoverRequests;
+    private Integer availableAsset;
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginFailedResponse {
+public class FailedResponse {
     private String errorCode;
     private String errorMessage;
 }
