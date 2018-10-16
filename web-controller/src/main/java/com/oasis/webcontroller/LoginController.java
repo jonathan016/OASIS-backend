@@ -7,7 +7,7 @@ import com.oasis.webmodel.request.LoginRequest;
 import com.oasis.webmodel.response.NoPagingResponse;
 import com.oasis.webmodel.response.ResponseStatus;
 import com.oasis.webmodel.response.failed.FailedResponse;
-import com.oasis.webmodel.response.success.LoginSuccessResponse;
+import com.oasis.webmodel.response.success.LoginResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -34,24 +34,26 @@ public class LoginController {
                         request.getPassword()
                 );
 
-        if (result == null)
+        if (result == null) {
             return produceFailedResponse(USER_NOT_FOUND[0], USER_NOT_FOUND[1]);
+        }
 
-        if (result.getPassword() == null)
+        if (result.getPassword() == null){
             return produceFailedResponse(PASSWORD_DOES_NOT_MATCH[0], PASSWORD_DOES_NOT_MATCH[1]);
+        }
 
         return produceSuccessResponse(result.get_id());
     }
 
-    private NoPagingResponse<LoginSuccessResponse> produceSuccessResponse(String employeeId) {
-        NoPagingResponse<LoginSuccessResponse> successResponse = new NoPagingResponse<>();
+    private NoPagingResponse<LoginResponse> produceSuccessResponse(String employeeId) {
+        NoPagingResponse<LoginResponse> successResponse = new NoPagingResponse<>();
 
         String role = loginServiceImpl.determineUserRole(employeeId);
 
         successResponse.setCode(HttpStatus.OK.value());
         successResponse.setSuccess(ResponseStatus.SUCCESS);
         successResponse.setValue(
-                new LoginSuccessResponse(
+                new LoginResponse(
                         employeeId,
                         role
                 )

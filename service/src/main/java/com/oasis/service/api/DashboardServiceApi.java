@@ -16,4 +16,5 @@ public interface DashboardServiceApi {
     AssetModel getAssetData(String assetId);
     EmployeeModel getEmployeeData(String employeeId);
     SupervisionModel getEmployeeSupervisorData(String employeeId);
+    String determineUserRole(String employeeId);
 }

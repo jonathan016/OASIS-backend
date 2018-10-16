@@ -6,7 +6,7 @@
 
     <groupId>com.oasis</groupId>
     <artifactId>oasis</artifactId>
-    <version>${oasis.version}</version>
+    <version>1.1.0-SNAPSHOT</version>
     <modules>
         <module>model</module>
         <module>repository</module>
@@ -23,7 +23,6 @@
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
 
-        <oasis.version>1.1.0-SNAPSHOT</oasis.version>
         <springwebmvc.version>5.1.0.RELEASE</springwebmvc.version>
         <springcontext.version>5.0.8.RELEASE</springcontext.version>
         <springsecurity.version>3.1.0.RELEASE</springsecurity.version>
@@ -31,11 +30,11 @@
         <jackson.version>2.9.4</jackson.version>
         <lombok.version>1.18.2</lombok.version>
         <orika.version>1.5.2</orika.version>
-        <model.version>${oasis.version}</model.version>
-        <repository.version>${oasis.version}</repository.version>
-        <service.version>${oasis.version}</service.version>
-        <web-controller.version>${oasis.version}</web-controller.version>
-        <web-model.version>${oasis.version}</web-model.version>
+        <model.version>${project.parent.version}</model.version>
+        <repository.version>${project.parent.version}</repository.version>
+        <service.version>${project.parent.version}</service.version>
+        <web-controller.version>${project.parent.version}</web-controller.version>
+        <web-model.version>${project.parent.version}</web-model.version>
     </properties>
 
     <repositories>
@@ -102,17 +101,17 @@
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>service</artifactId>
-                <version>${oasis.version}</version>
+                <version>${service.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>web-controller</artifactId>
-                <version>${oasis.version}</version>
+                <version>${web-controller.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>web-model</artifactId>
-                <version>${oasis.version}</version>
+                <version>${web-model.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

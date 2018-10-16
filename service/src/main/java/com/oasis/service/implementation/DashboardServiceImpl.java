@@ -8,6 +8,7 @@ import com.oasis.repository.AssetRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.RequestRepository;
 import com.oasis.repository.SupervisionRepository;
+import com.oasis.service.RoleDeterminer;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.DashboardServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,23 +75,29 @@ public class DashboardServiceImpl implements DashboardServiceApi {
         return supervisionRepository.findByEmployeeId(employeeId);
     }
 
-    private List<String> getSupervisedEmployeeIdList(String supervisorId){
+    @Override
+    public String determineUserRole(String employeeId) {
+        RoleDeterminer roleDeterminer = new RoleDeterminer();
+        return roleDeterminer.determineRole(employeeRepository, supervisionRepository, employeeId);
+    }
+
+    private List<String> getSupervisedEmployeeIdList(String supervisorId) {
         List<SupervisionModel> supervisions = supervisionRepository.findAllBySupervisorId(supervisorId);
 
         List<String> supervisedEmployeeIdList = new ArrayList<>();
-        for(SupervisionModel supervision : supervisions){
+        for (SupervisionModel supervision : supervisions) {
             supervisedEmployeeIdList.add(supervision.getEmployeeId());
         }
 
         return supervisedEmployeeIdList;
     }
 
-    private List<RequestModel> getRequestsList(String requestStatus, List<String> supervisedEmployeeIdList){
+    private List<RequestModel> getRequestsList(String requestStatus, List<String> supervisedEmployeeIdList) {
         List<RequestModel> assignedRequests = new ArrayList<>();
-        for(String supervisedEmployeeId : supervisedEmployeeIdList){
+        for (String supervisedEmployeeId : supervisedEmployeeIdList) {
             EmployeeModel employee = employeeRepository.findBy_id(supervisedEmployeeId);
-            if(employee.getSupervisingCount() > 0){
-                if(requestStatus.equals(ServiceConstant.PENDING_HANDOVER)){
+            if (employee.getSupervisingCount() > 0) {
+                if (requestStatus.equals(ServiceConstant.PENDING_HANDOVER)) {
                     assignedRequests.addAll(getMyAssignedPendingHandoverRequests(supervisedEmployeeId));
                 } else {
                     assignedRequests.addAll(getMyAssignedRequestedRequests(supervisedEmployeeId));

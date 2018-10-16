@@ -4,6 +4,7 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
+import com.oasis.service.RoleDeterminer;
 import com.oasis.service.api.LoginServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -41,20 +42,7 @@ public class LoginServiceImpl implements LoginServiceApi {
 
     @Override
     public String determineUserRole(String employeeId) {
-        EmployeeModel employee = employeeRepository.findBy_id(employeeId);
-
-        if(employee.getSupervisingCount() == 0){
-            return ROLE_EMPLOYEE;
-        } else {
-            List<SupervisionModel> supervisions = supervisionRepository.findAllBySupervisorId(employeeId);
-            for(SupervisionModel supervision : supervisions){
-                EmployeeModel supervisedEmployee = employeeRepository.findBy_id(supervision.getEmployeeId());
-                if(supervisedEmployee.getSupervisingCount() > 0){
-                    return ROLE_ADMINISTRATOR;
-                }
-            }
-        }
-
-        return ROLE_SUPERIOR;
+        RoleDeterminer roleDeterminer = new RoleDeterminer();
+        return roleDeterminer.determineRole(employeeRepository, supervisionRepository, employeeId);
     }
 }
