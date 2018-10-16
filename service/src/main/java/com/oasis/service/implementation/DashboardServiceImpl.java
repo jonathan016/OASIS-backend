@@ -31,8 +31,8 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     private SupervisionRepository supervisionRepository;
 
     @Override
-    public List<AssetModel> getAvailableAssets() {
-        return assetRepository.findAllByStockGreaterThan(ServiceConstant.STOCK_LIMIT);
+    public Integer getAvailableAssetsCount() {
+        return assetRepository.findAllByStockGreaterThan(ServiceConstant.STOCK_LIMIT).size();
     }
 
     @Override
@@ -57,6 +57,21 @@ public class DashboardServiceImpl implements DashboardServiceApi {
         List<String> supervisedEmployeeIdList = getSupervisedEmployeeIdList(supervisorId);
 
         return getRequestsList(ServiceConstant.PENDING_HANDOVER, supervisedEmployeeIdList);
+    }
+
+    @Override
+    public AssetModel getAssetData(String assetId) {
+        return assetRepository.findBy_id(assetId);
+    }
+
+    @Override
+    public EmployeeModel getEmployeeData(String employeeId) {
+        return employeeRepository.findBy_id(employeeId);
+    }
+
+    @Override
+    public SupervisionModel getEmployeeSupervisorData(String employeeId) {
+        return supervisionRepository.findByEmployeeId(employeeId);
     }
 
     private List<String> getSupervisedEmployeeIdList(String supervisorId){

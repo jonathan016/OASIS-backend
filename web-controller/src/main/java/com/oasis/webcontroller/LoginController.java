@@ -1,10 +1,10 @@
 package com.oasis.webcontroller;
 
-import com.oasis.MappingValue;
+import com.oasis.constant.APIMappingValue;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.service.implementation.LoginServiceImpl;
 import com.oasis.webmodel.request.LoginRequest;
-import com.oasis.webmodel.response.BaseResponse;
+import com.oasis.webmodel.response.PagingResponse;
 import com.oasis.webmodel.response.ResponseStatus;
 import com.oasis.webmodel.response.failed.FailedResponse;
 import com.oasis.webmodel.response.success.LoginSuccessResponse;
@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.oasis.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
-import static com.oasis.ErrorCodeAndMessage.USER_NOT_FOUND;
+import static com.oasis.constant.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
+import static com.oasis.constant.ErrorCodeAndMessage.USER_NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -24,9 +24,9 @@ public class LoginController {
     private LoginServiceImpl loginServiceImpl;
 
     @CrossOrigin(origins = "http://localhost")
-    @PostMapping(value = MappingValue.API_LOGIN,
+    @PostMapping(value = APIMappingValue.API_LOGIN,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public BaseResponse<?> callLoginService(@RequestBody LoginRequest model) {
+    public PagingResponse<?> callLoginService(@RequestBody LoginRequest model) {
         EmployeeModel result =
                 loginServiceImpl.checkLoginCredentials(
                         model.getUsername().toLowerCase(),
@@ -42,8 +42,8 @@ public class LoginController {
         return produceSuccessResponse(result);
     }
 
-    private BaseResponse<LoginSuccessResponse> produceSuccessResponse(EmployeeModel result) {
-        BaseResponse<LoginSuccessResponse> successResponse = new BaseResponse<>();
+    private PagingResponse<LoginSuccessResponse> produceSuccessResponse(EmployeeModel result) {
+        PagingResponse<LoginSuccessResponse> successResponse = new PagingResponse<>();
 
         String role = loginServiceImpl.determineUserRole(result.get_id());
 
@@ -59,8 +59,8 @@ public class LoginController {
         return successResponse;
     }
 
-    private BaseResponse<FailedResponse> produceFailedResponse(String errorCode, String errorMessage) {
-        BaseResponse<FailedResponse> failedResponse = new BaseResponse<>();
+    private PagingResponse<FailedResponse> produceFailedResponse(String errorCode, String errorMessage) {
+        PagingResponse<FailedResponse> failedResponse = new PagingResponse<>();
 
         failedResponse.setCode("404");
         failedResponse.setSuccess(ResponseStatus.FAILED);

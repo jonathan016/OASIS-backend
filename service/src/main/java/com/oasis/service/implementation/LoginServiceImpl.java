@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.oasis.service.ServiceConstant.ROLE_ADMINISTRATOR;
+import static com.oasis.service.ServiceConstant.ROLE_EMPLOYEE;
+import static com.oasis.service.ServiceConstant.ROLE_SUPERIOR;
+
 @Service
 public class LoginServiceImpl implements LoginServiceApi {
     @Autowired
@@ -40,17 +44,17 @@ public class LoginServiceImpl implements LoginServiceApi {
         EmployeeModel employee = employeeRepository.findBy_id(employeeId);
 
         if(employee.getSupervisingCount() == 0){
-            return "EMPLOYEE";
+            return ROLE_EMPLOYEE;
         } else {
             List<SupervisionModel> supervisions = supervisionRepository.findAllBySupervisorId(employeeId);
             for(SupervisionModel supervision : supervisions){
                 EmployeeModel supervisedEmployee = employeeRepository.findBy_id(supervision.getEmployeeId());
                 if(supervisedEmployee.getSupervisingCount() > 0){
-                    return "ADMINISTRATOR";
+                    return ROLE_ADMINISTRATOR;
                 }
             }
         }
 
-        return "SUPERIOR";
+        return ROLE_SUPERIOR;
     }
 }

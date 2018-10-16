@@ -1,4 +1,4 @@
-package com.oasis;
+package com.oasis.constant;
 
 public class ErrorCodeAndMessage {
     public static final String[] USER_NOT_FOUND = {

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface AssetRepository extends MongoRepository<AssetModel, String> {
     List<AssetModel> findAllByStockGreaterThan(Integer stockLimit);
+    AssetModel findBy_id(String assetId);
 }

@@ -30,6 +30,7 @@
         <mongodb.version>2.1.0.RELEASE</mongodb.version>
         <jackson.version>2.9.4</jackson.version>
         <lombok.version>1.18.2</lombok.version>
+        <orika.version>1.5.2</orika.version>
         <model.version>${oasis.version}</model.version>
         <repository.version>${oasis.version}</repository.version>
         <service.version>${oasis.version}</service.version>
@@ -81,6 +82,11 @@
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
             </dependency>
+            <dependency>
+                <groupId>ma.glasnost.orika</groupId>
+                <artifactId>orika-core</artifactId>
+                <version>${orika.version}</version>
+            </dependency>
 
             <!--Module Dependency-->
             <dependency>
@@ -112,6 +118,6 @@
     </dependencyManagement>
 
     <build>
-        <finalName>oasis</finalName>
+        <finalName>OASIS</finalName>
     </build>
 </project>
