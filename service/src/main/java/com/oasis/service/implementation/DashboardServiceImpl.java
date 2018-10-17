@@ -38,12 +38,12 @@ public class DashboardServiceImpl implements DashboardServiceApi {
 
     @Override
     public List<RequestModel> getMyPendingHandoverRequests(String employeeId) {
-        return requestRepository.findAllByStatusAndEmployeeId(ServiceConstant.PENDING_HANDOVER, employeeId);
+        return requestRepository.findAllByEmployeeIdAndStatus(employeeId, ServiceConstant.PENDING_HANDOVER);
     }
 
     @Override
     public List<RequestModel> getMyRequestedRequests(String employeeId) {
-        return requestRepository.findAllByStatusAndEmployeeId(ServiceConstant.REQUESTED, employeeId);
+        return requestRepository.findAllByEmployeeIdAndStatus(employeeId, ServiceConstant.REQUESTED);
     }
 
     @Override
@@ -104,9 +104,9 @@ public class DashboardServiceImpl implements DashboardServiceApi {
                 }
             } else {
                 assignedRequests.addAll(
-                        requestRepository.findAllByStatusAndEmployeeId(
-                                requestStatus,
-                                supervisedEmployeeId
+                        requestRepository.findAllByEmployeeIdAndStatus(
+                                supervisedEmployeeId,
+                                requestStatus
                         )
                 );
             }

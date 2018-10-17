@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface RequestRepository extends MongoRepository<RequestModel, String> {
-    List<RequestModel> findAllByStatusAndEmployeeId(String status, String employeeId);
+    List<RequestModel> findAllByEmployeeIdAndStatus(String employeeId, String status);
 }
