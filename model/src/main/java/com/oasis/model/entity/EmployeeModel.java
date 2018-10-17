@@ -2,7 +2,7 @@ package com.oasis.model.entity;
 
 import com.oasis.model.BaseEntity;
 import com.oasis.model.CollectionName;
-import com.oasis.model.FieldName;
+import com.oasis.model.fieldname.EmployeeFieldName;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -12,30 +12,30 @@ import java.util.Date;
 @Data
 @Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 public class EmployeeModel extends BaseEntity {
-    @Field(FieldName.EMPLOYEE_FULLNAME)
+    @Field(EmployeeFieldName.EMPLOYEE_FULLNAME)
     private String fullname;
 
-    @Field(FieldName.EMPLOYEE_DOB)
+    @Field(EmployeeFieldName.EMPLOYEE_DOB)
     private Date dob;
 
-    @Field(FieldName.EMPLOYEE_USERNAME)
+    @Field(EmployeeFieldName.EMPLOYEE_USERNAME)
     private String username;
 
-    @Field(FieldName.EMPLOYEE_PASSWORD)
+    @Field(EmployeeFieldName.EMPLOYEE_PASSWORD)
     private String password;
 
-    @Field(FieldName.EMPLOYEE_PHONE)
+    @Field(EmployeeFieldName.EMPLOYEE_PHONE)
     private String phone;
 
-    @Field(FieldName.EMPLOYEE_JOB_TITLE)
+    @Field(EmployeeFieldName.EMPLOYEE_JOB_TITLE)
     private String jobTitle;
 
-    @Field(FieldName.EMPLOYEE_DIVISION)
+    @Field(EmployeeFieldName.EMPLOYEE_DIVISION)
     private String division;
 
-    @Field(FieldName.EMPLOYEE_SUPERVISING_COUNT)
+    @Field(EmployeeFieldName.EMPLOYEE_SUPERVISING_COUNT)
     private Integer supervisingCount;
 
-    @Field(FieldName.EMPLOYEE_SUPERVISION_ID)
+    @Field(EmployeeFieldName.EMPLOYEE_SUPERVISION_ID)
     private String supervisionId;
 }

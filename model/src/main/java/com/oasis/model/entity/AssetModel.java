@@ -2,7 +2,7 @@ package com.oasis.model.entity;
 
 import com.oasis.model.BaseEntity;
 import com.oasis.model.CollectionName;
-import com.oasis.model.FieldName;
+import com.oasis.model.fieldname.AssetFieldName;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -10,21 +10,21 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @Document(collection = CollectionName.ASSET_COLLECTION_NAME)
 public class AssetModel extends BaseEntity {
-    @Field(FieldName.ASSET_NAME)
+    @Field(AssetFieldName.ASSET_NAME)
     private String name;
 
-    @Field(FieldName.ASSET_LOCATION)
+    @Field(AssetFieldName.ASSET_LOCATION)
     private String location;
 
-    @Field(FieldName.ASSET_PRICE)
+    @Field(AssetFieldName.ASSET_PRICE)
     private Double price;
 
-    @Field(FieldName.ASSET_STOCK)
+    @Field(AssetFieldName.ASSET_STOCK)
     private Integer stock;
 
-    @Field(FieldName.ASSET_BRAND)
+    @Field(AssetFieldName.ASSET_BRAND)
     private String brand;
 
-    @Field(FieldName.ASSET_TYPE)
+    @Field(AssetFieldName.ASSET_TYPE)
     private String type;
 }
