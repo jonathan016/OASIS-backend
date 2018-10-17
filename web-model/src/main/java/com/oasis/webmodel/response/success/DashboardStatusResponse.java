@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DashboardStatusResponse {
-    private Integer requestedRequests;
-    private Integer pendingHandoverRequests;
-    private Integer availableAsset;
+    private int requestedRequests;
+    private int pendingHandoverRequests;
+    private int availableAsset;
 }

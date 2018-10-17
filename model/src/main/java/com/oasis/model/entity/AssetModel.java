@@ -17,10 +17,10 @@ public class AssetModel extends BaseEntity {
     private String location;
 
     @Field(AssetFieldName.ASSET_PRICE)
-    private Double price;
+    private double price;
 
     @Field(AssetFieldName.ASSET_STOCK)
-    private Integer stock;
+    private int stock;
 
     @Field(AssetFieldName.ASSET_BRAND)
     private String brand;

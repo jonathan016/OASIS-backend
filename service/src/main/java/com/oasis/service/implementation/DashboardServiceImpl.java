@@ -32,8 +32,8 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     private SupervisionRepository supervisionRepository;
 
     @Override
-    public Integer getAvailableAssetsCount() {
-        return assetRepository.findAllByStockGreaterThan(ServiceConstant.STOCK_LIMIT).size();
+    public int getAvailableAssetsCount() {
+        return assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size();
     }
 
     @Override

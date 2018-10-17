@@ -8,7 +8,7 @@ import com.oasis.model.entity.SupervisionModel;
 import java.util.List;
 
 public interface DashboardServiceApi {
-    Integer getAvailableAssetsCount();
+    int getAvailableAssetsCount();
     List<RequestModel> getMyPendingHandoverRequests(String employeeId);
     List<RequestModel> getMyRequestedRequests(String employeeId);
     List<RequestModel> getMyAssignedRequestedRequests(String employeeId);

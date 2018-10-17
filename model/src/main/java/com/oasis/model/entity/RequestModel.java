@@ -17,7 +17,7 @@ public class RequestModel extends BaseEntity {
     private String assetId;
 
     @Field(RequestFieldName.REQUEST_ASSET_QUANTITY)
-    private Integer assetQuantity;
+    private int assetQuantity;
 
     @Field(RequestFieldName.REQUEST_STATUS)
     private String status;

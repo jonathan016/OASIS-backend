@@ -35,7 +35,7 @@ public class DashboardController {
     @GetMapping(value = APIMappingValue.API_DASHBOARD_STATUS,
             produces = APPLICATION_JSON_VALUE)
     public NoPagingResponse<?> callDashboardStatusService(@PathVariable String employeeId) {
-        Integer availableAssetCount = dashboardServiceImpl.getAvailableAssetsCount();
+        int availableAssetCount = dashboardServiceImpl.getAvailableAssetsCount();
         List<RequestModel> requestedRequests = new ArrayList<>();
         List<RequestModel> pendingHandoverRequests = new ArrayList<>();
 
@@ -86,7 +86,7 @@ public class DashboardController {
             produces = APPLICATION_JSON_VALUE)
     public PagingResponse<?> callDashboardRequestUpdateService(@PathVariable String employeeId,
                                                                @RequestParam String currentTab,
-                                                               @RequestParam Integer pageNumber,
+                                                               @RequestParam int pageNumber,
                                                                @RequestParam String sortInfo) {
         List<RequestModel> requestUpdates = new ArrayList<>();
 
@@ -116,9 +116,9 @@ public class DashboardController {
     }
 
     private NoPagingResponse<DashboardStatusResponse>
-    produceDashboardStatusSuccessResult(Integer requestedRequestsCount,
-                                        Integer pendingHandoverRequestsCount,
-                                        Integer availableAssetCount) {
+    produceDashboardStatusSuccessResult(int requestedRequestsCount,
+                                        int pendingHandoverRequestsCount,
+                                        int availableAssetCount) {
         NoPagingResponse<DashboardStatusResponse> successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(HttpStatus.OK.value());
@@ -136,7 +136,7 @@ public class DashboardController {
 
     private PagingResponse<DashboardRequestUpdateResponse>
     produceDashboardRequestUpdateSuccessResult(List<RequestUpdateModel> requests,
-                                               Integer pageNumber) {
+                                               int pageNumber) {
         PagingResponse<DashboardRequestUpdateResponse> successResponse = new PagingResponse<>();
         int startIndex = ControllerConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE * (pageNumber - 1);
         int endIndex = startIndex + ControllerConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE;
