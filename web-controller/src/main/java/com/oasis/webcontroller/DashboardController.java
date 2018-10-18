@@ -91,19 +91,28 @@ public class DashboardController {
         List<RequestModel> requestUpdates = new ArrayList<>();
 
         if(dashboardServiceImpl.getEmployeeData(employeeId) == null){
-            return produceDashboardRequestUpdateFailedResult(INCORRECT_EMPLOYEE_ID[0], INCORRECT_EMPLOYEE_ID[1]);
+            return produceDashboardRequestUpdateFailedResult(
+                    INCORRECT_EMPLOYEE_ID.getErrorCode(),
+                    INCORRECT_EMPLOYEE_ID.getErrorMessage()
+            );
         }
         String role = dashboardServiceImpl.determineUserRole(employeeId);
 
         fillData(requestUpdates, employeeId, currentTab, role);
 
         if (requestUpdates.size() == 0){
-            return produceDashboardRequestUpdateFailedResult(REQUESTS_NOT_FOUND[0], REQUESTS_NOT_FOUND[1]);
+            return produceDashboardRequestUpdateFailedResult(
+                    REQUESTS_NOT_FOUND.getErrorCode(),
+                    REQUESTS_NOT_FOUND.getErrorMessage()
+            );
         }
 
         if ((int) Math.ceil(
                 (float) requestUpdates.size() / ControllerConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE) < pageNumber){
-            return produceDashboardRequestUpdateFailedResult(REQUESTS_NOT_FOUND[0], REQUESTS_NOT_FOUND[1]);
+            return produceDashboardRequestUpdateFailedResult(
+                    REQUESTS_NOT_FOUND.getErrorCode(),
+                    REQUESTS_NOT_FOUND.getErrorMessage()
+            );
         }
 
         sortData(requestUpdates, sortInfo);
@@ -215,7 +224,7 @@ public class DashboardController {
             case "EMPLOYEE":
                 //Should throw exception when no requested request exists
                 requestUpdates.addAll(
-                        dashboardServiceImpl.getMyRequestedRequests(
+                        dashboardServiceImpl.getMyPendingHandoverRequests(
                                 employeeId
                         )
                 );
