@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.oasis.constant.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
-import static com.oasis.constant.ErrorCodeAndMessage.USER_NOT_FOUND;
+import static com.oasis.service.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
+import static com.oasis.service.ErrorCodeAndMessage.USER_NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @CrossOrigin(origins = "http://localhost")

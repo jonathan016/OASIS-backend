@@ -9,4 +9,9 @@ import java.util.List;
 @Repository
 public interface RequestRepository extends MongoRepository<RequestModel, String> {
     List<RequestModel> findAllByEmployeeIdAndStatus(String employeeId, String status);
+
+    List<RequestModel> findAllByEmployeeIdAndStatusOrderByCreatedDateAsc(String employeeId, String status);
+    List<RequestModel> findAllByEmployeeIdAndStatusOrderByCreatedDateDesc(String employeeId, String status);
+    List<RequestModel> findAllByEmployeeIdAndStatusOrderByUpdatedDateAsc(String employeeId, String status);
+    List<RequestModel> findAllByEmployeeIdAndStatusOrderByUpdatedDateDesc(String employeeId, String status);
 }

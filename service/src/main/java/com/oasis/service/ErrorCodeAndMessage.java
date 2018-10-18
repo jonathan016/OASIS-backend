@@ -1,4 +1,4 @@
-package com.oasis.constant;
+package com.oasis.service;
 
 import com.oasis.webmodel.response.failed.FailedResponse;
 

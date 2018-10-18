@@ -1,6 +1,7 @@
 package com.oasis.service;
 
 public class ServiceConstant {
+    public static final int DASHBOARD_REQUEST_UPDATE_PAGE_SIZE = 5;
     public static final int ZERO = 0;
     public static final String REQUESTED = "Requested";
     public static final String PENDING_HANDOVER = "Pending Handover";

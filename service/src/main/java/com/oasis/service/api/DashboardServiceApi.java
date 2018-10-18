@@ -4,12 +4,12 @@ import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
+import com.oasis.webmodel.response.NoPagingResponse;
+import com.oasis.webmodel.response.PagingResponse;
 
 import java.util.List;
 
 public interface DashboardServiceApi {
-    int getAvailableAssetsCount();
-
     List<RequestModel> getMyPendingHandoverRequests(String employeeId);
 
     List<RequestModel> getMyRequestedRequests(String employeeId);
@@ -25,4 +25,12 @@ public interface DashboardServiceApi {
     SupervisionModel getEmployeeSupervisorData(String employeeId);
 
     String determineUserRole(String employeeId);
+
+    List<String> getSupervisedEmployeeIdList(String supervisorId);
+
+    List<RequestModel> getRequestsList(String requestStatus, List<String> supervisedEmployeeIdList);
+
+    NoPagingResponse<?> getStatusSectionData(String employeeId);
+
+    PagingResponse<?> getRequestUpdateSectionData(String employeeId, String currentTab, int pageNumber, String sortInfo);
 }
