@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.oasis.constant.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
-import static com.oasis.constant.ErrorCodeAndMessage.USER_NOT_FOUND;
+import static com.oasis.service.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
+import static com.oasis.service.ErrorCodeAndMessage.USER_NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @CrossOrigin(origins = "http://localhost")
@@ -35,11 +35,17 @@ public class LoginController {
                 );
 
         if (result == null) {
-            return produceFailedResponse(USER_NOT_FOUND[0], USER_NOT_FOUND[1]);
+            return produceFailedResponse(
+                    USER_NOT_FOUND.getErrorCode(),
+                    USER_NOT_FOUND.getErrorMessage()
+            );
         }
 
         if (result.getPassword() == null){
-            return produceFailedResponse(PASSWORD_DOES_NOT_MATCH[0], PASSWORD_DOES_NOT_MATCH[1]);
+            return produceFailedResponse(
+                    PASSWORD_DOES_NOT_MATCH.getErrorCode(),
+                    PASSWORD_DOES_NOT_MATCH.getErrorMessage()
+            );
         }
 
         return produceSuccessResponse(result.get_id());

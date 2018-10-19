@@ -47,7 +47,7 @@ public class DashboardRequestUpdateResponse {
         public static class Asset {
             private String assetId;
             private String assetName;
-            private Integer assetQuantity;
+            private int assetQuantity;
         }
     }
 

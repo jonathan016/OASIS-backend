@@ -30,11 +30,6 @@
         <jackson.version>2.9.4</jackson.version>
         <lombok.version>1.18.2</lombok.version>
         <orika.version>1.5.2</orika.version>
-        <model.version>${project.parent.version}</model.version>
-        <repository.version>${project.parent.version}</repository.version>
-        <service.version>${project.parent.version}</service.version>
-        <web-controller.version>${project.parent.version}</web-controller.version>
-        <web-model.version>${project.parent.version}</web-model.version>
     </properties>
 
     <repositories>
@@ -91,27 +86,27 @@
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>model</artifactId>
-                <version>${model.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>repository</artifactId>
-                <version>${repository.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>service</artifactId>
-                <version>${service.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>web-controller</artifactId>
-                <version>${web-controller.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oasis</groupId>
                 <artifactId>web-model</artifactId>
-                <version>${web-model.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
