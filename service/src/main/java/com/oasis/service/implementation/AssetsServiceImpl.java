@@ -9,6 +9,7 @@ import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.ASSET_NOT_FOUND;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.EMPTY_SEARCH_QUERY;
 
+@Service
 public class AssetsServiceImpl implements AssetsServiceApi {
 
     @Autowired
@@ -44,6 +46,11 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     @Override
     public List<AssetListResponse.Asset> getAvailableAsset(int pageNumber, String sortInfo) throws DataNotFoundException {
         if (assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size() == 0) {
+            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+        }
+        if ((int) Math.ceil(
+                (float) assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size()
+                        / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
             throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
         }
 
