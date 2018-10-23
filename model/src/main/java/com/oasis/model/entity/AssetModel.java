@@ -11,6 +11,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = CollectionName.ASSET_COLLECTION_NAME)
 public class AssetModel extends BaseEntity {
 
+    @Field(AssetFieldName.ASSET_ID)
+    private String sku;
+
     @Field(AssetFieldName.ASSET_NAME)
     private String name;
 
