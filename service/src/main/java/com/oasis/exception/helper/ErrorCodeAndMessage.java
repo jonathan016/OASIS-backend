@@ -38,4 +38,8 @@ public class ErrorCodeAndMessage {
             "ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR",
             "Non-administrator attempted to create new asset"
     );
+    public static final FailedResponse ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR = new FailedResponse(
+            "ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR",
+            "Non-administrator attempted to update existing asset"
+    );
 }

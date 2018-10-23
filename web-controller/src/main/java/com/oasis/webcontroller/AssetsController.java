@@ -5,10 +5,10 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
-import com.oasis.model.entity.AssetModel;
 import com.oasis.responsemapper.AssetsResponseMapper;
 import com.oasis.service.implementation.AssetsServiceImpl;
 import com.oasis.webmodel.request.AddAssetRequest;
+import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.BaseResponse;
 import com.oasis.webmodel.response.PagingResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
@@ -30,7 +30,8 @@ public class AssetsController {
     @Autowired
     private AssetsServiceImpl assetsServiceImpl;
 
-    @GetMapping(value = APIMappingValue.API_FIND_ASSET)
+    @GetMapping(value = APIMappingValue.API_FIND_ASSET,
+            produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
     public PagingResponse<?> callFindAssetsService(@RequestParam String searchQuery,
                                                    @RequestParam int pageNumber,
                                                    @RequestParam String sortInfo) {
@@ -67,9 +68,22 @@ public class AssetsController {
         try {
             assetsServiceImpl.insertToDatabase(request.getAsset(), request.getEmployeeNik());
         } catch (DuplicateDataException | UnauthorizedOperationException | DataNotFoundException e) {
-            return assetsResponseMapper.produceAssetInsertionFailedResult(e.getErrorCode(), e.getErrorMessage());
+            return assetsResponseMapper.produceAssetSaveFailedResult(e.getErrorCode(), e.getErrorMessage());
         }
 
-        return assetsResponseMapper.produceAssetInsertionSuccessResult();
+        return assetsResponseMapper.produceAssetSaveSuccessResult();
+    }
+
+    @PutMapping(value = APIMappingValue.API_SAVE_ASSET,
+            produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public BaseResponse callUpdateAssetService(@RequestBody UpdateAssetRequest request) {
+
+        try {
+            assetsServiceImpl.updateAsset(request.getAsset(), request.getEmployeeNik());
+        } catch (UnauthorizedOperationException | DataNotFoundException e) {
+            return assetsResponseMapper.produceAssetSaveFailedResult(e.getErrorCode(), e.getErrorMessage());
+        }
+
+        return assetsResponseMapper.produceAssetSaveSuccessResult();
     }
 }

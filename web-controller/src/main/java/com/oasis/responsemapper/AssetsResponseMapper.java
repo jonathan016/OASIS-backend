@@ -52,7 +52,7 @@ public class AssetsResponseMapper {
     }
 
     public BaseResponse
-    produceAssetInsertionSuccessResult() {
+    produceAssetSaveSuccessResult() {
         BaseResponse successResponse = new BaseResponse();
 
         successResponse.setCode(HttpStatus.OK.value());
@@ -62,7 +62,7 @@ public class AssetsResponseMapper {
     }
 
     public NoPagingResponse<FailedResponse>
-    produceAssetInsertionFailedResult(String errorCode, String errorMessage) {
+    produceAssetSaveFailedResult(String errorCode, String errorMessage) {
         NoPagingResponse<FailedResponse> failedResponse = new NoPagingResponse<>();
 
         failedResponse.setCode(HttpStatus.NOT_FOUND.value());

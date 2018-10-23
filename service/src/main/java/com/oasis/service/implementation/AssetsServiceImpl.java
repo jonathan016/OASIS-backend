@@ -10,6 +10,7 @@ import com.oasis.repository.AssetRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.webmodel.request.AddAssetRequest;
+import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -216,5 +217,34 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         skuCode.append(String.format("-%03d", latestCode));
 
         return String.valueOf(skuCode);
+    }
+
+    @Override
+    public void updateAsset(UpdateAssetRequest.Asset assetRequest, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException {
+
+        try {
+            if (!roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+                throw new UnauthorizedOperationException(ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
+                        ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
+            }
+        } catch (DataNotFoundException e) {
+            throw new DataNotFoundException(e.getErrorCode(), e.getErrorMessage());
+        }
+
+        AssetModel asset = assetRepository.findBySku(assetRequest.getAssetSku());
+
+        if(asset == null)
+            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+
+        asset.setName(assetRequest.getAssetName());
+        asset.setLocation(assetRequest.getAssetLocation());
+        asset.setPrice(assetRequest.getAssetPrice());
+        asset.setStock(assetRequest.getAssetQty());
+        asset.setBrand(assetRequest.getAssetBrand());
+        asset.setType(assetRequest.getAssetType());
+        asset.setUpdatedBy(employeeNik);
+        asset.setUpdatedDate(new Date());
+
+        assetRepository.save(asset);
     }
 }

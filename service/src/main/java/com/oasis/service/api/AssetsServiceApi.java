@@ -6,6 +6,7 @@ import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.webmodel.request.AddAssetRequest;
+import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 
 import java.util.List;
@@ -27,4 +28,6 @@ public interface AssetsServiceApi {
     String generateAssetSku(String assetBrand, String assetType);
 
     String generateSkuCode(String lastCode, String target);
+
+    void updateAsset(UpdateAssetRequest.Asset request, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException;
 }
