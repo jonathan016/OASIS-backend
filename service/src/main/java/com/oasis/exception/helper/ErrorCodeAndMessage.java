@@ -24,8 +24,18 @@ public class ErrorCodeAndMessage {
     );
     public static final FailedResponse EMPTY_SEARCH_QUERY = new FailedResponse(
             "EMPTY_SEARCH_QUERY",
-            "No search query given, thus the server cannot search for asset");
+            "No search query given, thus the server cannot search for asset"
+    );
     public static final FailedResponse ASSET_NOT_FOUND = new FailedResponse(
             "ASSET_NOT_FOUND",
-            "Asset with given search query cannot be found");
+            "Asset with given search query cannot be found"
+    );
+    public static final FailedResponse SAME_ASSET_EXISTS = new FailedResponse(
+            "SAME_ASSET_EXISTS",
+            "Same asset exists and so insertion process cannot continue"
+    );
+    public static final FailedResponse ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR = new FailedResponse(
+            "ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR",
+            "Non-administrator attempted to create new asset"
+    );
 }

@@ -1,9 +1,7 @@
 package com.oasis.responsemapper;
 
 import com.oasis.service.ServiceConstant;
-import com.oasis.webmodel.response.Paging;
-import com.oasis.webmodel.response.PagingResponse;
-import com.oasis.webmodel.response.ResponseStatus;
+import com.oasis.webmodel.response.*;
 import com.oasis.webmodel.response.failed.FailedResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.http.HttpStatus;
@@ -15,8 +13,8 @@ import java.util.List;
 public class AssetsResponseMapper {
 
     public PagingResponse<AssetListResponse>
-    produceFindAssetSuccessResult(List<AssetListResponse.Asset> mappedAssets,
-                                  Integer pageNumber) {
+    produceViewFoundAssetSuccessResult(List<AssetListResponse.Asset> mappedAssets,
+                                       Integer pageNumber) {
         PagingResponse<AssetListResponse> successResponse = new PagingResponse<>();
 
         successResponse.setCode(HttpStatus.OK.value());
@@ -38,8 +36,34 @@ public class AssetsResponseMapper {
     }
 
     public PagingResponse<FailedResponse>
-    produceFindAssetFailedResult(String errorCode, String errorMessage) {
+    produceViewFoundAssetFailedResult(String errorCode, String errorMessage) {
         PagingResponse<FailedResponse> failedResponse = new PagingResponse<>();
+
+        failedResponse.setCode(HttpStatus.NOT_FOUND.value());
+        failedResponse.setSuccess(ResponseStatus.FAILED);
+        failedResponse.setValue(
+                new FailedResponse(
+                        errorCode,
+                        errorMessage
+                )
+        );
+
+        return failedResponse;
+    }
+
+    public BaseResponse
+    produceAssetInsertionSuccessResult() {
+        BaseResponse successResponse = new BaseResponse();
+
+        successResponse.setCode(HttpStatus.OK.value());
+        successResponse.setSuccess(ResponseStatus.SUCCESS);
+
+        return successResponse;
+    }
+
+    public NoPagingResponse<FailedResponse>
+    produceAssetInsertionFailedResult(String errorCode, String errorMessage) {
+        NoPagingResponse<FailedResponse> failedResponse = new NoPagingResponse<>();
 
         failedResponse.setCode(HttpStatus.NOT_FOUND.value());
         failedResponse.setSuccess(ResponseStatus.FAILED);

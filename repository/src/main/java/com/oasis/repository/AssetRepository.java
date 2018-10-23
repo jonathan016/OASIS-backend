@@ -9,15 +9,15 @@ import java.util.List;
 @Repository
 public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
-    List<AssetModel> findAllByStockGreaterThan(int stockLimit);
+    List<AssetModel> findAllByStockGreaterThan(long stockLimit);
 
-    List<AssetModel> findAllByStockGreaterThanOrderBySkuAsc(int stockLimit);
+    List<AssetModel> findAllByStockGreaterThanOrderBySkuAsc(long stockLimit);
 
-    List<AssetModel> findAllByStockGreaterThanOrderBySkuDesc(int stockLimit);
+    List<AssetModel> findAllByStockGreaterThanOrderBySkuDesc(long stockLimit);
 
-    List<AssetModel> findAllByStockGreaterThanOrderByNameAsc(int stockLimit);
+    List<AssetModel> findAllByStockGreaterThanOrderByNameAsc(long stockLimit);
 
-    List<AssetModel> findAllByStockGreaterThanOrderByNameDesc(int stockLimit);
+    List<AssetModel> findAllByStockGreaterThanOrderByNameDesc(long stockLimit);
 
     List<AssetModel> findAllBySkuContainsOrNameContains(String id, String name);
 
@@ -30,4 +30,10 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
     List<AssetModel> findAllBySkuContainsOrNameContainsOrderByNameDesc(String sku, String name);
 
     AssetModel findBySku(String sku);
+
+    AssetModel findByNameAndBrandAndType(String name, String brand, String type);
+
+    AssetModel save(AssetModel assetModel);
+
+    AssetModel findFirstByBrandAndTypeOrderBySkuDesc(String brand, String type);
 }

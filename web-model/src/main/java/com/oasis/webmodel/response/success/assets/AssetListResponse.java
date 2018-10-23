@@ -18,6 +18,6 @@ public class AssetListResponse {
         private String assetBrand;
         private String assetType;
         private String assetLocation;
-        private Integer assetQty;
+        private long assetQty;
     }
 }

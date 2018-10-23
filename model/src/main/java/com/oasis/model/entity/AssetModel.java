@@ -24,7 +24,7 @@ public class AssetModel extends BaseEntity {
     private double price;
 
     @Field(AssetFieldName.ASSET_STOCK)
-    private int stock;
+    private long stock;
 
     @Field(AssetFieldName.ASSET_BRAND)
     private String brand;

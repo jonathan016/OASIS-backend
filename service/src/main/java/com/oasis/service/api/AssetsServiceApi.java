@@ -2,7 +2,10 @@ package com.oasis.service.api;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.DuplicateDataException;
+import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
+import com.oasis.webmodel.request.AddAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 
 import java.util.List;
@@ -17,5 +20,11 @@ public interface AssetsServiceApi {
 
     List<AssetListResponse.Asset> mapAssetsFound(List<AssetModel> assetsFound);
 
-    void sortData(List<AssetModel> assetsAvailable, String sortInfo, int stockLimit);
+    void sortData(List<AssetModel> assetsAvailable, String sortInfo, long stockLimit);
+
+    void insertToDatabase(AddAssetRequest.Asset request, String employeeNik) throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException;
+
+    String generateAssetSku(String assetBrand, String assetType);
+
+    String generateSkuCode(String lastCode, String target);
 }
