@@ -12,6 +12,10 @@ import java.util.Date;
 @Data
 @Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 public class EmployeeModel extends BaseEntity {
+
+    @Field(EmployeeFieldName.EMPLOYEE_NIK)
+    private String nik;
+
     @Field(EmployeeFieldName.EMPLOYEE_FULLNAME)
     private String fullname;
 

@@ -1,6 +1,8 @@
 package com.oasis.model.fieldname;
 
 public class EmployeeFieldName {
+
+    public static final String EMPLOYEE_NIK = "NIK";
     public static final String EMPLOYEE_FULLNAME = "fullname";
     public static final String EMPLOYEE_DOB = "dob";
     public static final String EMPLOYEE_USERNAME = "username";

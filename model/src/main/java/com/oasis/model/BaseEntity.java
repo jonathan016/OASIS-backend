@@ -9,6 +9,7 @@ import java.util.Date;
 
 @Data
 public class BaseEntity {
+
     @Id
     @Setter(AccessLevel.PRIVATE)
     private String _id;

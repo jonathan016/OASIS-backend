@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class Paging {
+
     private long pageNumber;
     private long pageSize;
     private long totalRecords;

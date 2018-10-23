@@ -1,85 +1,55 @@
 package com.oasis.webcontroller;
 
 import com.oasis.constant.APIMappingValue;
+import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
+import com.oasis.responsemapper.LoginResponseMapper;
 import com.oasis.service.implementation.LoginServiceImpl;
 import com.oasis.webmodel.request.LoginRequest;
 import com.oasis.webmodel.response.NoPagingResponse;
-import com.oasis.webmodel.response.ResponseStatus;
-import com.oasis.webmodel.response.failed.FailedResponse;
-import com.oasis.webmodel.response.success.LoginResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.oasis.service.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
-import static com.oasis.service.ErrorCodeAndMessage.USER_NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @CrossOrigin(origins = "http://localhost")
 @RestController
 public class LoginController {
+
     @Autowired
     private LoginServiceImpl loginServiceImpl;
+    @Autowired
+    private LoginResponseMapper loginResponseMapper;
 
     @PostMapping(value = APIMappingValue.API_LOGIN,
-            produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public NoPagingResponse<?> callLoginService(@RequestBody LoginRequest request) {
-        EmployeeModel result =
-                loginServiceImpl.checkLoginCredentials(
-                        request.getUsername().toLowerCase(),
-                        request.getPassword()
-                );
+            produces = APPLICATION_JSON_VALUE,
+            consumes = APPLICATION_JSON_VALUE)
+    public NoPagingResponse<?> callLoginService(
+            @RequestBody
+                    LoginRequest request
+    ) {
+        EmployeeModel result;
 
-        if (result == null) {
-            return produceFailedResponse(
-                    USER_NOT_FOUND.getErrorCode(),
-                    USER_NOT_FOUND.getErrorMessage()
-            );
+        try {
+            result = loginServiceImpl.checkLoginCredentials(
+                    request.getUsername()
+                            .toLowerCase(), request.getPassword());
+        } catch (DataNotFoundException | UserNotAuthenticatedException e) {
+            return loginResponseMapper.produceFailedResponse(e.getErrorCode(), e.getErrorMessage());
         }
 
-        if (result.getPassword() == null){
-            return produceFailedResponse(
-                    PASSWORD_DOES_NOT_MATCH.getErrorCode(),
-                    PASSWORD_DOES_NOT_MATCH.getErrorMessage()
-            );
+        String role;
+
+        try {
+            role = loginServiceImpl.determineUserRole(result.getNik());
+        } catch (DataNotFoundException e){
+            return loginResponseMapper.produceFailedResponse(e.getErrorCode(), e.getErrorMessage());
         }
 
-        return produceSuccessResponse(result.get_id());
-    }
-
-    private NoPagingResponse<LoginResponse> produceSuccessResponse(String employeeId) {
-        NoPagingResponse<LoginResponse> successResponse = new NoPagingResponse<>();
-
-        String role = loginServiceImpl.determineUserRole(employeeId);
-
-        successResponse.setCode(HttpStatus.OK.value());
-        successResponse.setSuccess(ResponseStatus.SUCCESS);
-        successResponse.setValue(
-                new LoginResponse(
-                        employeeId,
-                        role
-                )
-        );
-
-        return successResponse;
-    }
-
-    private NoPagingResponse<FailedResponse> produceFailedResponse(String errorCode, String errorMessage) {
-        NoPagingResponse<FailedResponse> failedResponse = new NoPagingResponse<>();
-
-        failedResponse.setCode(HttpStatus.NOT_FOUND.value());
-        failedResponse.setSuccess(ResponseStatus.FAILED);
-        failedResponse.setValue(
-                new FailedResponse(
-                        errorCode,
-                        errorMessage
-                )
-        );
-
-        return failedResponse;
+        return loginResponseMapper.produceSuccessResponse(result.getNik(), role);
     }
 }

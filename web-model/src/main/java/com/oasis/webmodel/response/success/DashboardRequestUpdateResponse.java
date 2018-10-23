@@ -10,11 +10,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DashboardRequestUpdateResponse {
+
     private List<RequestUpdateModel> requests;
 
     @Data
     @AllArgsConstructor
     public static class RequestUpdateModel {
+
         private Request request;
         private Employee employee;
         private Supervisor supervisor;
@@ -23,6 +25,7 @@ public class DashboardRequestUpdateResponse {
         @Data
         @AllArgsConstructor
         public static class Request {
+
             private String requestId;
             private String requestStatus;
             private String requestNote;
@@ -31,20 +34,23 @@ public class DashboardRequestUpdateResponse {
         @Data
         @AllArgsConstructor
         public static class Employee {
-            private String employeeId;
+
+            private String employeeNik;
             private String employeeName;
         }
 
         @Data
         @AllArgsConstructor
         public static class Supervisor {
-            private String supervisorId;
+
+            private String supervisorNik;
             private String supervisorName;
         }
 
         @Data
         @AllArgsConstructor
         public static class Asset {
+
             private String assetId;
             private String assetName;
             private int assetQuantity;

@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EmployeeRepository extends MongoRepository<EmployeeModel, String> {
+
     EmployeeModel findByUsername(String username);
-    EmployeeModel findBy_id(String _id);
+
+    EmployeeModel findByNik(String nik);
 }

@@ -10,9 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @Document(collection = CollectionName.SUPERVISION_COLLECTION_NAME)
 public class SupervisionModel extends BaseEntity {
+
     @Field(SupervisionFieldName.SUPERVISION_SUPERVISOR_ID)
-    private String supervisorId;
+    private String supervisorNik;
 
     @Field(SupervisionFieldName.SUPERVISION_EMPLOYEE_ID)
-    private String employeeId;
+    private String employeeNik;
 }

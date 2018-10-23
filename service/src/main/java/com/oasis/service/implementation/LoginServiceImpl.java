@@ -1,48 +1,55 @@
 package com.oasis.service.implementation;
 
+import com.oasis.RoleDeterminer;
+import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.EmployeeRepository;
-import com.oasis.repository.SupervisionRepository;
-import com.oasis.service.RoleDeterminer;
 import com.oasis.service.api.LoginServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
-import static com.oasis.service.ServiceConstant.ROLE_ADMINISTRATOR;
-import static com.oasis.service.ServiceConstant.ROLE_EMPLOYEE;
-import static com.oasis.service.ServiceConstant.ROLE_SUPERIOR;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
 @Service
 public class LoginServiceImpl implements LoginServiceApi {
+
     @Autowired
     private EmployeeRepository employeeRepository;
-
     @Autowired
-    private SupervisionRepository supervisionRepository;
+    private RoleDeterminer roleDeterminer;
 
     @Override
-    public EmployeeModel checkLoginCredentials(String username, String password) {
+    public EmployeeModel checkLoginCredentials(final String username, final String password)
+            throws DataNotFoundException, UserNotAuthenticatedException {
         EmployeeModel result = employeeRepository.findByUsername(username);
-
-        if (result != null) {
+        if (result == null) {
+            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(),
+                    USER_NOT_FOUND.getErrorMessage()
+            );
+        } else {
             BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             if (!encoder.matches(password, result.getPassword())) {
-                result.setPassword(null);
-
-                return result;
+                throw new UserNotAuthenticatedException(PASSWORD_DOES_NOT_MATCH.getErrorCode(),
+                        PASSWORD_DOES_NOT_MATCH.getErrorMessage()
+                );
             }
         }
-
         return result;
     }
 
     @Override
-    public String determineUserRole(String employeeId) {
-        RoleDeterminer roleDeterminer = new RoleDeterminer();
-        return roleDeterminer.determineRole(employeeRepository, supervisionRepository, employeeId);
+    public String determineUserRole(final String employeeNik) throws DataNotFoundException {
+        String role;
+
+        try {
+            role = roleDeterminer.determineRole(employeeNik);
+        } catch (DataNotFoundException e){
+            throw e;
+        }
+
+        return role;
     }
 }

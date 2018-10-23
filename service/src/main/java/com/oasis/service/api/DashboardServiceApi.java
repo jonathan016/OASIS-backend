@@ -1,118 +1,75 @@
 package com.oasis.service.api;
 
+import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
-import com.oasis.webmodel.response.NoPagingResponse;
-import com.oasis.webmodel.response.PagingResponse;
-import com.oasis.webmodel.response.failed.FailedResponse;
 import com.oasis.webmodel.response.success.DashboardRequestUpdateResponse;
-import com.oasis.webmodel.response.success.DashboardStatusResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface DashboardServiceApi {
 
-    List<RequestModel>
-    getMyPendingHandoverRequests(
-            String employeeId
+    List<RequestModel> getMyPendingHandoverRequests(
+            final String employeeNik
     );
 
-    List<RequestModel>
-    getMyRequestedRequests(
-            String employeeId
+    List<RequestModel> getMyRequestedRequests(
+            final String employeeNik
     );
 
-    List<RequestModel>
-    getMyAssignedRequestedRequests(
-            String employeeId
+    List<RequestModel> getOthersRequestedRequests(
+            final String employeeNik
     );
 
-    List<RequestModel>
-    getMyAssignedPendingHandoverRequests(
-            String employeeId
+    List<RequestModel> getOthersPendingHandoverRequests(
+            final String employeeNik
     );
 
-    AssetModel
-    getAssetData(
-            String assetId
+    AssetModel getAssetData(
+            final String assetId
     );
 
-    EmployeeModel
-    getEmployeeData(
-            String employeeId
+    EmployeeModel getEmployeeData(
+            final String employeeNik
     );
 
-    SupervisionModel
-    getEmployeeSupervisorData(
-            String employeeId
+    SupervisionModel getEmployeeSupervisorData(
+            final String employeeNik
     );
 
-    String
-    determineUserRole(
-            String employeeId
+    String determineUserRole(
+            final String employeeNik
+    ) throws DataNotFoundException;
+
+    List<String> getSupervisedEmployeeNikList(
+            final String supervisorNik
     );
 
-    List<String>
-    getSupervisedEmployeeIdList(
-            String supervisorId
+    List<RequestModel> getRequestsList(
+            final String requestStatus, final List<String> supervisedEmployeeIdList
     );
 
-    List<RequestModel>
-    getRequestsList(
-            String requestStatus,
-            List<String> supervisedEmployeeIdList
+    List<RequestModel> fillData(
+            final String employeeNik, final String currentTab, final String role
     );
 
-    NoPagingResponse<DashboardStatusResponse>
-    produceDashboardStatusSuccessResult(
-            int requestedRequestsCount,
-            int pendingHandoverRequestsCount,
-            int availableAssetCount
+    void sortData(
+            List<RequestModel> requestUpdates, final String sortInfo
     );
 
-    PagingResponse<DashboardRequestUpdateResponse>
-    produceDashboardRequestUpdateSuccessResult(
-            List<DashboardRequestUpdateResponse.RequestUpdateModel> requests,
-            int pageNumber
+    List<DashboardRequestUpdateResponse.RequestUpdateModel> mapRequests(
+            final List<RequestModel> requestUpdates
     );
 
-    PagingResponse<FailedResponse>
-    produceDashboardRequestUpdateFailedResult(
-            String errorCode,
-            String errorMessage
-    );
+    Map<String, Integer> getStatusSectionData(
+            final String employeeNik
+    ) throws DataNotFoundException;
 
-    void
-    fillData(
-            List<RequestModel> requestUpdates,
-            String employeeId,
-            String currentTab,
-            String role
-    );
-
-    void
-    sortData(
-            List<RequestModel> requestUpdates,
-            String sortInfo
-    );
-
-    List<DashboardRequestUpdateResponse.RequestUpdateModel>
-    mapRequests(
-            List<RequestModel> requestUpdates
-    );
-
-    NoPagingResponse<?>
-    getStatusSectionData(
-            String employeeId
-    );
-
-    PagingResponse<?>
-    getRequestUpdateSectionData(
-            String employeeId,
-            String currentTab,
-            int pageNumber,
-            String sortInfo
-    );
+    List<DashboardRequestUpdateResponse.RequestUpdateModel> getRequestUpdateSectionData(
+            final String employeeNik, final String currentTab, final int pageNumber, final String sortInfo
+    )
+            throws DataNotFoundException;
 }

@@ -8,6 +8,8 @@ import java.util.List;
 
 @Repository
 public interface SupervisionRepository extends MongoRepository<SupervisionModel, String> {
-    List<SupervisionModel> findAllBySupervisorId(String supervisorId);
-    SupervisionModel findByEmployeeId(String employeeId);
+
+    List<SupervisionModel> findAllBySupervisorNik(String supervisorNik);
+
+    SupervisionModel findByEmployeeNik(String employeeNik);
 }
