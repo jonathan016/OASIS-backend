@@ -11,5 +11,23 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     List<AssetModel> findAllByStockGreaterThan(int stockLimit);
 
-    AssetModel findBy_id(String assetId);
+    List<AssetModel> findAllByStockGreaterThanOrderBySkuAsc(int stockLimit);
+
+    List<AssetModel> findAllByStockGreaterThanOrderBySkuDesc(int stockLimit);
+
+    List<AssetModel> findAllByStockGreaterThanOrderByNameAsc(int stockLimit);
+
+    List<AssetModel> findAllByStockGreaterThanOrderByNameDesc(int stockLimit);
+
+    List<AssetModel> findAllBySkuContainsOrNameContains(String id, String name);
+
+    List<AssetModel> findAllBySkuContainsOrNameContainsOrderBySkuAsc(String sku, String name);
+
+    List<AssetModel> findAllBySkuContainsOrNameContainsOrderBySkuDesc(String sku, String name);
+
+    List<AssetModel> findAllBySkuContainsOrNameContainsOrderByNameAsc(String sku, String name);
+
+    List<AssetModel> findAllBySkuContainsOrNameContainsOrderByNameDesc(String sku, String name);
+
+    AssetModel findBySku(String sku);
 }
