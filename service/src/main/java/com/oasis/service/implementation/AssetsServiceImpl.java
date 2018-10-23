@@ -42,10 +42,19 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public List<AssetListResponse.Asset> getAvailableAsset(int pageNumber, String sortInfo) {
-        return null;
+    public List<AssetListResponse.Asset> getAvailableAsset(int pageNumber, String sortInfo) throws DataNotFoundException {
+        if (assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size() == 0) {
+            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+        }
+
+        List<AssetModel> assetsAvailable = new ArrayList<>();
+
+        sortData(assetsAvailable, sortInfo, ServiceConstant.ZERO);
+
+        return mapAssetsFound(assetsAvailable);
     }
 
+    @Override
     public List<AssetModel> fillData(String searchQuery, String sortInfo) {
         List<AssetModel> assetsFound = new ArrayList<>();
 
@@ -86,6 +95,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         return assetsFound;
     }
 
+    @Override
     public List<AssetListResponse.Asset> mapAssetsFound(List<AssetModel> assetsFound) {
         List<AssetListResponse.Asset> mappedAssets = new ArrayList<>();
 
@@ -103,5 +113,22 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         return mappedAssets;
+    }
+
+    @Override
+    public void sortData(List<AssetModel> assetsAvailable, String sortInfo, int stockLimit) {
+        if (sortInfo.substring(1).equals("assetId")) {
+            if (sortInfo.substring(0, 1).equals("A")) {
+                assetsAvailable.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuAsc(stockLimit));
+            } else if (sortInfo.substring(0, 1).equals("D")) {
+                assetsAvailable.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuDesc(stockLimit));
+            }
+        } else if (sortInfo.substring(1).equals("assetName")) {
+            if (sortInfo.substring(0, 1).equals("A")) {
+                assetsAvailable.addAll(assetRepository.findAllByStockGreaterThanOrderByNameAsc(stockLimit));
+            } else if (sortInfo.substring(0, 1).equals("D")) {
+                assetsAvailable.addAll(assetRepository.findAllByStockGreaterThanOrderByNameDesc(stockLimit));
+            }
+        }
     }
 }
