@@ -22,4 +22,10 @@ public class ErrorCodeAndMessage {
             "The given employee NIK could not be found in database and thus inferred" +
                     " as incorrect employee NIK"
     );
+    public static final FailedResponse EMPTY_SEARCH_QUERY = new FailedResponse(
+            "EMPTY_SEARCH_QUERY",
+            "No search query given, thus the server cannot search for asset");
+    public static final FailedResponse ASSET_NOT_FOUND = new FailedResponse(
+            "ASSET_NOT_FOUND",
+            "Asset with given search query cannot be found");
 }
