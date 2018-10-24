@@ -42,4 +42,8 @@ public class ErrorCodeAndMessage {
             "ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR",
             "Non-administrator attempted to update existing asset"
     );
+    public static final FailedResponse NO_ASSET_SELECTED = new FailedResponse(
+            "NO_ASSET_SELECTED",
+            "No asset has been selected for deletion"
+    );
 }

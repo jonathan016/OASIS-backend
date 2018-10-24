@@ -35,5 +35,11 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     AssetModel save(AssetModel assetModel);
 
+    AssetModel findFirstByBrandOrderBySkuDesc(String brand);
+
     AssetModel findFirstByBrandAndTypeOrderBySkuDesc(String brand, String type);
+
+    AssetModel findFirstBySkuContainsOrderBySkuDesc(String sku);
+
+    void delete(AssetModel entity);
 }

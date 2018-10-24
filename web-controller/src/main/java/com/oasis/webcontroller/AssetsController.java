@@ -8,6 +8,7 @@ import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.responsemapper.AssetsResponseMapper;
 import com.oasis.service.implementation.AssetsServiceImpl;
 import com.oasis.webmodel.request.AddAssetRequest;
+import com.oasis.webmodel.request.DeleteAssetRequest;
 import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.BaseResponse;
 import com.oasis.webmodel.response.PagingResponse;
@@ -77,10 +78,27 @@ public class AssetsController {
     @PutMapping(value = APIMappingValue.API_SAVE_ASSET,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public BaseResponse callUpdateAssetService(@RequestBody UpdateAssetRequest request) {
+        //TODO Handle concurrency
+        //TODO Handle existing requests with the asset
 
         try {
             assetsServiceImpl.updateAsset(request.getAsset(), request.getEmployeeNik());
         } catch (UnauthorizedOperationException | DataNotFoundException e) {
+            return assetsResponseMapper.produceAssetSaveFailedResult(e.getErrorCode(), e.getErrorMessage());
+        }
+
+        return assetsResponseMapper.produceAssetSaveSuccessResult();
+    }
+
+    @DeleteMapping(value = APIMappingValue.API_DELETE_ASSET,
+            produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public BaseResponse callDeleteAssetsService(@RequestBody DeleteAssetRequest request) {
+        //TODO Handle concurrency
+        //TODO Handle existing requests with the asset
+
+        try {
+            assetsServiceImpl.deleteAssets(request.getSelectedAssets(), request.getEmployeeNik());
+        } catch (UnauthorizedOperationException | DataNotFoundException | BadRequestException e) {
             return assetsResponseMapper.produceAssetSaveFailedResult(e.getErrorCode(), e.getErrorMessage());
         }
 

@@ -25,9 +25,9 @@ public interface AssetsServiceApi {
 
     void insertToDatabase(AddAssetRequest.Asset request, String employeeNik) throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException;
 
-    String generateAssetSku(String assetBrand, String assetType);
-
-    String generateSkuCode(String lastCode, String target);
+    String generateAssetSkuCode(String assetBrand, String assetType, String assetName);
 
     void updateAsset(UpdateAssetRequest.Asset request, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException;
+
+    void deleteAssets(List<String> assetSkus, String employeeNik) throws UnauthorizedOperationException, BadRequestException, DataNotFoundException;
 }

@@ -7,6 +7,7 @@ import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.repository.AssetRepository;
+import com.oasis.repository.RequestRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.webmodel.request.AddAssetRequest;
@@ -26,6 +27,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
     @Autowired
     private AssetRepository assetRepository;
+    @Autowired
+    private RequestRepository requestRepository;
     @Autowired
     private RoleDeterminer roleDeterminer;
 
@@ -162,7 +165,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         } else {
             AssetModel asset = new AssetModel();
 
-            asset.setSku(generateAssetSku(assetRequest.getAssetBrand(), assetRequest.getAssetType()));
+            asset.setSku(generateAssetSkuCode(assetRequest.getAssetBrand(), assetRequest.getAssetType(), assetRequest.getAssetName()));
             asset.setName(assetRequest.getAssetName());
             asset.setLocation(assetRequest.getAssetLocation());
             asset.setPrice(assetRequest.getAssetPrice());
@@ -179,44 +182,42 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public String generateAssetSku(String assetBrand, String assetType) {
+    public String generateAssetSkuCode(String assetBrand, String assetType, String assetName) {
         StringBuilder sku = new StringBuilder();
 
         sku.append(ServiceConstant.SKU_PREFIX);
 
-        AssetModel asset = assetRepository.findFirstByBrandAndTypeOrderBySkuDesc(assetBrand, assetType);
+        AssetModel assetWithBrand = assetRepository.findFirstByBrandOrderBySkuDesc(assetBrand);
 
-        if (asset == null) {
-            sku.append(generateSkuCode(String.valueOf(sku), null));
-            sku.append(generateSkuCode(String.valueOf(sku), null));
-            sku.append(generateSkuCode(String.valueOf(sku), null));
+        if (assetWithBrand != null) {
+            AssetModel assetWithType = assetRepository.findFirstByBrandAndTypeOrderBySkuDesc(assetBrand, assetType);
+            String lastBrandSku = assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
+            int lastBrandCode = Integer.valueOf(lastBrandSku.substring(4, 7));
+
+            sku.append(String.format("-%03d", lastBrandCode));
+
+            int lastTypeCode = Integer.valueOf(lastBrandSku.substring(8, 11));
+
+            if (assetWithType != null) {
+                sku.append(String.format("-%03d", lastTypeCode));
+
+                int lastProductIdCode = Integer.valueOf(lastBrandSku.substring(12, 15));
+                sku.append(String.format("-%03d", lastProductIdCode + 1));
+            } else {
+                sku.append(String.format("-%03d", lastTypeCode + 1));
+
+                sku.append(String.format("-%03d", 1));
+            }
         } else {
-            sku.append(asset.getSku(), 3, 11);
-            sku.append(generateSkuCode(asset.getSku(), "ProductId"));
+            String lastBrandSku = assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
+            int lastBrandCode = Integer.valueOf(lastBrandSku.substring(4, 7));
+
+            sku.append(String.format("-%03d", lastBrandCode + 1));
+            sku.append(String.format("-%03d", 1));
+            sku.append(String.format("-%03d", 1));
         }
 
         return String.valueOf(sku);
-    }
-
-    @Override
-    public String generateSkuCode(String sku, String target) {
-        StringBuilder skuCode = new StringBuilder();
-        String lastCode = null;
-
-        if (target != null) {
-            if (target.equals("ProductId")) {
-                String lastProductIdCode = sku.substring(12, 15);
-                lastCode = lastProductIdCode;
-            }
-        }
-
-        if (lastCode == null)
-            return String.format("-%03d", 1);
-        int latestCode = Integer.valueOf(lastCode);
-        latestCode++;
-        skuCode.append(String.format("-%03d", latestCode));
-
-        return String.valueOf(skuCode);
     }
 
     @Override
@@ -233,7 +234,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
         AssetModel asset = assetRepository.findBySku(assetRequest.getAssetSku());
 
-        if(asset == null)
+        if (asset == null)
             throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
 
         asset.setName(assetRequest.getAssetName());
@@ -246,5 +247,31 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         asset.setUpdatedDate(new Date());
 
         assetRepository.save(asset);
+    }
+
+    @Override
+    public void deleteAssets(List<String> assetSkus, String employeeNik) throws UnauthorizedOperationException, BadRequestException, DataNotFoundException {
+        try {
+            if (!roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+                throw new UnauthorizedOperationException(ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
+                        ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
+            }
+        } catch (DataNotFoundException e) {
+            throw new DataNotFoundException(e.getErrorCode(), e.getErrorMessage());
+        }
+
+        if (assetSkus.isEmpty())
+            throw new BadRequestException(NO_ASSET_SELECTED.getErrorCode(), NO_ASSET_SELECTED.getErrorMessage());
+
+        List<AssetModel> selectedAssets = new ArrayList<>();
+        for (String sku : assetSkus) {
+            if (assetRepository.findBySku(sku) == null)
+                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            selectedAssets.add(assetRepository.findBySku(sku));
+        }
+
+        for (AssetModel selectedAsset : selectedAssets) {
+            assetRepository.delete(selectedAsset);
+        }
     }
 }
