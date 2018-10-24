@@ -46,4 +46,8 @@ public class ErrorCodeAndMessage {
             "NO_ASSET_SELECTED",
             "No asset has been selected for deletion"
     );
+    public static final FailedResponse SELECTED_ASSET_STILL_REQUESTED = new FailedResponse(
+            "SELECTED_ASSET_STILL_REQUESTED",
+            "Selected asset for deletion is still being requested, thus cannot be deleted"
+    );
 }

@@ -267,6 +267,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         for (String sku : assetSkus) {
             if (assetRepository.findBySku(sku) == null)
                 throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            if (requestRepository.findAllByAssetSku(sku) != null)
+                throw new BadRequestException(SELECTED_ASSET_STILL_REQUESTED.getErrorCode(), SELECTED_ASSET_STILL_REQUESTED.getErrorMessage());
             selectedAssets.add(assetRepository.findBySku(sku));
         }
 
