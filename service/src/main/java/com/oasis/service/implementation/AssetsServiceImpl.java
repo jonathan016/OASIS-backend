@@ -16,7 +16,11 @@ import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
@@ -31,36 +35,50 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     private RoleDeterminer roleDeterminer;
 
     @Override
-    public List<AssetListResponse.Asset> getAssetsBySearchQuery(String searchQuery, Integer pageNumber, String sortInfo) throws BadRequestException, DataNotFoundException {
+    public List<AssetListResponse.Asset> getAssetsBySearchQuery(String searchQuery, int pageNumber, String sortInfo)
+            throws BadRequestException, DataNotFoundException {
         if (searchQuery.isEmpty()) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY.getErrorCode(), EMPTY_SEARCH_QUERY.getErrorMessage());
+            throw new BadRequestException(
+                    EMPTY_SEARCH_QUERY.getErrorCode(), EMPTY_SEARCH_QUERY.getErrorMessage());
         }
 
         String[] queries = searchQuery.split(" ");
         Set<AssetModel> assetsFound = new HashSet<>();
 
-        if(queries.length == 0){
-            if (assetRepository.findAllBySkuContainsOrNameContains(searchQuery, searchQuery).size() == 0) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+        if (queries.length == 0) {
+            if (assetRepository.findAllBySkuContainsOrNameContains(searchQuery, searchQuery).size()
+                    == 0) {
+                throw new DataNotFoundException(
+                        ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
             }
 
-            if ((int) Math.ceil(
-                    (float) assetRepository.findAllBySkuContainsOrNameContains(searchQuery, searchQuery).size()
-                            / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            if ((int)
+                    Math.ceil(
+                            (float)
+                                    assetRepository
+                                            .findAllBySkuContainsOrNameContains(searchQuery, searchQuery)
+                                            .size()
+                                    / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)
+                    < pageNumber) {
+                throw new DataNotFoundException(
+                        ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
             }
 
             assetsFound.addAll(fillData(searchQuery, sortInfo));
         } else {
-            for(String query : queries){
+            for (String query : queries) {
                 if (assetRepository.findAllBySkuContainsOrNameContains(query, query).size() == 0) {
-                    throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                    throw new DataNotFoundException(
+                            ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
                 }
 
-                if ((int) Math.ceil(
-                        (float) assetRepository.findAllBySkuContainsOrNameContains(query, query).size()
-                                / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-                    throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                if ((int)
+                        Math.ceil(
+                                (float) assetRepository.findAllBySkuContainsOrNameContains(query, query).size()
+                                        / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)
+                        < pageNumber) {
+                    throw new DataNotFoundException(
+                            ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
                 }
 
                 assetsFound.addAll(fillData(query, sortInfo));
@@ -71,19 +89,22 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public List<AssetListResponse.Asset> getAvailableAsset(int pageNumber, String sortInfo) throws DataNotFoundException {
+    public List<AssetListResponse.Asset> getAvailableAsset(int pageNumber, String sortInfo)
+            throws DataNotFoundException {
         if (assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size() == 0) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(
+                    ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
         }
-        if ((int) Math.ceil(
-                (float) assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size()
-                        / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+        if ((int)
+                Math.ceil(
+                        (float) assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size()
+                                / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)
+                < pageNumber) {
+            throw new DataNotFoundException(
+                    ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
         }
 
-        Set<AssetModel> assetsAvailable = new HashSet<>();
-
-        sortData(assetsAvailable, sortInfo, ServiceConstant.ZERO);
+        Set<AssetModel> assetsAvailable = sortData(sortInfo, ServiceConstant.ZERO);
 
         return mapAssetsFound(assetsAvailable);
     }
@@ -96,33 +117,21 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             if (sortInfo.substring(0, 1).equals("A")) {
                 assetsFound.addAll(
                         assetRepository.findAllBySkuContainsOrNameContainsOrderBySkuAsc(
-                                searchQuery,
-                                searchQuery
-                        )
-                );
+                                searchQuery, searchQuery));
             } else if (sortInfo.substring(0, 1).equals("D")) {
                 assetsFound.addAll(
                         assetRepository.findAllBySkuContainsOrNameContainsOrderBySkuDesc(
-                                searchQuery,
-                                searchQuery
-                        )
-                );
+                                searchQuery, searchQuery));
             }
         } else if (sortInfo.substring(1).equals("assetName")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 assetsFound.addAll(
                         assetRepository.findAllBySkuContainsOrNameContainsOrderByNameAsc(
-                                searchQuery,
-                                searchQuery
-                        )
-                );
+                                searchQuery, searchQuery));
             } else if (sortInfo.substring(0, 1).equals("D")) {
                 assetsFound.addAll(
                         assetRepository.findAllBySkuContainsOrNameContainsOrderByNameDesc(
-                                searchQuery,
-                                searchQuery
-                        )
-                );
+                                searchQuery, searchQuery));
             }
         }
 
@@ -134,14 +143,14 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         List<AssetListResponse.Asset> mappedAssets = new ArrayList<>();
 
         for (AssetModel assetFound : assetsFound) {
-            AssetListResponse.Asset asset = new AssetListResponse.Asset(
-                    assetFound.getSku(),
-                    assetFound.getName(),
-                    assetFound.getBrand(),
-                    assetFound.getType(),
-                    assetFound.getLocation(),
-                    assetFound.getStock()
-            );
+            AssetListResponse.Asset asset =
+                    new AssetListResponse.Asset(
+                            assetFound.getSku(),
+                            assetFound.getName(),
+                            assetFound.getBrand(),
+                            assetFound.getType(),
+                            assetFound.getLocation(),
+                            assetFound.getStock());
 
             mappedAssets.add(asset);
         }
@@ -150,7 +159,9 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public void sortData(Set<AssetModel> assetsAvailable, String sortInfo, long stockLimit) {
+    public Set<AssetModel> sortData(String sortInfo, long stockLimit) {
+        Set<AssetModel> assetsAvailable = new HashSet<>();
+
         if (sortInfo.substring(1).equals("assetId")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 assetsAvailable.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuAsc(stockLimit));
@@ -161,29 +172,41 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             if (sortInfo.substring(0, 1).equals("A")) {
                 assetsAvailable.addAll(assetRepository.findAllByStockGreaterThanOrderByNameAsc(stockLimit));
             } else if (sortInfo.substring(0, 1).equals("D")) {
-                assetsAvailable.addAll(assetRepository.findAllByStockGreaterThanOrderByNameDesc(stockLimit));
+                assetsAvailable.addAll(
+                        assetRepository.findAllByStockGreaterThanOrderByNameDesc(stockLimit));
             }
         }
+
+        return assetsAvailable;
     }
 
     @Override
-    public void insertToDatabase(AddAssetRequest.Asset assetRequest, String employeeNik) throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException {
+    public void insertToDatabase(AddAssetRequest.Asset assetRequest, String employeeNik)
+            throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException {
 
         try {
             if (!roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-                throw new UnauthorizedOperationException(ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
+                throw new UnauthorizedOperationException(
+                        ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
                         ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
             }
         } catch (DataNotFoundException e) {
             throw new DataNotFoundException(e.getErrorCode(), e.getErrorMessage());
         }
 
-        if (assetRepository.findByNameAndBrandAndType(assetRequest.getAssetName(), assetRequest.getAssetBrand(), assetRequest.getAssetType()) != null) {
-            throw new DuplicateDataException(SAME_ASSET_EXISTS.getErrorCode(), SAME_ASSET_EXISTS.getErrorMessage());
+        if (assetRepository.findByNameAndBrandAndType(
+                assetRequest.getAssetName(), assetRequest.getAssetBrand(), assetRequest.getAssetType())
+                != null) {
+            throw new DuplicateDataException(
+                    SAME_ASSET_EXISTS.getErrorCode(), SAME_ASSET_EXISTS.getErrorMessage());
         } else {
             AssetModel asset = new AssetModel();
 
-            asset.setSku(generateAssetSkuCode(assetRequest.getAssetBrand(), assetRequest.getAssetType(), assetRequest.getAssetName()));
+            asset.setSku(
+                    generateAssetSkuCode(
+                            assetRequest.getAssetBrand(),
+                            assetRequest.getAssetType(),
+                            assetRequest.getAssetName()));
             asset.setName(assetRequest.getAssetName());
             asset.setLocation(assetRequest.getAssetLocation());
             asset.setPrice(assetRequest.getAssetPrice());
@@ -208,8 +231,10 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         AssetModel assetWithBrand = assetRepository.findFirstByBrandOrderBySkuDesc(assetBrand);
 
         if (assetWithBrand != null) {
-            AssetModel assetWithType = assetRepository.findFirstByBrandAndTypeOrderBySkuDesc(assetBrand, assetType);
-            String lastBrandSku = assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
+            AssetModel assetWithType =
+                    assetRepository.findFirstByBrandAndTypeOrderBySkuDesc(assetBrand, assetType);
+            String lastBrandSku =
+                    assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
             int lastBrandCode = Integer.valueOf(lastBrandSku.substring(4, 7));
 
             sku.append(String.format("-%03d", lastBrandCode));
@@ -227,7 +252,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 sku.append(String.format("-%03d", 1));
             }
         } else {
-            String lastBrandSku = assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
+            String lastBrandSku =
+                    assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
             int lastBrandCode = Integer.valueOf(lastBrandSku.substring(4, 7));
 
             sku.append(String.format("-%03d", lastBrandCode + 1));
@@ -239,11 +265,13 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public void updateAsset(UpdateAssetRequest.Asset assetRequest, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException {
+    public void updateAsset(UpdateAssetRequest.Asset assetRequest, String employeeNik)
+            throws UnauthorizedOperationException, DataNotFoundException {
 
         try {
             if (!roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-                throw new UnauthorizedOperationException(ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
+                throw new UnauthorizedOperationException(
+                        ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
                         ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
             }
         } catch (DataNotFoundException e) {
@@ -253,7 +281,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         AssetModel asset = assetRepository.findBySku(assetRequest.getAssetSku());
 
         if (asset == null)
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(
+                    ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
 
         asset.setName(assetRequest.getAssetName());
         asset.setLocation(assetRequest.getAssetLocation());
@@ -268,10 +297,12 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public void deleteAssets(List<String> assetSkus, String employeeNik) throws UnauthorizedOperationException, BadRequestException, DataNotFoundException {
+    public void deleteAssets(List<String> assetSkus, String employeeNik)
+            throws UnauthorizedOperationException, BadRequestException, DataNotFoundException {
         try {
             if (!roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-                throw new UnauthorizedOperationException(ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
+                throw new UnauthorizedOperationException(
+                        ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
                         ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
             }
         } catch (DataNotFoundException e) {
@@ -279,14 +310,18 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         if (assetSkus.isEmpty())
-            throw new BadRequestException(NO_ASSET_SELECTED.getErrorCode(), NO_ASSET_SELECTED.getErrorMessage());
+            throw new BadRequestException(
+                    NO_ASSET_SELECTED.getErrorCode(), NO_ASSET_SELECTED.getErrorMessage());
 
         List<AssetModel> selectedAssets = new ArrayList<>();
         for (String sku : assetSkus) {
             if (assetRepository.findBySku(sku) == null)
-                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                throw new DataNotFoundException(
+                        ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
             if (requestRepository.findAllByAssetSku(sku) != null)
-                throw new BadRequestException(SELECTED_ASSET_STILL_REQUESTED.getErrorCode(), SELECTED_ASSET_STILL_REQUESTED.getErrorMessage());
+                throw new BadRequestException(
+                        SELECTED_ASSET_STILL_REQUESTED.getErrorCode(),
+                        SELECTED_ASSET_STILL_REQUESTED.getErrorMessage());
             selectedAssets.add(assetRepository.findBySku(sku));
         }
 
@@ -299,8 +334,9 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     public AssetModel getAssetData(String assetSku) throws DataNotFoundException {
         AssetModel asset = assetRepository.findBySku(assetSku);
 
-        if(asset == null)
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+        if (asset == null)
+            throw new DataNotFoundException(
+                    ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
 
         return asset;
     }

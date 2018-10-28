@@ -14,23 +14,30 @@ import java.util.Set;
 
 public interface AssetsServiceApi {
 
-    List<AssetListResponse.Asset> getAssetsBySearchQuery(String searchQuery, Integer pageNumber, String sortInfo) throws BadRequestException, DataNotFoundException;
+    List<AssetListResponse.Asset> getAssetsBySearchQuery(
+            final String searchQuery, final int pageNumber, final String sortInfo)
+            throws BadRequestException, DataNotFoundException;
 
-    List<AssetListResponse.Asset> getAvailableAsset(int pageNumber, String sortInfo) throws DataNotFoundException;
+    List<AssetListResponse.Asset> getAvailableAsset(final int pageNumber, final String sortInfo)
+            throws DataNotFoundException;
 
-    List<AssetModel> fillData(String searchQuery, String sortInfo);
+    List<AssetModel> fillData(final String searchQuery, final String sortInfo);
 
-    List<AssetListResponse.Asset> mapAssetsFound(Set<AssetModel> assetsFound);
+    List<AssetListResponse.Asset> mapAssetsFound(final Set<AssetModel> assetsFound);
 
-    void sortData(Set<AssetModel> assetsAvailable, String sortInfo, long stockLimit);
+    Set<AssetModel> sortData(final String sortInfo, final long stockLimit);
 
-    void insertToDatabase(AddAssetRequest.Asset request, String employeeNik) throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException;
+    void insertToDatabase(final AddAssetRequest.Asset request, final String employeeNik)
+            throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException;
 
-    String generateAssetSkuCode(String assetBrand, String assetType, String assetName);
+    String generateAssetSkuCode(
+            final String assetBrand, final String assetType, final String assetName);
 
-    void updateAsset(UpdateAssetRequest.Asset request, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException;
+    void updateAsset(final UpdateAssetRequest.Asset request, final String employeeNik)
+            throws UnauthorizedOperationException, DataNotFoundException;
 
-    void deleteAssets(List<String> assetSkus, String employeeNik) throws UnauthorizedOperationException, BadRequestException, DataNotFoundException;
+    void deleteAssets(final List<String> assetSkus, final String employeeNik)
+            throws UnauthorizedOperationException, BadRequestException, DataNotFoundException;
 
-    AssetModel getAssetData(String assetSku) throws DataNotFoundException;
+    AssetModel getAssetData(final String assetSku) throws DataNotFoundException;
 }
