@@ -10,4 +10,5 @@ public class APIMappingValue {
     public static final String API_ASSET_LIST = "/api/assets";
     public static final String API_SAVE_ASSET = "/api/assets/save";
     public static final String API_DELETE_ASSET = "/api/assets/delete";
+    public static final String API_ASSET_DETAIL = "/api/assets/{assetSku}";
 }

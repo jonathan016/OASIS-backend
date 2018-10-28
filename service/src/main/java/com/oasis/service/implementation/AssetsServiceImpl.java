@@ -294,4 +294,14 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             assetRepository.delete(selectedAsset);
         }
     }
+
+    @Override
+    public AssetModel getAssetData(String assetSku) throws DataNotFoundException {
+        AssetModel asset = assetRepository.findBySku(assetSku);
+
+        if(asset == null)
+            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+
+        return asset;
+    }
 }

@@ -31,4 +31,6 @@ public interface AssetsServiceApi {
     void updateAsset(UpdateAssetRequest.Asset request, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException;
 
     void deleteAssets(List<String> assetSkus, String employeeNik) throws UnauthorizedOperationException, BadRequestException, DataNotFoundException;
+
+    AssetModel getAssetData(String assetSku) throws DataNotFoundException;
 }

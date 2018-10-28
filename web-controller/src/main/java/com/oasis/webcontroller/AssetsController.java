@@ -5,12 +5,14 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.model.entity.AssetModel;
 import com.oasis.responsemapper.AssetsResponseMapper;
 import com.oasis.service.implementation.AssetsServiceImpl;
 import com.oasis.webmodel.request.AddAssetRequest;
 import com.oasis.webmodel.request.DeleteAssetRequest;
 import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.BaseResponse;
+import com.oasis.webmodel.response.NoPagingResponse;
 import com.oasis.webmodel.response.PagingResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +63,21 @@ public class AssetsController {
 
         return assetsResponseMapper.produceViewFoundAssetSuccessResult(assetsFound, pageNumber);
     }
+
+    @GetMapping(value = APIMappingValue.API_ASSET_DETAIL,
+    produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
+    public NoPagingResponse<?> callGetAssetDetailService(@PathVariable String assetSku){
+        AssetModel asset;
+
+        try {
+            asset = assetsServiceImpl.getAssetData(assetSku);
+        } catch(DataNotFoundException e){
+            return assetsResponseMapper.produceViewAssetDetailFailedResult(e.getErrorCode(), e.getErrorMessage());
+        }
+
+        return assetsResponseMapper.produceViewAssetDetailSuccessResult(asset);
+    }
+
 
     @PostMapping(value = APIMappingValue.API_SAVE_ASSET,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
