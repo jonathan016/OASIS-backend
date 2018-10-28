@@ -1,7 +1,6 @@
 package com.oasis.service.implementation;
 
 import com.oasis.exception.DataNotFoundException;
-import com.oasis.model.BaseEntity;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.EmployeeRepository;
@@ -10,11 +9,13 @@ import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
+@Service
 public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     @Autowired
