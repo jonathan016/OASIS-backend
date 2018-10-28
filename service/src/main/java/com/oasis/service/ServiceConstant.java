@@ -3,6 +3,7 @@ package com.oasis.service;
 public class ServiceConstant {
 
     public static final int DASHBOARD_REQUEST_UPDATE_PAGE_SIZE = 5;
+    public static final int EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE = 10;
     public static final int ZERO = 0;
 
     public static final String REQUESTED = "Requested";
