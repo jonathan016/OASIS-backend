@@ -10,6 +10,7 @@ import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 
 import java.util.List;
+import java.util.Set;
 
 public interface AssetsServiceApi {
 
@@ -19,9 +20,9 @@ public interface AssetsServiceApi {
 
     List<AssetModel> fillData(String searchQuery, String sortInfo);
 
-    List<AssetListResponse.Asset> mapAssetsFound(List<AssetModel> assetsFound);
+    List<AssetListResponse.Asset> mapAssetsFound(Set<AssetModel> assetsFound);
 
-    void sortData(List<AssetModel> assetsAvailable, String sortInfo, long stockLimit);
+    void sortData(Set<AssetModel> assetsAvailable, String sortInfo, long stockLimit);
 
     void insertToDatabase(AddAssetRequest.Asset request, String employeeNik) throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException;
 

@@ -16,9 +16,7 @@ import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
@@ -38,16 +36,36 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throw new BadRequestException(EMPTY_SEARCH_QUERY.getErrorCode(), EMPTY_SEARCH_QUERY.getErrorMessage());
         }
 
-        if (assetRepository.findAllBySkuContainsOrNameContains(searchQuery, searchQuery).size() == 0) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
-        }
-        if ((int) Math.ceil(
-                (float) assetRepository.findAllBySkuContainsOrNameContains(searchQuery, searchQuery).size()
-                        / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
-        }
+        String[] queries = searchQuery.split(" ");
+        Set<AssetModel> assetsFound = new HashSet<>();
 
-        List<AssetModel> assetsFound = fillData(searchQuery, sortInfo);
+        if(queries.length == 0){
+            if (assetRepository.findAllBySkuContainsOrNameContains(searchQuery, searchQuery).size() == 0) {
+                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            }
+
+            if ((int) Math.ceil(
+                    (float) assetRepository.findAllBySkuContainsOrNameContains(searchQuery, searchQuery).size()
+                            / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
+                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            }
+
+            assetsFound.addAll(fillData(searchQuery, sortInfo));
+        } else {
+            for(String query : queries){
+                if (assetRepository.findAllBySkuContainsOrNameContains(query, query).size() == 0) {
+                    throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                }
+
+                if ((int) Math.ceil(
+                        (float) assetRepository.findAllBySkuContainsOrNameContains(query, query).size()
+                                / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
+                    throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                }
+
+                assetsFound.addAll(fillData(query, sortInfo));
+            }
+        }
 
         return mapAssetsFound(assetsFound);
     }
@@ -63,7 +81,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
         }
 
-        List<AssetModel> assetsAvailable = new ArrayList<>();
+        Set<AssetModel> assetsAvailable = new HashSet<>();
 
         sortData(assetsAvailable, sortInfo, ServiceConstant.ZERO);
 
@@ -112,7 +130,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public List<AssetListResponse.Asset> mapAssetsFound(List<AssetModel> assetsFound) {
+    public List<AssetListResponse.Asset> mapAssetsFound(Set<AssetModel> assetsFound) {
         List<AssetListResponse.Asset> mappedAssets = new ArrayList<>();
 
         for (AssetModel assetFound : assetsFound) {
@@ -132,7 +150,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public void sortData(List<AssetModel> assetsAvailable, String sortInfo, long stockLimit) {
+    public void sortData(Set<AssetModel> assetsAvailable, String sortInfo, long stockLimit) {
         if (sortInfo.substring(1).equals("assetId")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 assetsAvailable.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuAsc(stockLimit));
