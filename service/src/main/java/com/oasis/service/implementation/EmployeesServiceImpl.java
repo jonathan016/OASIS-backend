@@ -49,19 +49,32 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         for (EmployeeModel employeeFound : employeesFound) {
             SupervisionModel supervision = supervisionRepository.findByEmployeeNik(employeeFound.getNik());
-            EmployeeModel supervisor = employeeRepository.findByNik(supervision.getSupervisorNik());
+            EmployeeListResponse.Employee employee;
 
-            EmployeeListResponse.Employee employee =
-                    new EmployeeListResponse.Employee(
-                            employeeFound.getNik(),
-                            employeeFound.getFullname(),
-                            employeeFound.getJobTitle(),
-                            employeeFound.getDivision(),
-                            new EmployeeListResponse.Employee.Supervisor(
-                                    supervisor.getNik(),
-                                    supervisor.getFullname()
-                            )
-                    );
+            if(supervision != null){
+                EmployeeModel supervisor = employeeRepository.findByNik(supervision.getSupervisorNik());
+
+                employee =
+                        new EmployeeListResponse.Employee(
+                                employeeFound.getNik(),
+                                employeeFound.getFullname(),
+                                employeeFound.getJobTitle(),
+                                employeeFound.getDivision(),
+                                new EmployeeListResponse.Employee.Supervisor(
+                                        supervisor.getNik(),
+                                        supervisor.getFullname()
+                                )
+                        );
+            } else {
+                employee =
+                        new EmployeeListResponse.Employee(
+                                employeeFound.getNik(),
+                                employeeFound.getFullname(),
+                                employeeFound.getJobTitle(),
+                                employeeFound.getDivision(),
+                                null
+                        );
+            }
 
             mappedEmployees.add(employee);
         }
