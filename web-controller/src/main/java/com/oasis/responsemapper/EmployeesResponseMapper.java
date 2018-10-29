@@ -6,6 +6,7 @@ import com.oasis.webmodel.response.Paging;
 import com.oasis.webmodel.response.PagingResponse;
 import com.oasis.webmodel.response.ResponseStatus;
 import com.oasis.webmodel.response.failed.FailedResponse;
+import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -53,5 +54,16 @@ public class EmployeesResponseMapper {
         );
 
         return failedResponse;
+    }
+
+    public NoPagingResponse<EmployeeDetailResponse>
+    produceEmployeeDetailSuccessResponse(int httpStatusCode, EmployeeDetailResponse employeeDetailResponse){
+        NoPagingResponse<EmployeeDetailResponse> successResponse = new NoPagingResponse<>();
+
+        successResponse.setCode(httpStatusCode);
+        successResponse.setSuccess(ResponseStatus.SUCCESS);
+        successResponse.setValue(employeeDetailResponse);
+
+        return successResponse;
     }
 }

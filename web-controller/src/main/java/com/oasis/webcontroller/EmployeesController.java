@@ -4,14 +4,12 @@ import com.oasis.constant.APIMappingValue;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.responsemapper.EmployeesResponseMapper;
 import com.oasis.service.implementation.EmployeesServiceImpl;
+import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -40,5 +38,20 @@ public class EmployeesController {
         }
 
         return new ResponseEntity<>(employeesResponseMapper.produceViewAllEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, pageNumber), HttpStatus.OK);
+    }
+
+    @GetMapping(value = APIMappingValue.API_EMPLOYEE_DETAIL,
+    produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity callViewEmployeeDetailService(@PathVariable String employeeNik){
+
+        EmployeeDetailResponse employeeDetailResponse;
+
+        try {
+            employeeDetailResponse = employeesServiceImpl.getEmployeeData(employeeNik);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(), employeeDetailResponse), HttpStatus.OK);
     }
 }

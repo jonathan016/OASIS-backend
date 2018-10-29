@@ -11,7 +11,7 @@ public class EmployeeDetailResponse {
     private String employeeNik;
     private String employeeUsername;
     private String employeeFullname;
-    private Date employeeDob;
+    private String employeeDob;
     private String employeePhone;
     private String employeeJobTitle;
     private String employeeDivision;

@@ -12,6 +12,7 @@ import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -62,7 +63,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                                 employeeFound.getNik(),
                                 employeeFound.getFullname(),
                                 employeeFound.getJobTitle(),
-                                employeeFound.getDivision(),
+                                employeeFound.getLocation(),
                                 new EmployeeListResponse.Employee.Supervisor(
                                         supervisor.getNik(),
                                         supervisor.getFullname()
@@ -74,7 +75,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                                 employeeFound.getNik(),
                                 employeeFound.getFullname(),
                                 employeeFound.getJobTitle(),
-                                employeeFound.getDivision(),
+                                employeeFound.getLocation(),
                                 null
                         );
             }
@@ -131,7 +132,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                             employee.getNik(),
                             employee.getUsername(),
                             employee.getFullname(),
-                            employee.getDob(),
+                            new SimpleDateFormat("dd-MMM-yyyy").format(employee.getDob()),
                             employee.getPhone(),
                             employee.getJobTitle(),
                             employee.getDivision(),
@@ -147,7 +148,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                             employee.getNik(),
                             employee.getUsername(),
                             employee.getFullname(),
-                            employee.getDob(),
+                            new SimpleDateFormat("dd-MMM-yyyy").format(employee.getDob()),
                             employee.getPhone(),
                             employee.getJobTitle(),
                             employee.getDivision(),
