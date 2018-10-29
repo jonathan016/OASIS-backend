@@ -7,8 +7,9 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.responsemapper.LoginResponseMapper;
 import com.oasis.service.implementation.LoginServiceImpl;
 import com.oasis.webmodel.request.LoginRequest;
-import com.oasis.webmodel.response.NoPagingResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +29,7 @@ public class LoginController {
     @PostMapping(value = APIMappingValue.API_LOGIN,
             produces = APPLICATION_JSON_VALUE,
             consumes = APPLICATION_JSON_VALUE)
-    public NoPagingResponse<?> callLoginService(
+    public ResponseEntity callLoginService(
             @RequestBody
                     LoginRequest request
     ) {
@@ -38,18 +39,20 @@ public class LoginController {
             result = loginServiceImpl.checkLoginCredentials(
                     request.getUsername()
                             .toLowerCase(), request.getPassword());
-        } catch (DataNotFoundException | UserNotAuthenticatedException e) {
-            return loginResponseMapper.produceFailedResponse(e.getErrorCode(), e.getErrorMessage());
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(loginResponseMapper.produceLoginFailedResponse(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
+        } catch (UserNotAuthenticatedException userNotAuthenticatedException) {
+            return new ResponseEntity<>(loginResponseMapper.produceLoginFailedResponse(HttpStatus.UNAUTHORIZED.value(), userNotAuthenticatedException.getErrorCode(), userNotAuthenticatedException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
         }
 
         String role;
 
         try {
             role = loginServiceImpl.determineUserRole(result.getNik());
-        } catch (DataNotFoundException e){
-            return loginResponseMapper.produceFailedResponse(e.getErrorCode(), e.getErrorMessage());
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(loginResponseMapper.produceLoginFailedResponse(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return loginResponseMapper.produceSuccessResponse(result.getNik(), role);
+        return new ResponseEntity<>(loginResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), result.getNik(), role), HttpStatus.OK);
     }
 }
