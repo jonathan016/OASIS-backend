@@ -7,11 +7,14 @@ import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
+import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
@@ -25,7 +28,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     @Override
     public List<EmployeeListResponse.Employee> getAllEmployees(int pageNumber, String sortInfo) throws DataNotFoundException {
-        if(employeeRepository.findAll().size() == 0){
+        if (employeeRepository.findAll().size() == 0) {
             throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
         }
 
@@ -51,7 +54,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             SupervisionModel supervision = supervisionRepository.findByEmployeeNik(employeeFound.getNik());
             EmployeeListResponse.Employee employee;
 
-            if(supervision != null){
+            if (supervision != null) {
                 EmployeeModel supervisor = employeeRepository.findByNik(supervision.getSupervisorNik());
 
                 employee =
@@ -83,7 +86,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public List<EmployeeModel> sortData(String sortInfo){
+    public List<EmployeeModel> sortData(String sortInfo) {
         List<EmployeeModel> employees = employeeRepository.findAll();
 
         if (sortInfo.substring(1)
@@ -109,5 +112,50 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         }
 
         return employees;
+    }
+
+    @Override
+    public EmployeeDetailResponse getEmployeeData(String employeeNik) throws DataNotFoundException {
+        EmployeeModel employee = employeeRepository.findByNik(employeeNik);
+
+        if (employee == null)
+            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+
+        SupervisionModel supervision = supervisionRepository.findByEmployeeNik(employeeNik);
+
+        EmployeeDetailResponse employeeDetailResponse;
+        if (supervision != null) {
+            EmployeeModel supervisor = employeeRepository.findByNik(supervision.getSupervisorNik());
+            employeeDetailResponse =
+                    new EmployeeDetailResponse(
+                            employee.getNik(),
+                            employee.getUsername(),
+                            employee.getFullname(),
+                            employee.getDob(),
+                            employee.getPhone(),
+                            employee.getJobTitle(),
+                            employee.getDivision(),
+                            employee.getLocation(),
+                            new EmployeeDetailResponse.Supervisor(
+                                    supervisor.getNik(),
+                                    supervisor.getFullname()
+                            )
+                    );
+        } else {
+            employeeDetailResponse =
+                    new EmployeeDetailResponse(
+                            employee.getNik(),
+                            employee.getUsername(),
+                            employee.getFullname(),
+                            employee.getDob(),
+                            employee.getPhone(),
+                            employee.getJobTitle(),
+                            employee.getDivision(),
+                            employee.getLocation(),
+                            null
+                    );
+        }
+
+        return employeeDetailResponse;
     }
 }
