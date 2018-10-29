@@ -11,11 +11,10 @@ import com.oasis.service.implementation.AssetsServiceImpl;
 import com.oasis.webmodel.request.AddAssetRequest;
 import com.oasis.webmodel.request.DeleteAssetRequest;
 import com.oasis.webmodel.request.UpdateAssetRequest;
-import com.oasis.webmodel.response.BaseResponse;
-import com.oasis.webmodel.response.NoPagingResponse;
-import com.oasis.webmodel.response.PagingResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -35,89 +34,101 @@ public class AssetsController {
 
     @GetMapping(value = APIMappingValue.API_FIND_ASSET,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public PagingResponse<?> callFindAssetsService(@RequestParam String searchQuery,
-                                                   @RequestParam int pageNumber,
-                                                   @RequestParam String sortInfo) {
+    public ResponseEntity callFindAssetsService(@RequestParam String searchQuery,
+                                                @RequestParam int pageNumber,
+                                                @RequestParam String sortInfo) {
         List<AssetListResponse.Asset> assetsFound;
 
         try {
             assetsFound = new ArrayList<>(assetsServiceImpl.getAssetsBySearchQuery(searchQuery, pageNumber, sortInfo));
-        } catch (BadRequestException | DataNotFoundException e) {
-            return assetsResponseMapper.produceViewFoundAssetFailedResult(e.getErrorCode(), e.getErrorMessage());
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return assetsResponseMapper.produceViewFoundAssetSuccessResult(assetsFound, pageNumber);
+        return new ResponseEntity<>(assetsResponseMapper.produceViewFoundAssetSuccessResult(HttpStatus.OK.value(), assetsFound, pageNumber), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_ASSET_LIST,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public PagingResponse<?> callGetAssetsListService(@RequestParam int pageNumber,
-                                                      @RequestParam String sortInfo) {
+    public ResponseEntity callGetAssetsListService(@RequestParam int pageNumber,
+                                                   @RequestParam String sortInfo) {
         List<AssetListResponse.Asset> assetsFound;
 
         try {
             assetsFound = new ArrayList<>(assetsServiceImpl.getAvailableAsset(pageNumber, sortInfo));
-        } catch (DataNotFoundException e) {
-            return assetsResponseMapper.produceViewFoundAssetFailedResult(e.getErrorCode(), e.getErrorMessage());
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return assetsResponseMapper.produceViewFoundAssetSuccessResult(assetsFound, pageNumber);
+        return new ResponseEntity<>(assetsResponseMapper.produceViewFoundAssetSuccessResult(HttpStatus.OK.value(), assetsFound, pageNumber), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_ASSET_DETAIL,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public NoPagingResponse<?> callGetAssetDetailService(@PathVariable String assetSku) {
+    public ResponseEntity callGetAssetDetailService(@PathVariable String assetSku) {
         AssetModel asset;
 
         try {
             asset = assetsServiceImpl.getAssetData(assetSku);
-        } catch (DataNotFoundException e) {
-            return assetsResponseMapper.produceViewAssetDetailFailedResult(e.getErrorCode(), e.getErrorMessage());
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return assetsResponseMapper.produceViewAssetDetailSuccessResult(asset);
+        return new ResponseEntity<>(assetsResponseMapper.produceViewAssetDetailSuccessResult(HttpStatus.OK.value(), asset), HttpStatus.OK);
     }
 
 
     @PostMapping(value = APIMappingValue.API_SAVE_ASSET,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public BaseResponse callInsertToDatabaseService(@RequestBody AddAssetRequest request) {
+    public ResponseEntity callInsertToDatabaseService(@RequestBody AddAssetRequest request) {
 
         try {
             assetsServiceImpl.insertToDatabase(request.getAsset(), request.getEmployeeNik());
-        } catch (DuplicateDataException | UnauthorizedOperationException | DataNotFoundException e) {
-            return assetsResponseMapper.produceAssetSaveFailedResult(e.getErrorCode(), e.getErrorMessage());
+        } catch (DuplicateDataException duplicateDataException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.CONFLICT.value(), duplicateDataException.getErrorCode(), duplicateDataException.getErrorMessage()), HttpStatus.CONFLICT);
+        } catch (UnauthorizedOperationException unauthorizedOperationException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return assetsResponseMapper.produceAssetSaveSuccessResult();
+        return new ResponseEntity<>(assetsResponseMapper.produceAssetSaveSuccessResult(HttpStatus.CREATED.value()), HttpStatus.CREATED);
     }
 
     @PutMapping(value = APIMappingValue.API_SAVE_ASSET,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public BaseResponse callUpdateAssetService(@RequestBody UpdateAssetRequest request) {
+    public ResponseEntity callUpdateAssetService(@RequestBody UpdateAssetRequest request) {
         //TODO Handle concurrency
         //TODO Handle existing requests with the asset
 
         try {
             assetsServiceImpl.updateAsset(request.getAsset(), request.getEmployeeNik());
-        } catch (UnauthorizedOperationException | DataNotFoundException e) {
-            return assetsResponseMapper.produceAssetSaveFailedResult(e.getErrorCode(), e.getErrorMessage());
+        } catch (UnauthorizedOperationException unauthorizedOperationException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return assetsResponseMapper.produceAssetSaveSuccessResult();
+        return new ResponseEntity<>(assetsResponseMapper.produceAssetSaveSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
     }
 
     @DeleteMapping(value = APIMappingValue.API_DELETE_ASSET,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public BaseResponse callDeleteAssetsService(@RequestBody DeleteAssetRequest request) {
+    public ResponseEntity callDeleteAssetsService(@RequestBody DeleteAssetRequest request) {
         //TODO Handle concurrency
 
         try {
             assetsServiceImpl.deleteAssets(request.getSelectedAssets(), request.getEmployeeNik());
-        } catch (UnauthorizedOperationException | DataNotFoundException | BadRequestException e) {
-            return assetsResponseMapper.produceAssetSaveFailedResult(e.getErrorCode(), e.getErrorMessage());
+        } catch (UnauthorizedOperationException unauthorizedOperationException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
         }
 
-        return assetsResponseMapper.produceAssetSaveSuccessResult();
+        return new ResponseEntity<>(assetsResponseMapper.produceAssetSaveSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
     }
 }

@@ -6,7 +6,6 @@ import com.oasis.webmodel.response.*;
 import com.oasis.webmodel.response.failed.FailedResponse;
 import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,11 +14,11 @@ import java.util.List;
 public class AssetsResponseMapper {
 
     public PagingResponse<AssetListResponse>
-    produceViewFoundAssetSuccessResult(List<AssetListResponse.Asset> mappedAssets,
+    produceViewFoundAssetSuccessResult(int httpStatusCode, List<AssetListResponse.Asset> mappedAssets,
                                        Integer pageNumber) {
         PagingResponse<AssetListResponse> successResponse = new PagingResponse<>();
 
-        successResponse.setCode(HttpStatus.OK.value());
+        successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
         successResponse.setValue(
                 new AssetListResponse(
@@ -37,11 +36,11 @@ public class AssetsResponseMapper {
         return successResponse;
     }
 
-    public PagingResponse<FailedResponse>
-    produceViewFoundAssetFailedResult(String errorCode, String errorMessage) {
-        PagingResponse<FailedResponse> failedResponse = new PagingResponse<>();
+    public NoPagingResponse<FailedResponse>
+    produceAssetsFailedResult(int httpStatusCode, String errorCode, String errorMessage) {
+        NoPagingResponse<FailedResponse> failedResponse = new NoPagingResponse<>();
 
-        failedResponse.setCode(HttpStatus.NOT_FOUND.value());
+        failedResponse.setCode(httpStatusCode);
         failedResponse.setSuccess(ResponseStatus.FAILED);
         failedResponse.setValue(
                 new FailedResponse(
@@ -54,36 +53,20 @@ public class AssetsResponseMapper {
     }
 
     public BaseResponse
-    produceAssetSaveSuccessResult() {
+    produceAssetSaveSuccessResult(int httpStatusCode) {
         BaseResponse successResponse = new BaseResponse();
 
-        successResponse.setCode(HttpStatus.OK.value());
+        successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
 
         return successResponse;
     }
 
-    public NoPagingResponse<FailedResponse>
-    produceAssetSaveFailedResult(String errorCode, String errorMessage) {
-        NoPagingResponse<FailedResponse> failedResponse = new NoPagingResponse<>();
-
-        failedResponse.setCode(HttpStatus.NOT_FOUND.value());
-        failedResponse.setSuccess(ResponseStatus.FAILED);
-        failedResponse.setValue(
-                new FailedResponse(
-                        errorCode,
-                        errorMessage
-                )
-        );
-
-        return failedResponse;
-    }
-
     public NoPagingResponse<AssetDetailResponse>
-    produceViewAssetDetailSuccessResult(AssetModel asset){
+    produceViewAssetDetailSuccessResult(int httpStatusCode, AssetModel asset){
         NoPagingResponse<AssetDetailResponse> successResponse = new NoPagingResponse<>();
 
-        successResponse.setCode(HttpStatus.OK.value());
+        successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
         successResponse.setValue(
                 new AssetDetailResponse(
@@ -97,21 +80,5 @@ public class AssetsResponseMapper {
         );
 
         return successResponse;
-    }
-
-    public NoPagingResponse<FailedResponse>
-    produceViewAssetDetailFailedResult(String errorCode, String errorMessage) {
-        NoPagingResponse<FailedResponse> failedResponse = new NoPagingResponse<>();
-
-        failedResponse.setCode(HttpStatus.NOT_FOUND.value());
-        failedResponse.setSuccess(ResponseStatus.FAILED);
-        failedResponse.setValue(
-                new FailedResponse(
-                        errorCode,
-                        errorMessage
-                )
-        );
-
-        return failedResponse;
     }
 }
