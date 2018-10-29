@@ -5,10 +5,10 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.responsemapper.DashboardResponseMapper;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.implementation.DashboardServiceImpl;
-import com.oasis.webmodel.response.NoPagingResponse;
-import com.oasis.webmodel.response.PagingResponse;
 import com.oasis.webmodel.response.success.DashboardRequestUpdateResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -30,25 +30,25 @@ public class DashboardController {
     @GetMapping(value = APIMappingValue.API_DASHBOARD_STATUS,
             produces = APPLICATION_JSON_VALUE,
             consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public NoPagingResponse<?> callDashboardStatusService(
+    public ResponseEntity callDashboardStatusService(
             @PathVariable
                     String employeeNik
     ) {
         Map<String, Integer> statusData;
 
         try {
-             statusData = dashboardServiceImpl.getStatusSectionData(employeeNik);
-        } catch (DataNotFoundException e){
-            return dashboardResponseMapper.produceDashboardStatusFailedResult(e.getErrorCode(), e.getErrorMessage());
+            statusData = dashboardServiceImpl.getStatusSectionData(employeeNik);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(dashboardResponseMapper.produceDashboardStatusFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return dashboardResponseMapper.produceDashboardStatusSuccessResult(statusData);
+        return new ResponseEntity<>(dashboardResponseMapper.produceDashboardStatusSuccessResult(HttpStatus.OK.value(), statusData), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_DASHBOARD_REQUEST_UPDATE,
             produces = APPLICATION_JSON_VALUE,
             consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public PagingResponse<?> callDashboardRequestUpdateService(
+    public ResponseEntity callDashboardRequestUpdateService(
             @PathVariable
                     String employeeNik,
             @RequestParam
@@ -67,15 +67,16 @@ public class DashboardController {
                     pageNumber,
                     sortInfo
             ));
-        } catch (DataNotFoundException e) {
-            return dashboardResponseMapper.produceDashboardRequestUpdateFailedResult(e.getErrorCode(),
-                    e.getErrorMessage()
-            );
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(dashboardResponseMapper.produceDashboardRequestUpdateFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
+            ), HttpStatus.NOT_FOUND);
         }
 
-        return dashboardResponseMapper.produceDashboardRequestUpdateSuccessResult(mappedData,
+        return new ResponseEntity<>(dashboardResponseMapper.produceDashboardRequestUpdateSuccessResult(HttpStatus.OK.value(),
+                mappedData,
                 pageNumber,
                 ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE
-        );
+        ), HttpStatus.OK);
     }
 }

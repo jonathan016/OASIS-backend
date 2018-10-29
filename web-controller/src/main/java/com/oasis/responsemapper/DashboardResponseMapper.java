@@ -18,11 +18,11 @@ public class DashboardResponseMapper {
 
     /*--------------Status Section--------------*/
     public NoPagingResponse<DashboardStatusResponse> produceDashboardStatusSuccessResult(
-            final Map<String, Integer> statusData
+            final int httpStatusCode, final Map<String, Integer> statusData
     ) {
         NoPagingResponse<DashboardStatusResponse> successResponse = new NoPagingResponse<>();
 
-        successResponse.setCode(HttpStatus.OK.value());
+        successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
         successResponse.setValue(new DashboardStatusResponse(
                 statusData.get("requestedRequestsCount"),
@@ -34,11 +34,11 @@ public class DashboardResponseMapper {
     }
 
     public NoPagingResponse<FailedResponse> produceDashboardStatusFailedResult(
-            final String errorCode, final String errorMessage
+            final int httpStatusCode, final String errorCode, final String errorMessage
     ) {
         NoPagingResponse<FailedResponse> failedResponse = new NoPagingResponse<>();
 
-        failedResponse.setCode(HttpStatus.OK.value());
+        failedResponse.setCode(httpStatusCode);
         failedResponse.setSuccess(ResponseStatus.SUCCESS);
         failedResponse.setValue(new FailedResponse(
                 errorCode,
@@ -50,6 +50,7 @@ public class DashboardResponseMapper {
 
     /*--------------Request Update Section--------------*/
     public PagingResponse<DashboardRequestUpdateResponse> produceDashboardRequestUpdateSuccessResult(
+            int httpStatusCode,
             List<DashboardRequestUpdateResponse.RequestUpdateModel> requests, int pageNumber,
             int pageSize
     ) {
@@ -58,7 +59,7 @@ public class DashboardResponseMapper {
         int startIndex = pageSize * (pageNumber - 1);
         int endIndex = startIndex + pageSize;
 
-        successResponse.setCode(HttpStatus.OK.value());
+        successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
 
         boolean indexBelowRecordSize = endIndex < requests.size();
@@ -76,11 +77,11 @@ public class DashboardResponseMapper {
     }
 
     public PagingResponse<FailedResponse> produceDashboardRequestUpdateFailedResult(
-            String errorCode, String errorMessage
+            int httpStatusCode, String errorCode, String errorMessage
     ) {
         PagingResponse<FailedResponse> failedResponse = new PagingResponse<>();
 
-        failedResponse.setCode(HttpStatus.NOT_FOUND.value());
+        failedResponse.setCode(httpStatusCode);
         failedResponse.setSuccess(ResponseStatus.FAILED);
         failedResponse.setValue(new FailedResponse(errorCode, errorMessage));
         failedResponse.setPaging(null);
