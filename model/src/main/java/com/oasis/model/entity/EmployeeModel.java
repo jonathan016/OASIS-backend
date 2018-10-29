@@ -37,6 +37,9 @@ public class EmployeeModel extends BaseEntity {
     @Field(EmployeeFieldName.EMPLOYEE_DIVISION)
     private String division;
 
+    @Field(EmployeeFieldName.EMPLOYEE_LOCATION)
+    private String location;
+
     @Field(EmployeeFieldName.EMPLOYEE_SUPERVISING_COUNT)
     private Integer supervisingCount;
 
