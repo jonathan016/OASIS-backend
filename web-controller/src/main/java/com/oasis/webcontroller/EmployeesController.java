@@ -4,9 +4,11 @@ import com.oasis.constant.APIMappingValue;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.responsemapper.EmployeesResponseMapper;
 import com.oasis.service.implementation.EmployeesServiceImpl;
-import com.oasis.webmodel.response.PagingResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +18,7 @@ import java.util.List;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
+@CrossOrigin(origins = "http://localhost")
 @RestController
 public class EmployeesController {
 
@@ -26,17 +29,16 @@ public class EmployeesController {
 
     @GetMapping(value = APIMappingValue.API_EMPLOYEE_LIST,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public PagingResponse<?> callViewAllEmployeesService(@RequestParam int pageNumber,
-                                                         @RequestParam String sortInfo) {
+    public ResponseEntity callViewAllEmployeesService(@RequestParam int pageNumber,
+                                                      @RequestParam String sortInfo) {
         List<EmployeeListResponse.Employee> employeesFound;
 
         try {
             employeesFound = employeesServiceImpl.getAllEmployees(pageNumber, sortInfo);
         } catch (DataNotFoundException e) {
-            return employeesResponseMapper.produceViewAllEmployeesFailedResult(e.getErrorCode(), e.getErrorMessage());
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), e.getErrorCode(), e.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-
-        return employeesResponseMapper.produceViewAllEmployeesSuccessResult(employeesFound, pageNumber);
+        return new ResponseEntity<>(employeesResponseMapper.produceViewAllEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, pageNumber), HttpStatus.OK);
     }
 }
