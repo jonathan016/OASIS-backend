@@ -19,15 +19,15 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     List<AssetModel> findAllByStockGreaterThanOrderByNameDesc(long stockLimit);
 
-    List<AssetModel> findAllBySkuContainsOrNameContains(String id, String name);
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(String id, String name);
 
-    List<AssetModel> findAllBySkuContainsOrNameContainsOrderBySkuAsc(String sku, String name);
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(String sku, String name);
 
-    List<AssetModel> findAllBySkuContainsOrNameContainsOrderBySkuDesc(String sku, String name);
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(String sku, String name);
 
-    List<AssetModel> findAllBySkuContainsOrNameContainsOrderByNameAsc(String sku, String name);
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String sku, String name);
 
-    List<AssetModel> findAllBySkuContainsOrNameContainsOrderByNameDesc(String sku, String name);
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String sku, String name);
 
     AssetModel findBySku(String sku);
 

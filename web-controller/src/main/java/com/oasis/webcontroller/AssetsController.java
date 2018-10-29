@@ -65,13 +65,13 @@ public class AssetsController {
     }
 
     @GetMapping(value = APIMappingValue.API_ASSET_DETAIL,
-    produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public NoPagingResponse<?> callGetAssetDetailService(@PathVariable String assetSku){
+            produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
+    public NoPagingResponse<?> callGetAssetDetailService(@PathVariable String assetSku) {
         AssetModel asset;
 
         try {
             asset = assetsServiceImpl.getAssetData(assetSku);
-        } catch(DataNotFoundException e){
+        } catch (DataNotFoundException e) {
             return assetsResponseMapper.produceViewAssetDetailFailedResult(e.getErrorCode(), e.getErrorMessage());
         }
 
@@ -111,7 +111,6 @@ public class AssetsController {
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public BaseResponse callDeleteAssetsService(@RequestBody DeleteAssetRequest request) {
         //TODO Handle concurrency
-        //TODO Handle existing requests with the asset
 
         try {
             assetsServiceImpl.deleteAssets(request.getSelectedAssets(), request.getEmployeeNik());

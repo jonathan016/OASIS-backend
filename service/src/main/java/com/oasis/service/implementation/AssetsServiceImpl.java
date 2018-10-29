@@ -16,11 +16,7 @@ import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
@@ -42,12 +38,10 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                     EMPTY_SEARCH_QUERY.getErrorCode(), EMPTY_SEARCH_QUERY.getErrorMessage());
         }
 
-        String[] queries = searchQuery.split(" ");
         Set<AssetModel> assetsFound = new HashSet<>();
 
-        if (queries.length == 0) {
-            if (assetRepository.findAllBySkuContainsOrNameContains(searchQuery, searchQuery).size()
-                    == 0) {
+        if (!searchQuery.contains(" ")) {
+            if (assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(searchQuery, searchQuery).size() == 0) {
                 throw new DataNotFoundException(
                         ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
             }
@@ -56,7 +50,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                     Math.ceil(
                             (float)
                                     assetRepository
-                                            .findAllBySkuContainsOrNameContains(searchQuery, searchQuery)
+                                            .findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(searchQuery, searchQuery)
                                             .size()
                                     / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)
                     < pageNumber) {
@@ -66,15 +60,18 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
             assetsFound.addAll(fillData(searchQuery, sortInfo));
         } else {
+            String[] queries = searchQuery.split(" ");
+
             for (String query : queries) {
-                if (assetRepository.findAllBySkuContainsOrNameContains(query, query).size() == 0) {
+                if (assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(query, query).size() == 0 &&
+                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(query.toLowerCase(), query.toLowerCase()).size() == 0) {
                     throw new DataNotFoundException(
                             ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
                 }
 
                 if ((int)
                         Math.ceil(
-                                (float) assetRepository.findAllBySkuContainsOrNameContains(query, query).size()
+                                (float) assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(query, query).size()
                                         / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)
                         < pageNumber) {
                     throw new DataNotFoundException(
@@ -116,21 +113,21 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         if (sortInfo.substring(1).equals("assetId")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 assetsFound.addAll(
-                        assetRepository.findAllBySkuContainsOrNameContainsOrderBySkuAsc(
+                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
                                 searchQuery, searchQuery));
             } else if (sortInfo.substring(0, 1).equals("D")) {
                 assetsFound.addAll(
-                        assetRepository.findAllBySkuContainsOrNameContainsOrderBySkuDesc(
+                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
                                 searchQuery, searchQuery));
             }
         } else if (sortInfo.substring(1).equals("assetName")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 assetsFound.addAll(
-                        assetRepository.findAllBySkuContainsOrNameContainsOrderByNameAsc(
+                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
                                 searchQuery, searchQuery));
             } else if (sortInfo.substring(0, 1).equals("D")) {
                 assetsFound.addAll(
-                        assetRepository.findAllBySkuContainsOrNameContainsOrderByNameDesc(
+                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
                                 searchQuery, searchQuery));
             }
         }
