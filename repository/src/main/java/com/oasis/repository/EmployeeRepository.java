@@ -13,13 +13,13 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     EmployeeModel findByNik(String nik);
 
-    List<EmployeeModel> findAllByNikContainsOrFullnameContains(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(String nik, String fullname);
 
-    List<EmployeeModel> findAllByNikContainsOrFullnameContainsOrderByNikAsc(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByNikAsc(String nik, String fullname);
 
-    List<EmployeeModel> findAllByNikContainsOrFullnameContainsOrderByNikDesc(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByNikDesc(String nik, String fullname);
 
-    List<EmployeeModel> findAllByNikContainsOrFullnameContainsOrderByFullnameAsc(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByFullnameAsc(String nik, String fullname);
 
-    List<EmployeeModel> findAllByNikContainsOrFullnameContainsOrderByFullnameDesc(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByFullnameDesc(String nik, String fullname);
 }

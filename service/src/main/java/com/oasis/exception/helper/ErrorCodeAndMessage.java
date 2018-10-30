@@ -26,4 +26,8 @@ public class ErrorCodeAndMessage {
             "SUPERVISION_DATA_NOT_FOUND",
             "No supervision with specified data could be found"
     );
+    public static final FailedResponse EMPTY_SEARCH_QUERY = new FailedResponse(
+            "EMPTY_SEARCH_QUERY",
+            "No search query given, thus the server cannot search for asset"
+    );
 }
