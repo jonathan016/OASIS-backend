@@ -18,9 +18,9 @@ import java.util.List;
 public class EmployeesResponseMapper {
 
     public PagingResponse<EmployeeListResponse>
-    produceViewAllEmployeesSuccessResult(int httpStatusCode,
-                                         List<EmployeeListResponse.Employee> mappedEmployees,
-                                         int pageNumber) {
+    produceViewFoundEmployeesSuccessResult(int httpStatusCode,
+                                           List<EmployeeListResponse.Employee> mappedEmployees,
+                                           int pageNumber) {
         PagingResponse<EmployeeListResponse> successResponse = new PagingResponse<>();
 
         successResponse.setCode(httpStatusCode);

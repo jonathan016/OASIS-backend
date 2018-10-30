@@ -1,6 +1,7 @@
 package com.oasis.webcontroller;
 
 import com.oasis.constant.APIMappingValue;
+import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.responsemapper.EmployeesResponseMapper;
@@ -37,7 +38,7 @@ public class EmployeesController {
             return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), e.getErrorCode(), e.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(employeesResponseMapper.produceViewAllEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, pageNumber), HttpStatus.OK);
+        return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, pageNumber), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_EMPLOYEE_DETAIL,
@@ -61,5 +62,23 @@ public class EmployeesController {
         }
 
         return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(), employee, supervisor), HttpStatus.OK);
+    }
+
+    @GetMapping(value = APIMappingValue.API_EMPLOYEE_FIND,
+            produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity callFindEmployeeService(@RequestParam String searchQuery,
+                                                  @RequestParam int pageNumber,
+                                                  @RequestParam String sortInfo) {
+        List<EmployeeListResponse.Employee> employeesFound;
+
+        try {
+            employeesFound = employeesServiceImpl.getEmployeesBySearchQuery(searchQuery, pageNumber, sortInfo);
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, pageNumber), HttpStatus.OK);
     }
 }
