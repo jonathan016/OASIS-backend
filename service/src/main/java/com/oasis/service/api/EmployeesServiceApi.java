@@ -2,6 +2,7 @@ package com.oasis.service.api;
 
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
+import com.oasis.model.entity.SupervisionModel;
 import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 
@@ -15,5 +16,7 @@ public interface EmployeesServiceApi {
 
     List<EmployeeListResponse.Employee> mapEmployeesFound(List<EmployeeModel> employees);
 
-    EmployeeDetailResponse getEmployeeData(String employeeNik) throws DataNotFoundException;
+    EmployeeModel getEmployeeData(String employeeNik) throws DataNotFoundException;
+
+    SupervisionModel getEmployeeSupervisionData(String employeeNik) throws DataNotFoundException;
 }

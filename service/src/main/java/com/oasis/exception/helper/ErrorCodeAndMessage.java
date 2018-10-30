@@ -22,4 +22,8 @@ public class ErrorCodeAndMessage {
             "The given employee NIK could not be found in database and thus inferred" +
                     " as incorrect employee NIK"
     );
+    public static final FailedResponse SUPERVISION_DATA_NOT_FOUND = new FailedResponse(
+            "SUPERVISION_DATA_NOT_FOUND",
+            "No supervision with specified data could be found"
+    );
 }

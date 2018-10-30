@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_EMPLOYEE_NIK;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.SUPERVISION_DATA_NOT_FOUND;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
 @Service
@@ -116,47 +118,22 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public EmployeeDetailResponse getEmployeeData(String employeeNik) throws DataNotFoundException {
+    public EmployeeModel getEmployeeData(String employeeNik) throws DataNotFoundException {
         EmployeeModel employee = employeeRepository.findByNik(employeeNik);
 
         if (employee == null)
-            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(INCORRECT_EMPLOYEE_NIK.getErrorCode(), INCORRECT_EMPLOYEE_NIK.getErrorMessage());
 
+        return employee;
+    }
+
+    @Override
+    public SupervisionModel getEmployeeSupervisionData(String employeeNik) throws DataNotFoundException {
         SupervisionModel supervision = supervisionRepository.findByEmployeeNik(employeeNik);
 
-        EmployeeDetailResponse employeeDetailResponse;
-        if (supervision != null) {
-            EmployeeModel supervisor = employeeRepository.findByNik(supervision.getSupervisorNik());
-            employeeDetailResponse =
-                    new EmployeeDetailResponse(
-                            employee.getNik(),
-                            employee.getUsername(),
-                            employee.getFullname(),
-                            new SimpleDateFormat("dd-MM-yyyy").format(employee.getDob()),
-                            employee.getPhone(),
-                            employee.getJobTitle(),
-                            employee.getDivision(),
-                            employee.getLocation(),
-                            new EmployeeDetailResponse.Supervisor(
-                                    supervisor.getNik(),
-                                    supervisor.getFullname()
-                            )
-                    );
-        } else {
-            employeeDetailResponse =
-                    new EmployeeDetailResponse(
-                            employee.getNik(),
-                            employee.getUsername(),
-                            employee.getFullname(),
-                            new SimpleDateFormat("dd-MM-yyyy").format(employee.getDob()),
-                            employee.getPhone(),
-                            employee.getJobTitle(),
-                            employee.getDivision(),
-                            employee.getLocation(),
-                            null
-                    );
-        }
+        if(supervision == null)
+            throw new DataNotFoundException(SUPERVISION_DATA_NOT_FOUND.getErrorCode(), SUPERVISION_DATA_NOT_FOUND.getErrorMessage());
 
-        return employeeDetailResponse;
+        return supervision;
     }
 }
