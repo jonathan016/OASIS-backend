@@ -1,5 +1,6 @@
 package com.oasis.service.implementation;
 
+import com.oasis.RoleDeterminer;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
@@ -7,23 +8,21 @@ import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
-import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_EMPLOYEE_NIK;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.SUPERVISION_DATA_NOT_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
 @Service
 public class EmployeesServiceImpl implements EmployeesServiceApi {
 
+    @Autowired
+    private RoleDeterminer roleDeterminer;
     @Autowired
     private EmployeeRepository employeeRepository;
     @Autowired
@@ -128,12 +127,17 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public SupervisionModel getEmployeeSupervisionData(String employeeNik) throws DataNotFoundException {
+    public EmployeeModel getEmployeeSupervisorData(String employeeNik) throws DataNotFoundException {
         SupervisionModel supervision = supervisionRepository.findByEmployeeNik(employeeNik);
+        boolean isAdmin = roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR);
 
-        if(supervision == null)
+        if (supervision == null && !isAdmin)
             throw new DataNotFoundException(SUPERVISION_DATA_NOT_FOUND.getErrorCode(), SUPERVISION_DATA_NOT_FOUND.getErrorMessage());
 
-        return supervision;
+        if (!isAdmin) {
+            return employeeRepository.findByNik(supervision.getSupervisorNik());
+        }
+
+        return null;
     }
 }

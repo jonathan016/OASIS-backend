@@ -18,5 +18,5 @@ public interface EmployeesServiceApi {
 
     EmployeeModel getEmployeeData(String employeeNik) throws DataNotFoundException;
 
-    SupervisionModel getEmployeeSupervisionData(String employeeNik) throws DataNotFoundException;
+    EmployeeModel getEmployeeSupervisorData(String employeeNik) throws DataNotFoundException;
 }
