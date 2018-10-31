@@ -276,9 +276,11 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
             String lastName = fullname.substring(fullname.lastIndexOf(" ") + 1);
             username.append(lastName);
+        } else {
+            username.append(fullname);
         }
 
-        while (employeeRepository.findByUsername(String.valueOf(username)) != null) {
+        while (employeeRepository.findByUsername(String.valueOf(username) + "@gdn-commerce.com") != null) {
             username.append(dob, 0, 2);
         }
 
