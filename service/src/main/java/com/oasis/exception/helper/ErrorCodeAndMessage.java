@@ -30,4 +30,8 @@ public class ErrorCodeAndMessage {
             "EMPTY_SEARCH_QUERY",
             "No search query given, thus the server cannot search for asset"
     );
+    public static final FailedResponse EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR = new FailedResponse(
+            "EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR",
+            "Non-administrator attempted to insert new employee"
+    );
 }

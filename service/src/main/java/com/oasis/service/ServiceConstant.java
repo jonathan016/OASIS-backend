@@ -15,4 +15,6 @@ public class ServiceConstant {
 
     public static final String TAB_OTHERS = "Others";
     public static final String TAB_SELF = "Self";
+
+    public static final String NIK_PREFIX = "GDN";
 }

@@ -2,8 +2,10 @@ package com.oasis.service.api;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
+import com.oasis.webmodel.request.AddEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 
@@ -23,4 +25,18 @@ public interface EmployeesServiceApi {
     List<EmployeeListResponse.Employee> getEmployeesBySearchQuery(String searchQuery, int pageNumber, String sortInfo) throws BadRequestException, DataNotFoundException;
 
     Set<EmployeeModel> fillData(String searchQuery, String sortInfo);
+
+    void insertToDatabase(AddEmployeeRequest.Employee employee, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException;
+
+    String generateEmployeeNik(String division);
+
+    String generateEmployeeUsername(String fullname, String dob);
+
+    String generateEmployeeDefaultPassword(String dob);
+
+    String getSupervisionId(String employeeNik, String supervisorNik) throws DataNotFoundException;
+
+    void createSupervision(String employeeNik, String supervisorNik);
+
+    void updateSupervisorSupervisingCount(String supervisorNik);
 }

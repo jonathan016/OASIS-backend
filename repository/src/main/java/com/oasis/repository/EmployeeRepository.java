@@ -22,4 +22,8 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
     List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByFullnameAsc(String nik, String fullname);
 
     List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByFullnameDesc(String nik, String fullname);
+
+    EmployeeModel save(EmployeeModel employee);
+
+    EmployeeModel findFirstByDivisionOrderByNikDesc(String division);
 }

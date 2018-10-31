@@ -3,16 +3,20 @@ package com.oasis.service.implementation;
 import com.oasis.RoleDeterminer;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
+import com.oasis.webmodel.request.AddEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
@@ -187,5 +191,131 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         }
 
         return employeesFound;
+    }
+
+    @Override
+    public void insertToDatabase(AddEmployeeRequest.Employee employeeRequest, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException {
+
+        try {
+            if (!roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR))
+                throw new UnauthorizedOperationException(EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(), EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
+        } catch (DataNotFoundException dataNotFoundException) {
+            throw dataNotFoundException;
+        }
+
+        //TODO Handle check for duplicate data (possibly check with phone number)
+
+        EmployeeModel employee = new EmployeeModel();
+
+        employee.setNik(generateEmployeeNik(employeeRequest.getDivision()));
+        employee.setFullname(employeeRequest.getFullname());
+        employee.setUsername(generateEmployeeUsername(employeeRequest.getFullname().toLowerCase(), employeeRequest.getDob()));
+        employee.setPassword(generateEmployeeDefaultPassword(employeeRequest.getDob()));
+        try {
+            employee.setDob(new SimpleDateFormat("dd-MM-yyyy").parse(employeeRequest.getDob()));
+        } catch (ParseException e) {
+            //TODO Handle exception
+        }
+        employee.setDivision(employeeRequest.getDivision());
+        employee.setJobTitle(employeeRequest.getJobTitle());
+        employee.setLocation(employeeRequest.getLocation());
+        employee.setSupervisingCount(ServiceConstant.ZERO);
+        employee.setSupervisionId(getSupervisionId(employeeRequest.getSupervisorId(), employee.getNik()));
+    }
+
+    @Override
+    public String generateEmployeeNik(String division) {
+        StringBuilder nik = new StringBuilder();
+
+        nik.append(ServiceConstant.NIK_PREFIX);
+
+        if (employeeRepository.findAll().size() != 0) {
+            EmployeeModel employeeWithDivision = employeeRepository.findFirstByDivisionOrderByNikDesc(division);
+
+            if (employeeWithDivision != null) {
+                String lastDivisionNumber = employeeRepository.findFirstByDivisionOrderByNikDesc(String.valueOf(nik)).getNik();
+                int lastDivisionCode = Integer.valueOf(lastDivisionNumber.substring(4, 7));
+
+                nik.append(String.format("-%03d", lastDivisionCode + 1));
+                nik.append(String.format("-%03d", 1));
+            } else {
+                String lastEmployeeDivisionNumber = employeeRepository.findFirstByDivisionOrderByNikDesc(String.valueOf(nik)).getNik();
+                int lastEmployeeCode = Integer.valueOf((lastEmployeeDivisionNumber.substring(8, 11)));
+
+                nik.append(String.format("-%03d", Integer.valueOf(lastEmployeeDivisionNumber.substring(4, 7))));
+                nik.append(String.format("-%03d", lastEmployeeCode + 1));
+            }
+        } else {
+            nik.append(String.format("-%03d", 1));
+            nik.append(String.format("-%03d", 1));
+        }
+
+        return String.valueOf(nik);
+    }
+
+    @Override
+    public String generateEmployeeUsername(String fullname, String dob) {
+        StringBuilder username = new StringBuilder();
+
+        boolean singleWordName = !fullname.contains(" ");
+
+        if (!singleWordName) {
+            String firstName = fullname.substring(0, fullname.lastIndexOf(" "));
+            String firstNames[] = firstName.split(" ");
+            for (String name : firstNames) {
+                username.append(name.substring(0, 1));
+                username.append(".");
+            }
+
+            String lastName = fullname.substring(fullname.lastIndexOf(" ") + 1);
+            username.append(lastName);
+        }
+
+        while (employeeRepository.findByUsername(String.valueOf(username)) != null) {
+            username.append(dob.substring(0, 2));
+        }
+
+        return String.valueOf(username);
+    }
+
+    @Override
+    public String generateEmployeeDefaultPassword(String dob) {
+        StringBuilder password = new StringBuilder();
+
+        password.append(ServiceConstant.NIK_PREFIX.toLowerCase());
+        password.append(dob.replace("-", ""));
+
+        return String.valueOf(password);
+    }
+
+    @Override
+    public void updateSupervisorSupervisingCount(String supervisorNik){
+        EmployeeModel supervisor = employeeRepository.findByNik(supervisorNik);
+
+        supervisor.setSupervisingCount(supervisor.getSupervisingCount() + 1);
+
+        employeeRepository.save(supervisor);
+    }
+
+    @Override
+    public void createSupervision(String employeeNik, String supervisorNik) {
+        updateSupervisorSupervisingCount(supervisorNik);
+
+        SupervisionModel supervision = new SupervisionModel();
+
+        supervision.setSupervisorNik(supervisorNik);
+        supervision.setEmployeeNik(employeeNik);
+
+        supervisionRepository.save(supervision);
+    }
+
+    @Override
+    public String getSupervisionId(String employeeNik, String supervisorNik) throws DataNotFoundException {
+        if (employeeRepository.findByNik(supervisorNik) == null)
+            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+
+        createSupervision(employeeNik, supervisorNik);
+
+        return supervisionRepository.findByEmployeeNik(employeeNik).get_id();
     }
 }
