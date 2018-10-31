@@ -34,9 +34,9 @@ public interface EmployeesServiceApi {
 
     String generateEmployeeDefaultPassword(String dob);
 
-    String getSupervisionId(String employeeNik, String supervisorNik) throws DataNotFoundException;
+    String getSupervisionId(String employeeNik, String supervisorNik, String adminNik) throws DataNotFoundException;
 
-    void createSupervision(String employeeNik, String supervisorNik);
+    void createSupervision(String employeeNik, String supervisorNik, String adminNik);
 
-    void updateSupervisorSupervisingCount(String supervisorNik);
+    void updateSupervisorSupervisingCount(String adminNik, String supervisorNik);
 }

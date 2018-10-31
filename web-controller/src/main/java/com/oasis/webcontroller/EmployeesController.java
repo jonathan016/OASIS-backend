@@ -3,9 +3,11 @@ package com.oasis.webcontroller;
 import com.oasis.constant.APIMappingValue;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.responsemapper.EmployeesResponseMapper;
 import com.oasis.service.implementation.EmployeesServiceImpl;
+import com.oasis.webmodel.request.AddEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -80,5 +82,20 @@ public class EmployeesController {
         }
 
         return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, pageNumber), HttpStatus.OK);
+    }
+
+    @PostMapping(value = APIMappingValue.API_SAVE_EMPLOYEE,
+            produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity callInsertToDatabaseService(@RequestBody AddEmployeeRequest request) {
+
+        try {
+            employeesServiceImpl.insertToDatabase(request.getEmployee(), request.getEmployeeNik());
+        } catch (UnauthorizedOperationException unauthorizedOperationException) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.CREATED.value()), HttpStatus.CREATED);
     }
 }

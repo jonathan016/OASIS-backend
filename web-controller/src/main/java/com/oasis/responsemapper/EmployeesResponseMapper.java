@@ -2,10 +2,7 @@ package com.oasis.responsemapper;
 
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.service.ServiceConstant;
-import com.oasis.webmodel.response.NoPagingResponse;
-import com.oasis.webmodel.response.Paging;
-import com.oasis.webmodel.response.PagingResponse;
-import com.oasis.webmodel.response.ResponseStatus;
+import com.oasis.webmodel.response.*;
 import com.oasis.webmodel.response.failed.FailedResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
@@ -96,6 +93,16 @@ public class EmployeesResponseMapper {
                     )
             );
         }
+
+        return successResponse;
+    }
+
+    public BaseResponse
+    produceEmployeeSaveSuccessResult(int httpStatusCode){
+        BaseResponse successResponse = new BaseResponse();
+
+        successResponse.setCode(httpStatusCode);
+        successResponse.setSuccess(ResponseStatus.SUCCESS);
 
         return successResponse;
     }

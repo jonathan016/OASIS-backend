@@ -13,6 +13,7 @@ import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.webmodel.request.AddEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
@@ -194,10 +195,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public void insertToDatabase(AddEmployeeRequest.Employee employeeRequest, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException {
+    public void insertToDatabase(AddEmployeeRequest.Employee employeeRequest, String adminNik) throws UnauthorizedOperationException, DataNotFoundException {
 
         try {
-            if (!roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR))
+            if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR))
                 throw new UnauthorizedOperationException(EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(), EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
         } catch (DataNotFoundException dataNotFoundException) {
             throw dataNotFoundException;
@@ -220,7 +221,13 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         employee.setJobTitle(employeeRequest.getJobTitle());
         employee.setLocation(employeeRequest.getLocation());
         employee.setSupervisingCount(ServiceConstant.ZERO);
-        employee.setSupervisionId(getSupervisionId(employeeRequest.getSupervisorId(), employee.getNik()));
+        employee.setSupervisionId(getSupervisionId(employee.getNik(), employeeRequest.getSupervisorId(), adminNik));
+        employee.setCreatedDate(new Date());
+        employee.setUpdatedDate(new Date());
+        employee.setCreatedBy(adminNik);
+        employee.setUpdatedBy(adminNik);
+
+        employeeRepository.save(employee);
     }
 
     @Override
@@ -232,14 +239,14 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (employeeRepository.findAll().size() != 0) {
             EmployeeModel employeeWithDivision = employeeRepository.findFirstByDivisionOrderByNikDesc(division);
 
-            if (employeeWithDivision != null) {
-                String lastDivisionNumber = employeeRepository.findFirstByDivisionOrderByNikDesc(String.valueOf(nik)).getNik();
+            if (employeeWithDivision == null) {
+                String lastDivisionNumber = employeeRepository.findFirstByDivisionOrderByNikDesc(division).getNik();
                 int lastDivisionCode = Integer.valueOf(lastDivisionNumber.substring(4, 7));
 
                 nik.append(String.format("-%03d", lastDivisionCode + 1));
                 nik.append(String.format("-%03d", 1));
             } else {
-                String lastEmployeeDivisionNumber = employeeRepository.findFirstByDivisionOrderByNikDesc(String.valueOf(nik)).getNik();
+                String lastEmployeeDivisionNumber = employeeRepository.findFirstByNikContainsAndDivisionOrderByNikDesc(String.valueOf(nik), division).getNik();
                 int lastEmployeeCode = Integer.valueOf((lastEmployeeDivisionNumber.substring(8, 11)));
 
                 nik.append(String.format("-%03d", Integer.valueOf(lastEmployeeDivisionNumber.substring(4, 7))));
@@ -263,7 +270,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             String firstName = fullname.substring(0, fullname.lastIndexOf(" "));
             String firstNames[] = firstName.split(" ");
             for (String name : firstNames) {
-                username.append(name.substring(0, 1));
+                username.append(name.charAt(0));
                 username.append(".");
             }
 
@@ -272,8 +279,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         }
 
         while (employeeRepository.findByUsername(String.valueOf(username)) != null) {
-            username.append(dob.substring(0, 2));
+            username.append(dob, 0, 2);
         }
+
+        username.append("@gdn-commerce.com");
 
         return String.valueOf(username);
     }
@@ -285,36 +294,45 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         password.append(ServiceConstant.NIK_PREFIX.toLowerCase());
         password.append(dob.replace("-", ""));
 
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        password.replace(0, password.length(), encoder.encode(String.valueOf(password)));
+
         return String.valueOf(password);
     }
 
     @Override
-    public void updateSupervisorSupervisingCount(String supervisorNik){
+    public void updateSupervisorSupervisingCount(String supervisorNik, String adminNik){
         EmployeeModel supervisor = employeeRepository.findByNik(supervisorNik);
 
         supervisor.setSupervisingCount(supervisor.getSupervisingCount() + 1);
+        supervisor.setUpdatedDate(new Date());
+        supervisor.setUpdatedBy(adminNik);
 
         employeeRepository.save(supervisor);
     }
 
     @Override
-    public void createSupervision(String employeeNik, String supervisorNik) {
-        updateSupervisorSupervisingCount(supervisorNik);
+    public void createSupervision(String employeeNik, String supervisorNik, String adminNik) {
+        updateSupervisorSupervisingCount(supervisorNik, adminNik);
 
         SupervisionModel supervision = new SupervisionModel();
 
         supervision.setSupervisorNik(supervisorNik);
         supervision.setEmployeeNik(employeeNik);
+        supervision.setCreatedDate(new Date());
+        supervision.setUpdatedDate(new Date());
+        supervision.setCreatedBy(adminNik);
+        supervision.setUpdatedBy(adminNik);
 
         supervisionRepository.save(supervision);
     }
 
     @Override
-    public String getSupervisionId(String employeeNik, String supervisorNik) throws DataNotFoundException {
+    public String getSupervisionId(String employeeNik, String supervisorNik, String adminNik) throws DataNotFoundException {
         if (employeeRepository.findByNik(supervisorNik) == null)
             throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
 
-        createSupervision(employeeNik, supervisorNik);
+        createSupervision(employeeNik, supervisorNik, adminNik);
 
         return supervisionRepository.findByEmployeeNik(employeeNik).get_id();
     }

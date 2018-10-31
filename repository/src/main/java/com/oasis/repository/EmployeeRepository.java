@@ -26,4 +26,6 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
     EmployeeModel save(EmployeeModel employee);
 
     EmployeeModel findFirstByDivisionOrderByNikDesc(String division);
+
+    EmployeeModel findFirstByNikContainsAndDivisionOrderByNikDesc(String nik, String division);
 }
