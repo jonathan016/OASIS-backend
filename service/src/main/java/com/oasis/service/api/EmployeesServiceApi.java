@@ -2,6 +2,7 @@ package com.oasis.service.api;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
@@ -26,7 +27,7 @@ public interface EmployeesServiceApi {
 
     Set<EmployeeModel> fillData(String searchQuery, String sortInfo);
 
-    void insertToDatabase(AddEmployeeRequest.Employee employee, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException;
+    void insertToDatabase(AddEmployeeRequest.Employee employee, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException;
 
     String generateEmployeeNik(String division);
 

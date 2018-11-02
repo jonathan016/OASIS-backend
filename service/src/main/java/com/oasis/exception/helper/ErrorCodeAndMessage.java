@@ -34,4 +34,8 @@ public class ErrorCodeAndMessage {
             "EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR",
             "Non-administrator attempted to insert new employee"
     );
+    public static final FailedResponse DUPLICATE_EMPLOYEE_DATA_FOUND = new FailedResponse(
+            "DUPLICATE_EMPLOYEE_DATA_FOUND",
+            "Employee(s) with matching data with the to-be-inserted employee found!"
+    );
 }

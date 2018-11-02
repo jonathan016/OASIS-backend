@@ -4,6 +4,7 @@ import com.oasis.model.entity.EmployeeModel;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -28,4 +29,6 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
     EmployeeModel findFirstByDivisionOrderByNikDesc(String division);
 
     EmployeeModel findFirstByNikContainsAndDivisionOrderByNikDesc(String nik, String division);
+
+    List<EmployeeModel> findAllByFullnameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String fullname, Date dob, String phone, String jobTitle, String division, String location);
 }

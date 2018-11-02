@@ -3,6 +3,7 @@ package com.oasis.service.implementation;
 import com.oasis.RoleDeterminer;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
@@ -195,7 +196,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public void insertToDatabase(AddEmployeeRequest.Employee employeeRequest, String adminNik) throws UnauthorizedOperationException, DataNotFoundException {
+    public void insertToDatabase(AddEmployeeRequest.Employee employeeRequest, String adminNik) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException {
 
         try {
             if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR))
@@ -204,30 +205,48 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             throw dataNotFoundException;
         }
 
-        //TODO Handle check for duplicate data (possibly check with phone number)
-
-        EmployeeModel employee = new EmployeeModel();
-
-        employee.setNik(generateEmployeeNik(employeeRequest.getDivision()));
-        employee.setFullname(employeeRequest.getFullname());
-        employee.setUsername(generateEmployeeUsername(employeeRequest.getFullname().toLowerCase(), employeeRequest.getDob()));
-        employee.setPassword(generateEmployeeDefaultPassword(employeeRequest.getDob()));
+        //TODO possible bug here
+        List<EmployeeModel> matchingEmployees = new ArrayList<>();
         try {
-            employee.setDob(new SimpleDateFormat("dd-MM-yyyy").parse(employeeRequest.getDob()));
+            matchingEmployees.addAll(employeeRepository.findAllByFullnameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
+                    employeeRequest.getFullname(),
+                    new SimpleDateFormat("dd-MM-yyyy").parse(employeeRequest.getDob()),
+                    employeeRequest.getPhone(),
+                    employeeRequest.getJobTitle(),
+                    employeeRequest.getDivision(),
+                    employeeRequest.getLocation()
+            ));
         } catch (ParseException e) {
-            //TODO Handle exception
+            //TODO handle exception
         }
-        employee.setDivision(employeeRequest.getDivision());
-        employee.setJobTitle(employeeRequest.getJobTitle());
-        employee.setLocation(employeeRequest.getLocation());
-        employee.setSupervisingCount(ServiceConstant.ZERO);
-        employee.setSupervisionId(getSupervisionId(employee.getNik(), employeeRequest.getSupervisorId(), adminNik));
-        employee.setCreatedDate(new Date());
-        employee.setUpdatedDate(new Date());
-        employee.setCreatedBy(adminNik);
-        employee.setUpdatedBy(adminNik);
 
-        employeeRepository.save(employee);
+        if (!matchingEmployees.isEmpty()) {
+            throw new DuplicateDataException(DUPLICATE_EMPLOYEE_DATA_FOUND.getErrorCode(), DUPLICATE_EMPLOYEE_DATA_FOUND.getErrorMessage());
+        } else {
+            EmployeeModel employee = new EmployeeModel();
+
+            employee.setNik(generateEmployeeNik(employeeRequest.getDivision()));
+            employee.setFullname(employeeRequest.getFullname());
+            employee.setUsername(generateEmployeeUsername(employeeRequest.getFullname().toLowerCase(), employeeRequest.getDob()));
+            employee.setPassword(generateEmployeeDefaultPassword(employeeRequest.getDob()));
+            try {
+                employee.setDob(new SimpleDateFormat("dd-MM-yyyy").parse(employeeRequest.getDob()));
+            } catch (ParseException e) {
+                //TODO Handle exception
+            }
+            employee.setPhone(employeeRequest.getPhone());
+            employee.setJobTitle(employeeRequest.getJobTitle());
+            employee.setDivision(employeeRequest.getDivision());
+            employee.setLocation(employeeRequest.getLocation());
+            employee.setSupervisingCount(ServiceConstant.ZERO);
+            employee.setSupervisionId(getSupervisionId(employee.getNik(), employeeRequest.getSupervisorId(), adminNik));
+            employee.setCreatedDate(new Date());
+            employee.setUpdatedDate(new Date());
+            employee.setCreatedBy(adminNik);
+            employee.setUpdatedBy(adminNik);
+
+            employeeRepository.save(employee);
+        }
     }
 
     @Override
@@ -303,7 +322,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public void updateSupervisorSupervisingCount(String supervisorNik, String adminNik){
+    public void updateSupervisorSupervisingCount(String supervisorNik, String adminNik) {
         EmployeeModel supervisor = employeeRepository.findByNik(supervisorNik);
 
         supervisor.setSupervisingCount(supervisor.getSupervisingCount() + 1);
