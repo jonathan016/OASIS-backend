@@ -31,4 +31,6 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
     EmployeeModel findFirstByNikContainsAndDivisionOrderByNikDesc(String nik, String division);
 
     List<EmployeeModel> findAllByFullnameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String fullname, Date dob, String phone, String jobTitle, String division, String location);
+
+    List<EmployeeModel> findAllByUsernameContains(String username);
 }

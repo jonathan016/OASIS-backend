@@ -7,6 +7,7 @@ import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.webmodel.request.AddEmployeeRequest;
+import com.oasis.webmodel.request.UpdateEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 
@@ -40,4 +41,8 @@ public interface EmployeesServiceApi {
     void createSupervision(String employeeNik, String supervisorNik, String adminNik);
 
     void updateSupervisorSupervisingCount(String adminNik, String supervisorNik);
+
+    void updateEmployee(UpdateEmployeeRequest.Employee employeeRequest, String adminNik) throws DataNotFoundException, UnauthorizedOperationException;
+
+    boolean checkCyclicSupervisingExists(String employeeNik, String supervisorNik);
 }

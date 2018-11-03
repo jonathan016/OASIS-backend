@@ -5,13 +5,16 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.model.entity.AdminModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
+import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.webmodel.request.AddEmployeeRequest;
+import com.oasis.webmodel.request.UpdateEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -32,6 +35,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     private EmployeeRepository employeeRepository;
     @Autowired
     private SupervisionRepository supervisionRepository;
+    @Autowired
+    private AdminRepository adminRepository;
 
     @Override
     public List<EmployeeListResponse.Employee> getAllEmployees(int pageNumber, String sortInfo) throws DataNotFoundException {
@@ -205,7 +210,6 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             throw dataNotFoundException;
         }
 
-        //TODO possible bug here
         List<EmployeeModel> matchingEmployees = new ArrayList<>();
         try {
             matchingEmployees.addAll(employeeRepository.findAllByFullnameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
@@ -299,8 +303,9 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             username.append(fullname);
         }
 
-        while (employeeRepository.findByUsername(String.valueOf(username) + "@gdn-commerce.com") != null) {
-            username.append(dob, 0, 2);
+        if (employeeRepository.findByUsername(String.valueOf(username).concat("@gdn-commerce.com")) != null) {
+            int suffix = employeeRepository.findAllByUsernameContains(String.valueOf(username)).size();
+            username.append(suffix);
         }
 
         username.append("@gdn-commerce.com");
@@ -356,5 +361,95 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         createSupervision(employeeNik, supervisorNik, adminNik);
 
         return supervisionRepository.findByEmployeeNik(employeeNik).get_id();
+    }
+
+    @Override
+    public void updateEmployee(UpdateEmployeeRequest.Employee employeeRequest, String adminNik) throws DataNotFoundException, UnauthorizedOperationException {
+        try {
+            if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+                throw new UnauthorizedOperationException(
+                        EMPLOYEE_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
+                        EMPLOYEE_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
+            }
+        } catch (DataNotFoundException e) {
+            throw new DataNotFoundException(e.getErrorCode(), e.getErrorMessage());
+        }
+
+        EmployeeModel employee = employeeRepository.findByNik(employeeRequest.getEmployeeNik());
+
+        if (employee == null)
+            throw new DataNotFoundException(
+                    USER_NOT_FOUND.getErrorCode(),
+                    USER_NOT_FOUND.getErrorMessage()
+            );
+
+        Date requestDob = null;
+        try {
+            requestDob = new SimpleDateFormat("dd-MM-yyyy").parse(employeeRequest.getEmployeeDob());
+        } catch (ParseException e) {
+            //TODO Handle exception
+        }
+
+        if (!employee.getFullname().equals(employeeRequest.getEmployeeFullname()) || employee.getDob().compareTo(requestDob) != 0)
+            employee.setUsername(generateEmployeeUsername(employeeRequest.getEmployeeFullname().toLowerCase(), employeeRequest.getEmployeeDob()));
+
+        employee.setFullname(employeeRequest.getEmployeeFullname());
+        employee.setDob(requestDob);
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        employee.setPassword(encoder.encode(employeeRequest.getEmployeePassword()));
+        employee.setPhone(employeeRequest.getEmployeePhone());
+        employee.setJobTitle(employeeRequest.getEmployeeJobTitle());
+        employee.setDivision(employeeRequest.getEmployeeDivision());
+        employee.setLocation(employeeRequest.getEmployeeLocation());
+
+        EmployeeModel supervisor = employeeRepository.findByNik(employeeRequest.getEmployeeSupervisorId());
+        if (supervisor == null) {
+            throw new DataNotFoundException(
+                    USER_NOT_FOUND.getErrorCode(),
+                    USER_NOT_FOUND.getErrorMessage()
+            );
+        } else if (!employeeRequest.getEmployeeSupervisorId().equals(supervisionRepository.findByEmployeeNik(employeeRequest.getEmployeeNik()).getSupervisorNik())) {
+            SupervisionModel supervision = supervisionRepository.findByEmployeeNik(employeeRequest.getEmployeeNik());
+
+            EmployeeModel previousSupervisor = employeeRepository.findByNik(supervision.getSupervisorNik());
+            previousSupervisor.setSupervisingCount(previousSupervisor.getSupervisingCount() - 1);
+            employeeRepository.save(previousSupervisor);
+
+            if (checkCyclicSupervisingExists(employee.getNik(), employeeRequest.getEmployeeSupervisorId())) {
+                throw new UnauthorizedOperationException(CYCLIC_SUPERVISING_OCCURED.getErrorCode(), CYCLIC_SUPERVISING_OCCURED.getErrorMessage());
+            }
+
+            supervision.setSupervisorNik(supervisor.getNik());
+            supervisionRepository.save(supervision);
+
+            if (employee.getSupervisingCount() > 0) {
+                AdminModel promotedAdmin = new AdminModel();
+
+                promotedAdmin.setNik(supervisor.getNik());
+                promotedAdmin.setUsername(supervisor.getUsername());
+                promotedAdmin.setPassword(supervisor.getPassword());
+                promotedAdmin.setCreatedDate(new Date());
+                promotedAdmin.setCreatedBy(adminNik);
+                promotedAdmin.setUpdatedDate(new Date());
+                promotedAdmin.setUpdatedBy(adminNik);
+
+                adminRepository.save(promotedAdmin);
+            }
+
+            updateSupervisorSupervisingCount(supervisor.getNik(), adminNik);
+        }
+
+        employee.setUpdatedDate(new Date());
+        employee.setUpdatedBy(adminNik);
+
+        employeeRepository.save(employee);
+    }
+
+    @Override
+    public boolean checkCyclicSupervisingExists(String employeeNik, String supervisorNik) {
+        String supervisorSupervisorNik = supervisionRepository.findByEmployeeNik(supervisorNik).getSupervisorNik();
+
+        return supervisorSupervisorNik.equals(employeeNik);
     }
 }

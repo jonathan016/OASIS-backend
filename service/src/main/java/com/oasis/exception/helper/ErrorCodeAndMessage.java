@@ -38,4 +38,12 @@ public class ErrorCodeAndMessage {
             "DUPLICATE_EMPLOYEE_DATA_FOUND",
             "Employee(s) with matching data with the to-be-inserted employee found!"
     );
+    public static final FailedResponse EMPLOYEE_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR = new FailedResponse(
+            "EMPLOYEE_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR",
+            "Non-administrator attempted to update employee data"
+    );
+    public static final FailedResponse CYCLIC_SUPERVISING_OCCURED = new FailedResponse(
+            "CYCLIC_SUPERVISING_OCCURED",
+            "Cyclic supervising between specified employees exists"
+    );
 }

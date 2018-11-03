@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface AdminRepository extends MongoRepository<AdminModel, String> {
 
     AdminModel findByNik(String nik);
+
+    AdminModel save(AdminModel admin);
 }
