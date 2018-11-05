@@ -8,6 +8,8 @@ public class ServiceConstant {
 
     public static final String REQUESTED = "Requested";
     public static final String PENDING_HANDOVER = "Pending Handover";
+    public static final String CANCELLED = "Cancelled";
+    public static final String PENDING_RETURN = "Pending Return";
 
     public static final String ROLE_EMPLOYEE = "EMPLOYEE";
     public static final String ROLE_SUPERIOR = "SUPERIOR";

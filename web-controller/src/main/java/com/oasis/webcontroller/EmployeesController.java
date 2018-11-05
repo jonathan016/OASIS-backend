@@ -9,6 +9,7 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.responsemapper.EmployeesResponseMapper;
 import com.oasis.service.implementation.EmployeesServiceImpl;
 import com.oasis.webmodel.request.AddEmployeeRequest;
+import com.oasis.webmodel.request.DeleteEmployeeRequest;
 import com.oasis.webmodel.request.UpdateEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,6 +116,23 @@ public class EmployeesController {
             return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.OK.value()), HttpStatus.CREATED);
+        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = APIMappingValue.API_DELETE_EMPLOYEE,
+    produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity callDeleteEmployeeService(@RequestBody DeleteEmployeeRequest request){
+
+        try {
+            employeesServiceImpl.deleteEmployee(request);
+        } catch (UnauthorizedOperationException unauthorizedOperationException) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
     }
 }

@@ -262,8 +262,8 @@ public class DashboardServiceImpl implements DashboardServiceApi {
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Asset asset =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Asset(
-                            requestUpdate.getAssetId(),
-                            getAssetData(requestUpdate.getAssetId()).getName(),
+                            requestUpdate.getAssetSku(),
+                            getAssetData(requestUpdate.getAssetSku()).getName(),
                             requestUpdate.getAssetQuantity()
                     );
 

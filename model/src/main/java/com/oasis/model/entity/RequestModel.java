@@ -14,8 +14,8 @@ public class RequestModel extends BaseEntity {
     @Field(RequestFieldName.REQUEST_EMPLOYEE_ID)
     private String employeeNik;
 
-    @Field(RequestFieldName.REQUEST_ASSET_ID)
-    private String assetId;
+    @Field(RequestFieldName.REQUEST_ASSET_SKU)
+    private String assetSku;
 
     @Field(RequestFieldName.REQUEST_ASSET_QUANTITY)
     private int assetQuantity;

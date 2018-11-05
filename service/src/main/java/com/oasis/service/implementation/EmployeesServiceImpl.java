@@ -7,13 +7,16 @@ import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AdminModel;
 import com.oasis.model.entity.EmployeeModel;
+import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
+import com.oasis.repository.RequestRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.webmodel.request.AddEmployeeRequest;
+import com.oasis.webmodel.request.DeleteEmployeeRequest;
 import com.oasis.webmodel.request.UpdateEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     private SupervisionRepository supervisionRepository;
     @Autowired
     private AdminRepository adminRepository;
+    @Autowired
+    private RequestRepository requestRepository;
 
     @Override
     public List<EmployeeListResponse.Employee> getAllEmployees(int pageNumber, String sortInfo) throws DataNotFoundException {
@@ -451,5 +456,48 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         String supervisorSupervisorNik = supervisionRepository.findByEmployeeNik(supervisorNik).getSupervisorNik();
 
         return supervisorSupervisorNik.equals(employeeNik);
+    }
+
+    @Override
+    public void deleteEmployee(DeleteEmployeeRequest deleteEmployeeRequest) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException {
+
+        try {
+            if (!roleDeterminer.determineRole(deleteEmployeeRequest.getAdminNik()).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+                throw new UnauthorizedOperationException(
+                        EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
+                        EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
+            }
+        } catch (DataNotFoundException dataNotFoundException) {
+            throw dataNotFoundException;
+        }
+
+        if (deleteEmployeeRequest.getEmployeeNik().isEmpty())
+            throw new BadRequestException(EMPTY_EMPLOYEE_NIK.getErrorCode(), EMPTY_EMPLOYEE_NIK.getErrorMessage());
+
+        if (deleteEmployeeRequest.getEmployeeNik().equals(deleteEmployeeRequest.getAdminNik()))
+            throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT.getErrorCode(), SELF_DELETION_ATTEMPT.getErrorMessage());
+
+        if (employeeRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()) == null)
+            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+
+        if(employeeRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()).getSupervisingCount() != 0)
+            throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT.getErrorCode(), EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT.getErrorMessage());
+
+        if(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_RETURN) != null)
+            throw new UnauthorizedOperationException(EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT.getErrorCode(), EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT.getErrorMessage());
+
+        List<RequestModel> requests = new ArrayList<>();
+        requests.addAll(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_HANDOVER));
+        requests.addAll(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.REQUESTED));
+        if(!requests.isEmpty()){
+            for(RequestModel request : requests){
+                request.setStatus(ServiceConstant.CANCELLED);
+                request.setUpdatedDate(new Date());
+                request.setUpdatedBy(deleteEmployeeRequest.getAdminNik());
+                requestRepository.save(request);
+            }
+        }
+
+        employeeRepository.deleteByNik(deleteEmployeeRequest.getEmployeeNik());
     }
 }

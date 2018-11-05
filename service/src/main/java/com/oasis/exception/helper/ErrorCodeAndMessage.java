@@ -46,4 +46,24 @@ public class ErrorCodeAndMessage {
             "CYCLIC_SUPERVISING_OCCURED",
             "Cyclic supervising between specified employees exists"
     );
+    public static final FailedResponse EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR = new FailedResponse(
+            "EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR",
+            "Non-administrator attempted to delete employee data"
+    );
+    public static final FailedResponse EMPTY_EMPLOYEE_NIK = new FailedResponse(
+            "EMPTY_EMPLOYEE_NIK",
+            "No employee NIK given, thus the server cannot delete employee"
+    );
+    public static final FailedResponse SELF_DELETION_ATTEMPT = new FailedResponse(
+            "SELF_DELETION_ATTEMPT",
+            "Admin attempted to delete his/her own data"
+    );
+    public static final FailedResponse EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT = new FailedResponse(
+            "EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT",
+            "Admin attempted to delete an employee who still have supervised employees."
+    );
+    public static final FailedResponse EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT = new FailedResponse(
+            "EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT",
+            "Admin attempted to delete an employee who has not returned all assets used by him/her."
+    );
 }
