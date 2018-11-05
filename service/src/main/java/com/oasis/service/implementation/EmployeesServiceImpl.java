@@ -480,22 +480,26 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (employeeRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()) == null)
             throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
 
-        if(employeeRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()).getSupervisingCount() != 0)
+        if (employeeRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()).getSupervisingCount() != 0)
             throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT.getErrorCode(), EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT.getErrorMessage());
 
-        if(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_RETURN) != null)
+        if (!requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_RETURN).isEmpty())
             throw new UnauthorizedOperationException(EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT.getErrorCode(), EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT.getErrorMessage());
 
         List<RequestModel> requests = new ArrayList<>();
         requests.addAll(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_HANDOVER));
         requests.addAll(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.REQUESTED));
-        if(!requests.isEmpty()){
-            for(RequestModel request : requests){
+        if (!requests.isEmpty()) {
+            for (RequestModel request : requests) {
                 request.setStatus(ServiceConstant.CANCELLED);
                 request.setUpdatedDate(new Date());
                 request.setUpdatedBy(deleteEmployeeRequest.getAdminNik());
                 requestRepository.save(request);
             }
+        }
+
+        if (adminRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()) != null) {
+            adminRepository.deleteByNik(deleteEmployeeRequest.getEmployeeNik());
         }
 
         employeeRepository.deleteByNik(deleteEmployeeRequest.getEmployeeNik());
