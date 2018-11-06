@@ -12,4 +12,5 @@ public class APIMappingValue {
     public static final String API_EMPLOYEE_FIND = "/api/employees/find";
     public static final String API_SAVE_EMPLOYEE = "/api/employees/save";
     public static final String API_DELETE_EMPLOYEE = "/api/employees/delete";
+    public static final String API_CHANGE_SUPERVISOR_ON_DELETE = "/api/employees/delete/change-supervisor";
 }

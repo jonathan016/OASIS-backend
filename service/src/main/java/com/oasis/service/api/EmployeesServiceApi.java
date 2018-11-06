@@ -8,6 +8,7 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.webmodel.request.AddEmployeeRequest;
 import com.oasis.webmodel.request.DeleteEmployeeRequest;
+import com.oasis.webmodel.request.DeleteEmployeeSupervisorRequest;
 import com.oasis.webmodel.request.UpdateEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
@@ -48,4 +49,6 @@ public interface EmployeesServiceApi {
     boolean checkCyclicSupervisingExists(String employeeNik, String supervisorNik);
 
     void deleteEmployee(DeleteEmployeeRequest deleteEmployeeRequest) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException;
+
+    void changeSupervisorOnPreviousSupervisorDeletion(DeleteEmployeeSupervisorRequest deleteEmployeeSupervisorRequest) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException;
 }

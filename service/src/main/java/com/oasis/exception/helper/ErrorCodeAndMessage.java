@@ -60,10 +60,14 @@ public class ErrorCodeAndMessage {
     );
     public static final FailedResponse EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT = new FailedResponse(
             "EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT",
-            "Admin attempted to delete an employee who still have supervised employees."
+            "Admin attempted to delete an employee who still have supervised employees"
     );
     public static final FailedResponse EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT = new FailedResponse(
             "EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT",
-            "Admin attempted to delete an employee who has not returned all assets used by him/her."
+            "Admin attempted to delete an employee who has not returned all assets used by him/her"
+    );
+    public static final FailedResponse SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE = new FailedResponse(
+            "SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE",
+            "Selected employee for change of supervisor does not supervise any employee"
     );
 }

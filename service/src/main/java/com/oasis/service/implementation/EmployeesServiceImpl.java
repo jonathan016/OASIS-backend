@@ -17,6 +17,7 @@ import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.webmodel.request.AddEmployeeRequest;
 import com.oasis.webmodel.request.DeleteEmployeeRequest;
+import com.oasis.webmodel.request.DeleteEmployeeSupervisorRequest;
 import com.oasis.webmodel.request.UpdateEmployeeRequest;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -426,6 +427,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             }
 
             supervision.setSupervisorNik(supervisor.getNik());
+            supervision.setUpdatedDate(new Date());
+            supervision.setUpdatedBy(adminNik);
             supervisionRepository.save(supervision);
 
             if (employee.getSupervisingCount() > 0) {
@@ -503,5 +506,46 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         }
 
         employeeRepository.deleteByNik(deleteEmployeeRequest.getEmployeeNik());
+    }
+
+    @Override
+    public void changeSupervisorOnPreviousSupervisorDeletion(DeleteEmployeeSupervisorRequest deleteEmployeeSupervisorRequest) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException {
+
+        try {
+            if (!roleDeterminer.determineRole(deleteEmployeeSupervisorRequest.getAdminNik()).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+                throw new UnauthorizedOperationException(
+                        EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
+                        EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
+            }
+        } catch (DataNotFoundException dataNotFoundException) {
+            throw dataNotFoundException;
+        }
+        if (deleteEmployeeSupervisorRequest.getOldSupervisorNik().isEmpty() || deleteEmployeeSupervisorRequest.getNewSupervisorNik().isEmpty())
+            throw new BadRequestException(EMPTY_EMPLOYEE_NIK.getErrorCode(), EMPTY_EMPLOYEE_NIK.getErrorMessage());
+
+        if (deleteEmployeeSupervisorRequest.getOldSupervisorNik().equals(deleteEmployeeSupervisorRequest.getAdminNik()))
+            throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT.getErrorCode(), SELF_DELETION_ATTEMPT.getErrorMessage());
+
+        if (employeeRepository.findByNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik()) == null || employeeRepository.findByNik(deleteEmployeeSupervisorRequest.getNewSupervisorNik()) == null)
+            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+
+        if(supervisionRepository.findAllBySupervisorNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik()).isEmpty())
+            throw new DataNotFoundException(SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE.getErrorCode(), SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE.getErrorMessage());
+
+        List<SupervisionModel> supervisions = supervisionRepository.findAllBySupervisorNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik());
+
+        for (SupervisionModel supervision : supervisions) {
+            EmployeeModel previousSupervisor = employeeRepository.findByNik(supervision.getSupervisorNik());
+            previousSupervisor.setSupervisingCount(previousSupervisor.getSupervisingCount() - 1);
+            employeeRepository.save(previousSupervisor);
+
+            supervision.setSupervisorNik(deleteEmployeeSupervisorRequest.getNewSupervisorNik());
+            supervision.setUpdatedDate(new Date());
+            supervision.setUpdatedBy(deleteEmployeeSupervisorRequest.getAdminNik());
+
+            updateSupervisorSupervisingCount(deleteEmployeeSupervisorRequest.getNewSupervisorNik(), deleteEmployeeSupervisorRequest.getAdminNik());
+
+            supervisionRepository.save(supervision);
+        }
     }
 }
