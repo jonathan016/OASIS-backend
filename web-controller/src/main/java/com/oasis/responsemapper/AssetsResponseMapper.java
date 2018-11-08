@@ -20,11 +20,19 @@ public class AssetsResponseMapper {
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
-        successResponse.setValue(
-                new AssetListResponse(
-                        mappedAssets
-                )
-        );
+        if(mappedAssets.size() - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber > 0){
+            successResponse.setValue(
+                    new AssetListResponse(
+                            mappedAssets.subList(ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber)
+                    )
+            );
+        } else {
+            successResponse.setValue(
+                    new AssetListResponse(
+                            mappedAssets.subList(ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE + mappedAssets.size() % ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)
+                    )
+            );
+        }
         successResponse.setPaging(
                 new Paging(
                         pageNumber,

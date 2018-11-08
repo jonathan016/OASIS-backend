@@ -38,10 +38,10 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                     EMPTY_SEARCH_QUERY.getErrorCode(), EMPTY_SEARCH_QUERY.getErrorMessage());
         }
 
-        Set<AssetModel> assetsFound = new HashSet<>();
+        Set<AssetModel> assetsFound = new LinkedHashSet<>();
 
         if (!searchQuery.contains(" ")) {
-            if (assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(searchQuery, searchQuery).size() == 0) {
+            if (pageNumber < 1 || assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(searchQuery, searchQuery).size() == 0) {
                 throw new DataNotFoundException(
                         ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
             }
@@ -63,8 +63,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             String[] queries = searchQuery.split(" ");
 
             for (String query : queries) {
-                if (assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(query, query).size() == 0 &&
-                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(query.toLowerCase(), query.toLowerCase()).size() == 0) {
+                if (pageNumber < 1 || (assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(query, query).size() == 0 &&
+                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(query.toLowerCase(), query.toLowerCase()).size() == 0)) {
                     throw new DataNotFoundException(
                             ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
                 }
@@ -88,7 +88,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     @Override
     public List<AssetListResponse.Asset> getAvailableAsset(int pageNumber, String sortInfo)
             throws DataNotFoundException {
-        if (assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size() == 0) {
+        if (pageNumber < 1 || assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO).size() == 0) {
             throw new DataNotFoundException(
                     ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
         }
@@ -157,7 +157,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
     @Override
     public Set<AssetModel> sortData(String sortInfo, long stockLimit) {
-        Set<AssetModel> assetsAvailable = new HashSet<>();
+        Set<AssetModel> assetsAvailable = new LinkedHashSet<>();
 
         if (sortInfo.substring(1).equals("assetId")) {
             if (sortInfo.substring(0, 1).equals("A")) {
