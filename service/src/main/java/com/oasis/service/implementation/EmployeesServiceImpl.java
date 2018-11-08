@@ -46,7 +46,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     @Override
     public List<EmployeeListResponse.Employee> getAllEmployees(int pageNumber, String sortInfo) throws DataNotFoundException {
-        if (employeeRepository.findAll().size() == 0) {
+        if (pageNumber < 1 || employeeRepository.findAll().size() == 0) {
             throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
         }
 
@@ -137,7 +137,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         Set<EmployeeModel> employeesFound = new HashSet<>();
 
         if (!searchQuery.contains(" ")) {
-            if (employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(searchQuery, searchQuery).size() == 0) {
+            if (pageNumber < 1 || employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(searchQuery, searchQuery).size() == 0) {
                 throw new DataNotFoundException(
                         USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
             }
@@ -159,8 +159,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             String[] queries = searchQuery.split(" ");
 
             for (String query : queries) {
-                if (employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(query, query).size() == 0 &&
-                        employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(query.toLowerCase(), query.toLowerCase()).size() == 0) {
+                if (pageNumber < 1 || (employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(query, query).size() == 0 &&
+                        employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(query.toLowerCase(), query.toLowerCase()).size() == 0)) {
                     throw new DataNotFoundException(
                             USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
                 }
@@ -268,18 +268,18 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (employeeRepository.findAll().size() != 0) {
             EmployeeModel employeeWithDivision = employeeRepository.findFirstByDivisionOrderByNikDesc(division);
 
-            if (employeeWithDivision == null) {
-                String lastDivisionNumber = employeeRepository.findFirstByDivisionOrderByNikDesc(division).getNik();
-                int lastDivisionCode = Integer.valueOf(lastDivisionNumber.substring(4, 7));
-
-                nik.append(String.format("-%03d", lastDivisionCode + 1));
-                nik.append(String.format("-%03d", 1));
-            } else {
+            if (employeeWithDivision != null) {
                 String lastEmployeeDivisionNumber = employeeRepository.findFirstByNikContainsAndDivisionOrderByNikDesc(String.valueOf(nik), division).getNik();
                 int lastEmployeeCode = Integer.valueOf((lastEmployeeDivisionNumber.substring(8, 11)));
 
                 nik.append(String.format("-%03d", Integer.valueOf(lastEmployeeDivisionNumber.substring(4, 7))));
                 nik.append(String.format("-%03d", lastEmployeeCode + 1));
+            } else {
+                String lastDivisionNumber = employeeRepository.findFirstByNikContainsOrderByNikDesc(String.valueOf(nik)).getNik();
+                int lastDivisionCode = Integer.valueOf(lastDivisionNumber.substring(4, 7));
+
+                nik.append(String.format("-%03d", lastDivisionCode + 1));
+                nik.append(String.format("-%03d", 1));
             }
         } else {
             nik.append(String.format("-%03d", 1));
@@ -529,7 +529,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (employeeRepository.findByNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik()) == null || employeeRepository.findByNik(deleteEmployeeSupervisorRequest.getNewSupervisorNik()) == null)
             throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
 
-        if(supervisionRepository.findAllBySupervisorNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik()).isEmpty())
+        if (supervisionRepository.findAllBySupervisorNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik()).isEmpty())
             throw new DataNotFoundException(SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE.getErrorCode(), SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE.getErrorMessage());
 
         List<SupervisionModel> supervisions = supervisionRepository.findAllBySupervisorNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik());

@@ -22,11 +22,19 @@ public class EmployeesResponseMapper {
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
-        successResponse.setValue(
-                new EmployeeListResponse(
-                        mappedEmployees
-                )
-        );
+        if(mappedEmployees.size() - ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber > 0){
+            successResponse.setValue(
+                    new EmployeeListResponse(
+                            mappedEmployees.subList(ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber - ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber)
+                    )
+            );
+        } else {
+            successResponse.setValue(
+                    new EmployeeListResponse(
+                            mappedEmployees.subList(ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber - ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber - ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE + mappedEmployees.size() % ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
+                    )
+            );
+        }
         successResponse.setPaging(
                 new Paging(
                         pageNumber,
