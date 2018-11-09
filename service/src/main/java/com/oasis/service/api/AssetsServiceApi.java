@@ -8,6 +8,7 @@ import com.oasis.model.entity.AssetModel;
 import com.oasis.webmodel.request.AddAssetRequest;
 import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Set;
@@ -27,7 +28,7 @@ public interface AssetsServiceApi {
 
     Set<AssetModel> sortData(final String sortInfo, final long stockLimit);
 
-    void insertToDatabase(final AddAssetRequest.Asset request, final String employeeNik)
+    void insertToDatabase(final MultipartFile[] photos, final String request)
             throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException;
 
     String generateAssetSkuCode(
@@ -40,4 +41,8 @@ public interface AssetsServiceApi {
             throws UnauthorizedOperationException, BadRequestException, DataNotFoundException;
 
     AssetModel getAssetData(final String assetSku) throws DataNotFoundException;
+
+    void savePhotos(final MultipartFile[] photos, final String assetSku);
+
+    byte[] getAssetPhoto(final String assetSku, final String assetPhotoName, final String extension, final ClassLoader loader) throws DataNotFoundException;
 }

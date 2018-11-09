@@ -50,4 +50,8 @@ public class ErrorCodeAndMessage {
             "SELECTED_ASSET_STILL_REQUESTED",
             "Selected asset for deletion is still being requested, thus cannot be deleted"
     );
+    public static final FailedResponse MISSING_ASSET_IMAGE = new FailedResponse(
+            "MISSING_ASSET_IMAGE",
+            "No image(s) can be found for specified asset"
+    );
 }

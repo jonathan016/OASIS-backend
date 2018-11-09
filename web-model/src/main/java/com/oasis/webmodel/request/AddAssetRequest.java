@@ -8,7 +8,7 @@ public class AddAssetRequest {
     private Asset asset;
 
     @Data
-    public class Asset {
+    public static class Asset {
         private String assetName;
         private String assetLocation;
         private String assetBrand;

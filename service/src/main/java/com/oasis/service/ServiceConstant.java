@@ -17,4 +17,6 @@ public class ServiceConstant {
     public static final String TAB_SELF = "Self";
 
     public static final String SKU_PREFIX = "SKU";
+
+    public static final String IMAGE_ROOT_DIRECTORY = "C:\\oasis\\images";
 }

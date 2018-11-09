@@ -1,5 +1,6 @@
 package com.oasis.service.implementation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oasis.RoleDeterminer;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
@@ -15,7 +16,13 @@ import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
@@ -178,8 +185,23 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public void insertToDatabase(AddAssetRequest.Asset assetRequest, String employeeNik)
+    public void insertToDatabase(MultipartFile[] photos, String request)
             throws DuplicateDataException, UnauthorizedOperationException, DataNotFoundException {
+
+        String employeeNik = "";
+        AddAssetRequest.Asset assetRequest = new AddAssetRequest.Asset();
+
+        try {
+            employeeNik = new ObjectMapper().readTree(request).path("employeeNik").asText();
+            assetRequest.setAssetName(new ObjectMapper().readTree(request).path("asset").path("assetName").asText());
+            assetRequest.setAssetLocation(new ObjectMapper().readTree(request).path("asset").path("assetLocation").asText());
+            assetRequest.setAssetBrand(new ObjectMapper().readTree(request).path("asset").path("assetBrand").asText());
+            assetRequest.setAssetType(new ObjectMapper().readTree(request).path("asset").path("assetType").asText());
+            assetRequest.setAssetQty(new ObjectMapper().readTree(request).path("asset").path("assetQty").asLong());
+            assetRequest.setAssetPrice(new ObjectMapper().readTree(request).path("asset").path("assetPrice").asDouble());
+        } catch (IOException e) {
+            //
+        }
 
         try {
             if (!roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
@@ -216,6 +238,35 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             asset.setUpdatedDate(new Date());
 
             assetRepository.save(asset);
+
+            savePhotos(photos, asset.getSku());
+        }
+    }
+
+    @Override
+    public void savePhotos(MultipartFile[] photos, String assetSku) {
+        if (photos.length != 0) {
+            if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
+                new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
+            }
+
+            try {
+                for (int i = 0; i < photos.length; i++) {
+                    Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(assetSku));
+                    if (!Files.exists(saveDir)) {
+                        new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(assetSku)).mkdir();
+                    }
+                    StringBuilder extensionBuilder = new StringBuilder();
+                    extensionBuilder.append(photos[i].getOriginalFilename());
+                    extensionBuilder = extensionBuilder.reverse();
+                    extensionBuilder = extensionBuilder.replace(0, extensionBuilder.length(), extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1));
+                    extensionBuilder = extensionBuilder.reverse();
+                    File dest = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(assetSku) + File.separator + assetSku.concat("-").concat(String.valueOf(i + 1)).concat(String.valueOf(extensionBuilder)));
+                    photos[i].transferTo(dest);
+                }
+            } catch (IOException ioException) {
+                //
+            }
         }
     }
 
@@ -336,5 +387,19 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                     ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
 
         return asset;
+    }
+
+    @Override
+    public byte[] getAssetPhoto(String assetSku, String assetPhotoName, String extension, ClassLoader loader) throws DataNotFoundException {
+        File file = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY + "\\" + assetSku + "\\" + assetPhotoName + "." + extension);
+        byte[] media;
+
+        try {
+            media = Files.readAllBytes(file.toPath());
+        } catch (IOException | NullPointerException exception) {
+            throw new DataNotFoundException(MISSING_ASSET_IMAGE.getErrorCode(), MISSING_ASSET_IMAGE.getErrorMessage());
+        }
+
+        return media;
     }
 }
