@@ -31,4 +31,7 @@ public class AssetModel extends BaseEntity {
 
     @Field(AssetFieldName.ASSET_TYPE)
     private String type;
+
+    @Field(AssetFieldName.ASSET_IMAGES_DIRECTORY)
+    private String[] imageDirectory;
 }

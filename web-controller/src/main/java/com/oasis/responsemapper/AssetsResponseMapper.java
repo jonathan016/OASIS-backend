@@ -20,19 +20,24 @@ public class AssetsResponseMapper {
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
-        if(mappedAssets.size() - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber > 0){
-            successResponse.setValue(
-                    new AssetListResponse(
-                            mappedAssets.subList(ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber)
-                    )
-            );
-        } else {
-            successResponse.setValue(
-                    new AssetListResponse(
-                            mappedAssets.subList(ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE + mappedAssets.size() % ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)
-                    )
-            );
-        }
+//        if(mappedAssets.size() - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber > 0){
+//            successResponse.setValue(
+//                    new AssetListResponse(
+//                            mappedAssets.subList(ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber)
+//                    )
+//            );
+//        } else {
+//            successResponse.setValue(
+//                    new AssetListResponse(
+//                            mappedAssets.subList(ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE * pageNumber - ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE + mappedAssets.size() % ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)
+//                    )
+//            );
+//        }
+        successResponse.setValue(
+                new AssetListResponse(
+                        mappedAssets
+                )
+        );
         successResponse.setPaging(
                 new Paging(
                         pageNumber,
@@ -83,7 +88,9 @@ public class AssetsResponseMapper {
                         asset.getBrand(),
                         asset.getType(),
                         asset.getLocation(),
-                        asset.getStock()
+                        asset.getStock(),
+                        asset.getPrice(),
+                        asset.getImageDirectory()
                 )
         );
 

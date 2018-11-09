@@ -12,4 +12,6 @@ public class AssetDetailResponse {
     private String assetType;
     private String assetLocation;
     private long assetQuantity;
+    private double assetPrice;
+    private String[] assetImages;
 }

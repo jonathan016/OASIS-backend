@@ -1,5 +1,6 @@
 package com.oasis.webmodel.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
@@ -8,7 +9,8 @@ public class UpdateAssetRequest {
     private UpdateAssetRequest.Asset asset;
 
     @Data
-    public class Asset {
+    @AllArgsConstructor
+    public static class Asset {
         private String assetSku;
         private String assetName;
         private String assetLocation;
