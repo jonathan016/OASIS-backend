@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -150,6 +153,26 @@ public class AssetsController {
         return new ResponseEntity<>(photo, HttpStatus.OK);
     }
 
+    @GetMapping(value = APIMappingValue.API_ASSET_DETAIL_PDF,
+                produces = MediaType.APPLICATION_PDF_VALUE, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity callGetAssetDetailInPdfService(
+            @PathVariable final String assetSku
+    ) {
+
+        byte[] document;
+        try {
+            document = assetsServiceImpl.getAssetDetailInPdf(assetSku, AssetsController.class.getClassLoader());
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
+            ), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(document, HttpStatus.OK);
+    }
+
     @PostMapping(value = APIMappingValue.API_SAVE_ASSET,
                  produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity callAddAssetService(
@@ -184,6 +207,7 @@ public class AssetsController {
         ), HttpStatus.CREATED);
     }
 
+    //TODO fix bug here, cannot receive multipartFile
     @PutMapping(value = "/update",
                 produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity callUpdateAssetService(

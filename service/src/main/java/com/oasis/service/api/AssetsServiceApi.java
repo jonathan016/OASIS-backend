@@ -48,6 +48,12 @@ public interface AssetsServiceApi {
     )
             throws DataNotFoundException;
 
+    byte[] getAssetDetailInPdf(
+            final String sku,
+            final ClassLoader classLoader
+    )
+            throws DataNotFoundException;
+
     byte[] getAssetImage(
             final String sku,
             final String photoName,

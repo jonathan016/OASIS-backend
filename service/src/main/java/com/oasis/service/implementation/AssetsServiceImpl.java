@@ -2,6 +2,11 @@ package com.oasis.service.implementation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfPageEventHelper;
+import com.itextpdf.text.pdf.PdfWriter;
 import com.oasis.RoleDeterminer;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
@@ -16,19 +21,21 @@ import com.oasis.webmodel.request.AddAssetRequest;
 import com.oasis.webmodel.request.UpdateAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.Date;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.ASSET_NOT_FOUND;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.EMPTY_SEARCH_QUERY;
@@ -245,6 +252,162 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         return asset;
+    }
+
+    @Override
+    public byte[] getAssetDetailInPdf(
+            final String sku,
+            final ClassLoader classLoader
+    )
+            throws DataNotFoundException {
+
+        AssetModel asset = assetRepository.findBySku(sku);
+
+        if (asset == null) {
+            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+        }
+
+        Document document = new Document(PageSize.A4, 36, 36, 90, 36);
+
+        if (!Files.exists(Paths.get(sku.concat(".pdf")))) {
+            new File(sku.concat(".pdf"));
+        }
+
+        try {
+            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(sku.concat(".pdf")));
+
+            FileHeader event = new FileHeader(classLoader);
+            writer.setPageEvent(event);
+
+            document.open();
+
+            document.add(Chunk.NEWLINE);
+
+            Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 30, new BaseColor(32,162,223));
+            Chunk chunk = new Chunk(asset.getName(), font);
+            Paragraph paragraph = new Paragraph(chunk);
+            paragraph.setAlignment(Paragraph.ALIGN_CENTER);
+            document.add(paragraph);
+
+            document.add(Chunk.NEWLINE);
+
+            File possibleDirectory = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
+
+            if (possibleDirectory.exists()){
+                File detailImageFile = null;
+                if (possibleDirectory.isDirectory()){
+                    for (final File image : Objects.requireNonNull(possibleDirectory.listFiles())){
+                        detailImageFile = image;
+                        break;  //Takes only first result
+                    }
+                }
+
+                if (Files.exists(detailImageFile.toPath())){
+                    Image detailImage = Image.getInstance(
+                            Files.readAllBytes(Paths.get(
+                                    Objects.requireNonNull(detailImageFile).toURI())));
+                    detailImage.scaleToFit(detailImage.getWidth(), document.getPageSize().getWidth() / 5);
+                    detailImage.setAlignment(Element.ALIGN_CENTER);
+                    document.add(detailImage);
+                }
+            } else {
+                Paragraph altDetailImageParagraph = new Paragraph("No Image Available!");
+                altDetailImageParagraph.setAlignment(Element.ALIGN_CENTER);
+                document.add(altDetailImageParagraph);
+            }
+            document.add(Chunk.NEWLINE);
+
+            PdfPTable detailTable = new PdfPTable(2);
+            detailTable.setWidths(new float[] { 2, 7 });
+
+            Font infoFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 12, BaseColor.BLACK);
+            Paragraph attribute = new Paragraph("Attribute", infoFont);
+            attribute.setAlignment(Element.ALIGN_CENTER);
+            PdfPCell attrCell = new PdfPCell(attribute);
+            attrCell.setPadding(5);
+            attrCell.setPaddingBottom(10);
+
+            Paragraph description = new Paragraph("Description", infoFont);
+            description.setAlignment(Element.ALIGN_CENTER);
+            PdfPCell descCell = new PdfPCell(description);
+            descCell.setPadding(5);
+            descCell.setPaddingBottom(10);
+
+            detailTable.addCell(attrCell);
+            detailTable.addCell(descCell);
+
+            detailTable.addCell("SKU");
+            PdfPCell skuCell = new PdfPCell(new Phrase(asset.getSku()));
+            skuCell.setPadding(2);
+            skuCell.setPaddingLeft(10);
+            skuCell.setPaddingBottom(5);
+            detailTable.addCell(skuCell);
+
+            detailTable.addCell("Name");
+            PdfPCell nameCell = new PdfPCell(new Phrase(asset.getName()));
+            nameCell.setPadding(2);
+            nameCell.setPaddingLeft(10);
+            nameCell.setPaddingBottom(5);
+            detailTable.addCell(nameCell);
+
+            detailTable.addCell("Brand");
+            PdfPCell brandCell = new PdfPCell(new Phrase(asset.getBrand()));
+            brandCell.setPadding(2);
+            brandCell.setPaddingLeft(10);
+            brandCell.setPaddingBottom(5);
+            detailTable.addCell(brandCell);
+
+            detailTable.addCell("Type");
+            PdfPCell typeCell = new PdfPCell(new Phrase(asset.getType()));
+            typeCell.setPadding(2);
+            typeCell.setPaddingLeft(10);
+            typeCell.setPaddingBottom(5);
+            detailTable.addCell(typeCell);
+
+            detailTable.addCell("Stock");
+            PdfPCell stockCell = new PdfPCell(new Phrase(String.valueOf(asset.getStock())));
+            stockCell.setPadding(2);
+            stockCell.setPaddingLeft(10);
+            stockCell.setPaddingBottom(5);
+            detailTable.addCell(stockCell);
+
+            detailTable.addCell("Location");
+            PdfPCell locationCell = new PdfPCell(new Phrase(asset.getLocation()));
+            locationCell.setPadding(2);
+            locationCell.setPaddingLeft(10);
+            locationCell.setPaddingBottom(5);
+            detailTable.addCell(locationCell);
+
+            detailTable.addCell("Price");
+            PdfPCell priceCell = new PdfPCell(new Phrase(String.format("Rp. %.2f", asset.getPrice())));
+            priceCell.setPadding(2);
+            priceCell.setPaddingLeft(10);
+            priceCell.setPaddingBottom(5);
+            detailTable.addCell(priceCell);
+
+            document.add(detailTable);
+
+            document.close();
+        } catch (DocumentException | FileNotFoundException e) {
+            //TODO throw real exception cause
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            //TODO throw real exception cause
+            e.printStackTrace();
+        } catch (IOException e) {
+            //TODO throw real exception cause
+            e.printStackTrace();
+        }
+
+        byte[] assetPdf = new byte[20];
+        try {
+            assetPdf = Files.readAllBytes(Paths.get(sku.concat(".pdf")));
+        } catch (IOException e) {
+            //TODO throw real exception cause
+            e.printStackTrace();
+        }
+
+        return assetPdf;
     }
 
     @Override
@@ -619,5 +782,64 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         for (AssetModel selectedAsset : selectedAssets) {
             assetRepository.delete(selectedAsset);
         }
+    }
+}
+
+class FileHeader extends PdfPageEventHelper {
+    private PdfPTable table;
+    private float tableHeight;
+
+    FileHeader(final ClassLoader loader) {
+        table = new PdfPTable(5);
+        table.setTotalWidth(523);
+        table.setLockedWidth(true);
+
+        Image blibli = null;
+        try {
+            blibli = Image.getInstance(
+                    Files.readAllBytes(Paths.get(
+                            Objects.requireNonNull(loader.getResource("pdf_header_images/blibli.png"))
+                                   .toURI())));
+            } catch (IOException | BadElementException | URISyntaxException e) {
+            e.printStackTrace();
+        }
+        PdfPCell blibliCell = new PdfPCell(blibli, true);
+        blibliCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        blibliCell.setBorder(Rectangle.NO_BORDER);
+        table.addCell(blibliCell);
+
+        PdfPCell emptyCell = new PdfPCell();
+        emptyCell.setBorder(Rectangle.NO_BORDER);
+        for(int i = 0; i < 3; i++){
+            table.addCell(emptyCell);
+        }
+
+        Image oasis = null;
+        try {
+            oasis = Image.getInstance(
+                    Files.readAllBytes(Paths.get(
+                            Objects.requireNonNull(loader.getResource("pdf_header_images/oasis.png"))
+                                   .toURI())));
+        } catch (IOException | BadElementException | URISyntaxException e) {
+            e.printStackTrace();
+        }
+        PdfPCell oasisCell = new PdfPCell(oasis, true);
+//        PdfPCell oasisCell = new PdfPCell(new Paragraph("OASIS"));
+        oasisCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        oasisCell.setBorder(Rectangle.NO_BORDER);
+        table.addCell(oasisCell);
+
+        tableHeight = table.getTotalHeight();
+    }
+
+    public float getTableHeight() {
+        return tableHeight;
+    }
+
+    public void onEndPage(PdfWriter writer, Document document) {
+        table.writeSelectedRows(0, -1,
+                                document.left(),
+                                document.top() + ((document.topMargin() + tableHeight) / 2),
+                                writer.getDirectContent());
     }
 }
