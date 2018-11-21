@@ -9,11 +9,11 @@ import java.util.List;
 @Repository
 public interface RequestRepository extends MongoRepository<RequestModel, String> {
 
-    List<RequestModel> findAllByEmployeeNikAndStatus(String employeeNik, String status);
+    List<RequestModel> findAllByNikAndStatus(String employeeNik, String status);
 
     @SuppressWarnings("unchecked")
     RequestModel save(RequestModel request);
 
-    List<RequestModel> findAllByAssetSku(String assetSku);
+    List<RequestModel> findAllBySku(String assetSku);
 
 }

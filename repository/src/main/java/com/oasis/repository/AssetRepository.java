@@ -44,8 +44,6 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     boolean existsAssetModelByBrandAndType(String brand, String type);
 
-
-
     void delete(AssetModel entity);
 
 }

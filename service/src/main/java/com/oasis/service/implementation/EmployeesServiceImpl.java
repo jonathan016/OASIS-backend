@@ -458,12 +458,12 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (employeeRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()).getSupervisingCount() != 0)
             throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT);
 
-        if (!requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_RETURN).isEmpty())
+        if (!requestRepository.findAllByNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_RETURN).isEmpty())
             throw new UnauthorizedOperationException(EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT);
 
         List<RequestModel> requests = new ArrayList<>();
-        requests.addAll(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_HANDOVER));
-        requests.addAll(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.REQUESTED));
+        requests.addAll(requestRepository.findAllByNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_HANDOVER));
+        requests.addAll(requestRepository.findAllByNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.REQUESTED));
         if (!requests.isEmpty()) {
             for (RequestModel request : requests) {
                 request.setStatus(ServiceConstant.CANCELLED);

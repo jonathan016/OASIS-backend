@@ -727,7 +727,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 throw new DataNotFoundException(ASSET_NOT_FOUND);
             }
 
-            if (!requestRepository.findAllByAssetSku(sku).isEmpty()) {
+            if (!requestRepository.findAllBySku(sku).isEmpty()) {
                 throw new BadRequestException(SELECTED_ASSET_STILL_REQUESTED);
             }
 
