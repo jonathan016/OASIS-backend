@@ -1,15 +1,13 @@
-package com.oasis.webmodel.response.success.assets;
+package com.oasis.webmodel.request.assets;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-@AllArgsConstructor
-public class AssetListResponse {
+public class SaveAssetRequest {
 
-    private List<Asset> availableAssets;
+    private String nik;
+    private SaveAssetRequest.Asset asset;
 
     @Data
     @AllArgsConstructor
@@ -17,10 +15,13 @@ public class AssetListResponse {
 
         private String sku;
         private String name;
+        private String location;
         private String brand;
         private String type;
-        private String location;
         private long quantity;
+        private double price;
+        private boolean expendable;
 
     }
+
 }

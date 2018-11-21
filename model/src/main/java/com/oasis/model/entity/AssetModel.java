@@ -33,6 +33,9 @@ public class AssetModel extends BaseEntity {
     @Field(AssetFieldName.TYPE)
     private String type;
 
+    @Field(AssetFieldName.EXPENDABLE)
+    private boolean expendable;
+
     @Field(AssetFieldName.IMAGE_DIRECTORY)
     private String imageDirectory;
 

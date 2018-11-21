@@ -17,8 +17,7 @@ import com.oasis.repository.AssetRepository;
 import com.oasis.repository.RequestRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
-import com.oasis.webmodel.request.AddAssetRequest;
-import com.oasis.webmodel.request.UpdateAssetRequest;
+import com.oasis.webmodel.request.assets.SaveAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,13 +78,13 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
         Set<AssetModel> sortedAvailableAssets = new LinkedHashSet<>();
 
-        if (sortInfo.substring(1).equals("assetId")) {
+        if (sortInfo.substring(1).equals("sku")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuAsc(stockLimit));
             } else if (sortInfo.substring(0, 1).equals("D")) {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuDesc(stockLimit));
             }
-        } else if (sortInfo.substring(1).equals("assetName")) {
+        } else if (sortInfo.substring(1).equals("name")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderByNameAsc(stockLimit));
             } else if (sortInfo.substring(0, 1).equals("D")) {
@@ -161,7 +160,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         Set<AssetModel> sortedAvailableAssets = new LinkedHashSet<>();
 
         if (sortInfo.substring(1)
-                    .equals("assetId")) {
+                    .equals("sku")) {
             if (sortInfo.substring(0, 1)
                         .equals("A")) {
                 sortedAvailableAssets.addAll(
@@ -182,7 +181,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 );
             }
         } else if (sortInfo.substring(1)
-                           .equals("assetName")) {
+                           .equals("name")) {
             if (sortInfo.substring(0, 1)
                         .equals("A")) {
                 sortedAvailableAssets.addAll(
@@ -242,9 +241,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
-        String[] images = new String[20];
-
         File imageDirectory = new File(assetDetailData.getImageDirectory());
+        String[] images = new String[Objects.requireNonNull(imageDirectory.listFiles()).length];
 
         int i = 0;
         for (final File image : Objects.requireNonNull(imageDirectory.listFiles())){
@@ -266,11 +264,12 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         return new AssetDetailResponse(
                 assetDetailData.getSku(),
                 assetDetailData.getName(),
-                assetDetailData.getBrand(),
-                assetDetailData.getType(),
                 assetDetailData.getLocation(),
                 assetDetailData.getStock(),
+                assetDetailData.getBrand(),
+                assetDetailData.getType(),
                 assetDetailData.getPrice(),
+                (assetDetailData.isExpendable()) ? "Yes" : "No",
                 images
         );
     }
@@ -458,20 +457,22 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                    DataNotFoundException {
 
         String adminNik;
-        AddAssetRequest.Asset assetRequest;
+        SaveAssetRequest.Asset assetRequest;
 
         try {
             adminNik = new ObjectMapper().readTree(rawAssetData).path("nik").asText();
 
             JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
 
-            assetRequest = new AddAssetRequest.Asset(
-                    asset.path("assetName").asText(),
-                    asset.path("assetLocation").asText(),
-                    asset.path("assetBrand").asText(),
-                    asset.path("assetType").asText(),
-                    asset.path("assetQty").asLong(),
-                    asset.path("assetPrice").asDouble()
+            assetRequest = new SaveAssetRequest.Asset(
+                    null,
+                    asset.path("name").asText(),
+                    asset.path("location").asText(),
+                    asset.path("brand").asText(),
+                    asset.path("type").asText(),
+                    asset.path("quantity").asLong(),
+                    asset.path("price").asDouble(),
+                    asset.path("expendable").asBoolean()
             );
         } catch (IOException e) {
             //TODO throw real exception cause
@@ -483,7 +484,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         if (assetRepository.existsAssetModelByNameAndBrandAndType(
-                assetRequest.getAssetName(), assetRequest.getAssetBrand(), assetRequest.getAssetType()
+                assetRequest.getName(), assetRequest.getBrand(), assetRequest.getType()
         )) {
             throw new DuplicateDataException(DUPLICATE_ASSET_DATA_FOUND);
         } else {
@@ -491,16 +492,17 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
             asset.setSku(
                     generateAssetSkuCode(
-                            assetRequest.getAssetBrand(),
-                            assetRequest.getAssetType(),
-                            assetRequest.getAssetName()
+                            assetRequest.getBrand(),
+                            assetRequest.getType(),
+                            assetRequest.getName()
                     ));
-            asset.setName(assetRequest.getAssetName());
-            asset.setLocation(assetRequest.getAssetLocation());
-            asset.setPrice(assetRequest.getAssetPrice());
-            asset.setStock(assetRequest.getAssetQty());
-            asset.setBrand(assetRequest.getAssetBrand());
-            asset.setType(assetRequest.getAssetType());
+            asset.setName(assetRequest.getName());
+            asset.setLocation(assetRequest.getLocation());
+            asset.setPrice(assetRequest.getPrice());
+            asset.setStock(assetRequest.getQuantity());
+            asset.setBrand(assetRequest.getBrand());
+            asset.setType(assetRequest.getType());
+            asset.setExpendable(assetRequest.isExpendable());
             asset.setCreatedBy(adminNik);
             asset.setUpdatedBy(adminNik);
             asset.setCreatedDate(new Date());
@@ -626,21 +628,22 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                    DataNotFoundException {
 
         String adminNik;
-        UpdateAssetRequest.Asset assetRequest;
+        SaveAssetRequest.Asset assetRequest;
 
         try {
             adminNik = new ObjectMapper().readTree(rawAssetData).path("nik").asText();
 
             JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
 
-            assetRequest = new UpdateAssetRequest.Asset(
+            assetRequest = new SaveAssetRequest.Asset(
                     asset.path("sku").asText(),
-                    asset.path("assetName").asText(),
-                    asset.path("assetLocation").asText(),
-                    asset.path("assetBrand").asText(),
-                    asset.path("assetType").asText(),
-                    asset.path("assetQty").asLong(),
-                    asset.path("assetPrice").asDouble()
+                    asset.path("name").asText(),
+                    asset.path("location").asText(),
+                    asset.path("brand").asText(),
+                    asset.path("type").asText(),
+                    asset.path("quantity").asLong(),
+                    asset.path("price").asDouble(),
+                    asset.path("expendable").asBoolean()
             );
         } catch (IOException e){
             //TODO throw real exception cause
@@ -651,18 +654,19 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
-        AssetModel asset = assetRepository.findBySku(assetRequest.getAssetSku());
+        AssetModel asset = assetRepository.findBySku(assetRequest.getSku());
 
         if (asset == null) {
             throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
-        asset.setName(assetRequest.getAssetName());
-        asset.setLocation(assetRequest.getAssetLocation());
-        asset.setPrice(assetRequest.getAssetPrice());
-        asset.setStock(assetRequest.getAssetQty());
-        asset.setBrand(assetRequest.getAssetBrand());
-        asset.setType(assetRequest.getAssetType());
+        asset.setName(assetRequest.getName());
+        asset.setLocation(assetRequest.getLocation());
+        asset.setPrice(assetRequest.getPrice());
+        asset.setStock(assetRequest.getQuantity());
+        asset.setBrand(assetRequest.getBrand());
+        asset.setType(assetRequest.getType());
+        asset.setExpendable(assetRequest.isExpendable());
 
         boolean rootDirectoryCreated;
         boolean directoryCreated;

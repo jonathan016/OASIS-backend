@@ -7,7 +7,7 @@ import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.responsemapper.AssetsResponseMapper;
 import com.oasis.service.implementation.AssetsServiceImpl;
-import com.oasis.webmodel.request.DeleteAssetRequest;
+import com.oasis.webmodel.request.assets.DeleteAssetRequest;
 import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +28,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-@CrossOrigin(origins = "http://localhost")
 @RestController
+@CrossOrigin(origins = "http://localhost")
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class AssetsController {
 
     @Autowired
@@ -101,13 +101,13 @@ public class AssetsController {
     @GetMapping(value = APIMappingValue.API_DETAIL_ASSET,
                 produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callGetAssetDetailService(
-            @PathVariable final String assetSku
+            @PathVariable final String sku
     ) {
 
         AssetDetailResponse asset;
 
         try {
-            asset = assetsServiceImpl.getAssetDetail(assetSku);
+            asset = assetsServiceImpl.getAssetDetail(sku);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
                     HttpStatus.NOT_FOUND.value(),
@@ -126,8 +126,8 @@ public class AssetsController {
                 produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE},
                 consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callGetAssetImageService(
-            @PathVariable final String assetSku,
-            @PathVariable final String assetPhotoName,
+            @PathVariable final String sku,
+            @PathVariable final String imageName,
             @PathVariable final String extension
     ) {
 
@@ -135,8 +135,8 @@ public class AssetsController {
 
         try {
             photo = assetsServiceImpl.getAssetImage(
-                    assetSku,
-                    assetPhotoName,
+                    sku,
+                    imageName,
                     extension,
                     AssetsController.class.getClassLoader()
             );
@@ -154,12 +154,12 @@ public class AssetsController {
     @GetMapping(value = APIMappingValue.API_PDF_ASSET,
                 produces = MediaType.APPLICATION_PDF_VALUE, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callGetAssetDetailInPdfService(
-            @PathVariable final String assetSku
+            @PathVariable final String sku
     ) {
 
         byte[] document;
         try {
-            document = assetsServiceImpl.getAssetDetailInPdf(assetSku, AssetsController.class.getClassLoader());
+            document = assetsServiceImpl.getAssetDetailInPdf(sku, AssetsController.class.getClassLoader());
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
                     HttpStatus.NOT_FOUND.value(),
@@ -245,7 +245,7 @@ public class AssetsController {
         //TODO Handle concurrency
 
         try {
-            assetsServiceImpl.deleteAssets(request.getSelectedAssets(), request.getEmployeeNik());
+            assetsServiceImpl.deleteAssets(request.getAssets(), request.getNik());
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
                     HttpStatus.UNAUTHORIZED.value(),

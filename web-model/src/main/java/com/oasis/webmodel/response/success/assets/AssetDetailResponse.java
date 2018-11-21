@@ -6,12 +6,15 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AssetDetailResponse {
-    private String assetSku;
-    private String assetName;
-    private String assetBrand;
-    private String assetType;
-    private String assetLocation;
-    private long assetQuantity;
-    private double assetPrice;
-    private String[] assetImages;
+
+    private String sku;
+    private String name;
+    private String location;
+    private long stock;
+    private String brand;
+    private String type;
+    private double price;
+    private String expendable;
+    private String[] images;
+
 }
