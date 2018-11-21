@@ -11,27 +11,27 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = CollectionName.ASSET_COLLECTION_NAME)
 public class AssetModel extends BaseEntity {
 
-    @Field(AssetFieldName.ASSET_ID)
+    @Field(AssetFieldName.SKU)
     private String sku;
 
-    @Field(AssetFieldName.ASSET_NAME)
+    @Field(AssetFieldName.NAME)
     private String name;
 
-    @Field(AssetFieldName.ASSET_LOCATION)
+    @Field(AssetFieldName.LOCATION)
     private String location;
 
-    @Field(AssetFieldName.ASSET_PRICE)
+    @Field(AssetFieldName.PRICE)
     private double price;
 
-    @Field(AssetFieldName.ASSET_STOCK)
+    @Field(AssetFieldName.STOCK)
     private long stock;
 
-    @Field(AssetFieldName.ASSET_BRAND)
+    @Field(AssetFieldName.BRAND)
     private String brand;
 
-    @Field(AssetFieldName.ASSET_TYPE)
+    @Field(AssetFieldName.TYPE)
     private String type;
 
-    @Field(AssetFieldName.ASSET_IMAGES_DIRECTORY)
-    private String[] imageDirectory;
+    @Field(AssetFieldName.IMAGE_DIRECTORY)
+    private String imageDirectory;
 }

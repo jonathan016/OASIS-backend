@@ -77,19 +77,19 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                 employee =
                         new EmployeeListResponse.Employee(
                                 employeeFound.getNik(),
-                                employeeFound.getFullname(),
+                                employeeFound.getName(),
                                 employeeFound.getJobTitle(),
                                 employeeFound.getLocation(),
                                 new EmployeeListResponse.Employee.Supervisor(
                                         supervisor.getNik(),
-                                        supervisor.getFullname()
+                                        supervisor.getName()
                                 )
                         );
             } else {
                 employee =
                         new EmployeeListResponse.Employee(
                                 employeeFound.getNik(),
-                                employeeFound.getFullname(),
+                                employeeFound.getName(),
                                 employeeFound.getJobTitle(),
                                 employeeFound.getLocation(),
                                 null
@@ -236,7 +236,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             EmployeeModel employee = new EmployeeModel();
 
             employee.setNik(generateEmployeeNik(employeeRequest.getDivision()));
-            employee.setFullname(employeeRequest.getFullname());
+            employee.setName(employeeRequest.getFullname());
             employee.setUsername(generateEmployeeUsername(employeeRequest.getFullname().toLowerCase(), employeeRequest.getDob()));
             employee.setPassword(generateEmployeeDefaultPassword(employeeRequest.getDob()));
             try {
@@ -396,10 +396,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             //TODO Handle exception
         }
 
-        if (!employee.getFullname().equals(employeeRequest.getEmployeeFullname()) || employee.getDob().compareTo(requestDob) != 0)
+        if (!employee.getName().equals(employeeRequest.getEmployeeFullname()) || employee.getDob().compareTo(requestDob) != 0)
             employee.setUsername(generateEmployeeUsername(employeeRequest.getEmployeeFullname().toLowerCase(), employeeRequest.getEmployeeDob()));
 
-        employee.setFullname(employeeRequest.getEmployeeFullname());
+        employee.setName(employeeRequest.getEmployeeFullname());
         employee.setDob(requestDob);
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

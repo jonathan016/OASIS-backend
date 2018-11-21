@@ -13,36 +13,36 @@ import java.util.Date;
 @Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 public class EmployeeModel extends BaseEntity {
 
-    @Field(EmployeeFieldName.EMPLOYEE_NIK)
+    @Field(EmployeeFieldName.NIK)
     private String nik;
 
-    @Field(EmployeeFieldName.EMPLOYEE_FULLNAME)
-    private String fullname;
+    @Field(EmployeeFieldName.NAME)
+    private String name;
 
-    @Field(EmployeeFieldName.EMPLOYEE_DOB)
+    @Field(EmployeeFieldName.DOB)
     private Date dob;
 
-    @Field(EmployeeFieldName.EMPLOYEE_USERNAME)
+    @Field(EmployeeFieldName.USERNAME)
     private String username;
 
-    @Field(EmployeeFieldName.EMPLOYEE_PASSWORD)
+    @Field(EmployeeFieldName.PASSWORD)
     private String password;
 
-    @Field(EmployeeFieldName.EMPLOYEE_PHONE)
+    @Field(EmployeeFieldName.PHONE)
     private String phone;
 
-    @Field(EmployeeFieldName.EMPLOYEE_JOB_TITLE)
+    @Field(EmployeeFieldName.JOB_TITLE)
     private String jobTitle;
 
-    @Field(EmployeeFieldName.EMPLOYEE_DIVISION)
+    @Field(EmployeeFieldName.DIVISION)
     private String division;
 
-    @Field(EmployeeFieldName.EMPLOYEE_LOCATION)
+    @Field(EmployeeFieldName.LOCATION)
     private String location;
 
-    @Field(EmployeeFieldName.EMPLOYEE_SUPERVISING_COUNT)
+    @Field(EmployeeFieldName.SUPERVISING_COUNT)
     private Integer supervisingCount;
 
-    @Field(EmployeeFieldName.EMPLOYEE_SUPERVISION_ID)
+    @Field(EmployeeFieldName.SUPERVISION_ID)
     private String supervisionId;
 }

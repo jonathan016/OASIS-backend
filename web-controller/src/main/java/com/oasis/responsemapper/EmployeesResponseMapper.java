@@ -74,7 +74,7 @@ public class EmployeesResponseMapper {
                     new EmployeeDetailResponse(
                             employee.getNik(),
                             employee.getUsername(),
-                            employee.getFullname(),
+                            employee.getName(),
                             new SimpleDateFormat("dd-MM-yyyy").format(employee.getDob()),
                             employee.getPhone(),
                             employee.getJobTitle(),
@@ -82,7 +82,7 @@ public class EmployeesResponseMapper {
                             employee.getLocation(),
                             new EmployeeDetailResponse.Supervisor(
                                     supervisor.getNik(),
-                                    supervisor.getFullname()
+                                    supervisor.getName()
                             )
                     )
             );
@@ -91,7 +91,7 @@ public class EmployeesResponseMapper {
                     new EmployeeDetailResponse(
                             employee.getNik(),
                             employee.getUsername(),
-                            employee.getFullname(),
+                            employee.getName(),
                             new SimpleDateFormat("dd-MM-yyyy").format(employee.getDob()),
                             employee.getPhone(),
                             employee.getJobTitle(),

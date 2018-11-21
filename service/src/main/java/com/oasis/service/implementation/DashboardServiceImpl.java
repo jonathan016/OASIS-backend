@@ -251,14 +251,14 @@ public class DashboardServiceImpl implements DashboardServiceApi {
             DashboardRequestUpdateResponse.RequestUpdateModel.Employee employee =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Employee(
                             requestUpdate.getEmployeeNik(),
-                            getEmployeeData(requestUpdate.getEmployeeNik()).getFullname()
+                            getEmployeeData(requestUpdate.getEmployeeNik()).getName()
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Supervisor supervisor =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Supervisor(
                             getEmployeeSupervisorData(
                                     requestUpdate.getEmployeeNik()).getSupervisorNik(),
                             getEmployeeData(getEmployeeSupervisorData(
-                                    requestUpdate.getEmployeeNik()).getSupervisorNik()).getFullname()
+                                    requestUpdate.getEmployeeNik()).getSupervisorNik()).getName()
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Asset asset =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Asset(

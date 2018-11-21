@@ -2,16 +2,16 @@ package com.oasis.model.fieldname;
 
 public class EmployeeFieldName {
 
-    public static final String EMPLOYEE_NIK = "NIK";
-    public static final String EMPLOYEE_FULLNAME = "fullname";
-    public static final String EMPLOYEE_DOB = "dob";
-    public static final String EMPLOYEE_USERNAME = "username";
-    public static final String EMPLOYEE_PASSWORD = "password";
-    public static final String EMPLOYEE_PHONE = "phone";
-    public static final String EMPLOYEE_JOB_TITLE = "jobTitle";
-    public static final String EMPLOYEE_DIVISION = "division";
-    public static final String EMPLOYEE_LOCATION = "location";
-    public static final String EMPLOYEE_SUPERVISING_COUNT = "supervisingCount";
-    public static final String EMPLOYEE_SUPERVISION_ID = "supervisionId";
+    public static final String NIK = "NIK";
+    public static final String NAME = "name";
+    public static final String DOB = "dob";
+    public static final String USERNAME = "username";
+    public static final String PASSWORD = "password";
+    public static final String PHONE = "phone";
+    public static final String JOB_TITLE = "jobTitle";
+    public static final String DIVISION = "division";
+    public static final String LOCATION = "location";
+    public static final String SUPERVISING_COUNT = "supervisingCount";
+    public static final String SUPERVISION_ID = "supervisionId";
 
 }

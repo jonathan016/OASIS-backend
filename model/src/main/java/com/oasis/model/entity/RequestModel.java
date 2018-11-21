@@ -11,21 +11,21 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = CollectionName.REQUEST_COLLECTION_NAME)
 public class RequestModel extends BaseEntity {
 
-    @Field(RequestFieldName.REQUEST_EMPLOYEE_NIK)
+    @Field(RequestFieldName.EMPLOYEE_NIK)
     private String employeeNik;
 
-    @Field(RequestFieldName.REQUEST_ASSET_SKU)
+    @Field(RequestFieldName.ASSET_SKU)
     private String assetSku;
 
-    @Field(RequestFieldName.REQUEST_ASSET_QUANTITY)
+    @Field(RequestFieldName.ASSET_QUANTITY)
     private int assetQuantity;
 
-    @Field(RequestFieldName.REQUEST_STATUS)
+    @Field(RequestFieldName.STATUS)
     private String status;
 
-    @Field(RequestFieldName.REQUEST_REQUEST_NOTE)
+    @Field(RequestFieldName.REQUEST_NOTE)
     private String requestNote;
 
-    @Field(RequestFieldName.REQUEST_TRANSACTION_NOTE)
+    @Field(RequestFieldName.TRANSACTION_NOTE)
     private String transactionNote;
 }
