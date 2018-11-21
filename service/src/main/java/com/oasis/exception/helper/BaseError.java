@@ -1,4 +1,4 @@
-package com.oasis.model;
+package com.oasis.exception.helper;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

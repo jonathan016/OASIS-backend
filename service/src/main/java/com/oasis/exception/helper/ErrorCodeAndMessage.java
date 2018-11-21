@@ -1,7 +1,5 @@
 package com.oasis.exception.helper;
 
-import com.oasis.model.BaseError;
-
 public class ErrorCodeAndMessage {
 
     public static final BaseError USER_NOT_FOUND = new BaseError(
