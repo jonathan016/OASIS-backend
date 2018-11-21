@@ -107,7 +107,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         EmployeeModel employee = employeeRepository.findByNik(employeeNik);
 
         if (employee == null)
-            throw new DataNotFoundException(INCORRECT_EMPLOYEE_NIK);
+            throw new DataNotFoundException(USER_NOT_FOUND);
 
         return employee;
     }
@@ -204,7 +204,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     public void insertToDatabase(AddEmployeeRequest.Employee employeeRequest, String adminNik) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException {
 
         if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR))
-            throw new UnauthorizedOperationException(EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR);
+            throw new UnauthorizedOperationException(EMPLOYEE_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
 
         List<EmployeeModel> matchingEmployees = new ArrayList<>();
         try {
@@ -362,7 +362,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     @Override
     public void updateEmployee(UpdateEmployeeRequest.Employee employeeRequest, String adminNik) throws DataNotFoundException, UnauthorizedOperationException {
         if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(EMPLOYEE_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR);
+            throw new UnauthorizedOperationException(EMPLOYEE_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
         EmployeeModel employee = employeeRepository.findByNik(employeeRequest.getEmployeeNik());
@@ -402,7 +402,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             employeeRepository.save(previousSupervisor);
 
             if (checkCyclicSupervisingExists(employee.getNik(), employeeRequest.getEmployeeSupervisorId())) {
-                throw new UnauthorizedOperationException(CYCLIC_SUPERVISING_OCCURED);
+                throw new UnauthorizedOperationException(CYCLIC_SUPERVISING_OCCURRED);
             }
 
             supervision.setSupervisorNik(supervisor.getNik());
@@ -459,7 +459,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT);
 
         if (!requestRepository.findAllByNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_RETURN).isEmpty())
-            throw new UnauthorizedOperationException(EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT);
+            throw new UnauthorizedOperationException(UNRETURNED_ASSETS_ON_DELETION_ATTEMPT);
 
         List<RequestModel> requests = new ArrayList<>();
         requests.addAll(requestRepository.findAllByNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_HANDOVER));

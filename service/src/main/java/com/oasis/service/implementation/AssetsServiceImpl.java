@@ -35,14 +35,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.ASSET_NOT_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.EMPTY_SEARCH_QUERY;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.MISSING_ASSET_IMAGE;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.NO_ASSET_SELECTED;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.SAME_ASSET_EXISTS;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.SELECTED_ASSET_STILL_REQUESTED;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
 @Service
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
@@ -486,13 +479,13 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR);
+            throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
         if (assetRepository.existsAssetModelByNameAndBrandAndType(
                 assetRequest.getAssetName(), assetRequest.getAssetBrand(), assetRequest.getAssetType()
         )) {
-            throw new DuplicateDataException(SAME_ASSET_EXISTS);
+            throw new DuplicateDataException(DUPLICATE_ASSET_DATA_FOUND);
         } else {
             AssetModel asset = new AssetModel();
 
@@ -655,7 +648,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR);
+            throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
         AssetModel asset = assetRepository.findBySku(assetRequest.getAssetSku());
@@ -713,7 +706,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                    BadRequestException,
                    DataNotFoundException {
         if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR);
+            throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
         if (skus.isEmpty()) {

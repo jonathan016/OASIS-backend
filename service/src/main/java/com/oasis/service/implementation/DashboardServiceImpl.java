@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_EMPLOYEE_NIK;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.REQUESTS_NOT_FOUND;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Service
@@ -264,7 +264,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     )
             throws DataNotFoundException {
         if (getEmployeeData(employeeNik) == null) {
-            throw new DataNotFoundException(INCORRECT_EMPLOYEE_NIK);
+            throw new DataNotFoundException(USER_NOT_FOUND);
         }
         String role = determineUserRole(employeeNik);
 
