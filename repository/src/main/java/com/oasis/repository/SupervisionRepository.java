@@ -15,5 +15,5 @@ public interface SupervisionRepository extends MongoRepository<SupervisionModel,
 
     @SuppressWarnings("unchecked")
     SupervisionModel save(SupervisionModel supervision);
-    
+
 }
