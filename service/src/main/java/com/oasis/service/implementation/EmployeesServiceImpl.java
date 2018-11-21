@@ -30,6 +30,7 @@ import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Service
 public class EmployeesServiceImpl implements EmployeesServiceApi {
 
@@ -47,7 +48,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     @Override
     public List<EmployeeListResponse.Employee> getAllEmployees(int pageNumber, String sortInfo) throws DataNotFoundException {
         if (pageNumber < 1 || employeeRepository.findAll().size() == 0) {
-            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(USER_NOT_FOUND);
         }
 
         if ((int)
@@ -55,8 +56,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                         (float) employeeRepository.findAll().size()
                                 / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
                 < pageNumber) {
-            throw new DataNotFoundException(
-                    USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(USER_NOT_FOUND);
         }
 
         Set<EmployeeModel> employees = fillData("", sortInfo);
@@ -107,7 +107,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         EmployeeModel employee = employeeRepository.findByNik(employeeNik);
 
         if (employee == null)
-            throw new DataNotFoundException(INCORRECT_EMPLOYEE_NIK.getErrorCode(), INCORRECT_EMPLOYEE_NIK.getErrorMessage());
+            throw new DataNotFoundException(INCORRECT_EMPLOYEE_NIK);
 
         return employee;
     }
@@ -118,7 +118,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         boolean isAdmin = roleDeterminer.determineRole(employeeNik).equals(ServiceConstant.ROLE_ADMINISTRATOR);
 
         if (supervision == null && !isAdmin)
-            throw new DataNotFoundException(SUPERVISION_DATA_NOT_FOUND.getErrorCode(), SUPERVISION_DATA_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(SUPERVISION_DATA_NOT_FOUND);
 
         if (!isAdmin) {
             return employeeRepository.findByNik(supervision.getSupervisorNik());
@@ -130,16 +130,13 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     @Override
     public List<EmployeeListResponse.Employee> getEmployeesBySearchQuery(String searchQuery, int pageNumber, String sortInfo) throws BadRequestException, DataNotFoundException {
         if (searchQuery.isEmpty())
-            throw new BadRequestException(
-                    EMPTY_SEARCH_QUERY.getErrorCode(), EMPTY_SEARCH_QUERY.getErrorMessage()
-            );
+            throw new BadRequestException(EMPTY_SEARCH_QUERY);
 
         Set<EmployeeModel> employeesFound = new HashSet<>();
 
         if (!searchQuery.contains(" ")) {
             if (pageNumber < 1 || employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(searchQuery, searchQuery).size() == 0) {
-                throw new DataNotFoundException(
-                        USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+                throw new DataNotFoundException(USER_NOT_FOUND);
             }
 
             if ((int)
@@ -150,8 +147,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                                             .size()
                                     / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
                     < pageNumber) {
-                throw new DataNotFoundException(
-                        USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+                throw new DataNotFoundException(USER_NOT_FOUND);
             }
 
             employeesFound.addAll(fillData(searchQuery, sortInfo));
@@ -161,8 +157,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             for (String query : queries) {
                 if (pageNumber < 1 || (employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(query, query).size() == 0 &&
                                        employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(query.toLowerCase(), query.toLowerCase()).size() == 0)) {
-                    throw new DataNotFoundException(
-                            USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+                    throw new DataNotFoundException(USER_NOT_FOUND);
                 }
 
                 if ((int)
@@ -170,8 +165,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                                 (float) employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(query, query).size()
                                         / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
                         < pageNumber) {
-                    throw new DataNotFoundException(
-                            USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+                    throw new DataNotFoundException(USER_NOT_FOUND);
                 }
 
                 employeesFound.addAll(fillData(query, sortInfo));
@@ -209,12 +203,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     @Override
     public void insertToDatabase(AddEmployeeRequest.Employee employeeRequest, String adminNik) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException {
 
-        try {
-            if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR))
-                throw new UnauthorizedOperationException(EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(), EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
-        } catch (DataNotFoundException dataNotFoundException) {
-            throw dataNotFoundException;
-        }
+        if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR))
+            throw new UnauthorizedOperationException(EMPLOYEE_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR);
 
         List<EmployeeModel> matchingEmployees = new ArrayList<>();
         try {
@@ -231,7 +221,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         }
 
         if (!matchingEmployees.isEmpty()) {
-            throw new DuplicateDataException(DUPLICATE_EMPLOYEE_DATA_FOUND.getErrorCode(), DUPLICATE_EMPLOYEE_DATA_FOUND.getErrorMessage());
+            throw new DuplicateDataException(DUPLICATE_EMPLOYEE_DATA_FOUND);
         } else {
             EmployeeModel employee = new EmployeeModel();
 
@@ -362,7 +352,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     @Override
     public String getSupervisionId(String employeeNik, String supervisorNik, String adminNik) throws DataNotFoundException {
         if (employeeRepository.findByNik(supervisorNik) == null)
-            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(USER_NOT_FOUND);
 
         createSupervision(employeeNik, supervisorNik, adminNik);
 
@@ -371,23 +361,14 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     @Override
     public void updateEmployee(UpdateEmployeeRequest.Employee employeeRequest, String adminNik) throws DataNotFoundException, UnauthorizedOperationException {
-        try {
-            if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-                throw new UnauthorizedOperationException(
-                        EMPLOYEE_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
-                        EMPLOYEE_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
-            }
-        } catch (DataNotFoundException e) {
-            throw new DataNotFoundException(e.getErrorCode(), e.getErrorMessage());
+        if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+            throw new UnauthorizedOperationException(EMPLOYEE_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
         EmployeeModel employee = employeeRepository.findByNik(employeeRequest.getEmployeeNik());
 
         if (employee == null)
-            throw new DataNotFoundException(
-                    USER_NOT_FOUND.getErrorCode(),
-                    USER_NOT_FOUND.getErrorMessage()
-            );
+            throw new DataNotFoundException(USER_NOT_FOUND);
 
         Date requestDob = null;
         try {
@@ -396,7 +377,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             //TODO Handle exception
         }
 
-        if (!employee.getName().equals(employeeRequest.getEmployeeFullname()) || employee.getDob().compareTo(requestDob) != 0)
+        if (!employee.getName().equals(employeeRequest.getEmployeeFullname()) || employee.getDob().compareTo(
+                Objects.requireNonNull(requestDob)) != 0)
             employee.setUsername(generateEmployeeUsername(employeeRequest.getEmployeeFullname().toLowerCase(), employeeRequest.getEmployeeDob()));
 
         employee.setName(employeeRequest.getEmployeeFullname());
@@ -411,10 +393,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         EmployeeModel supervisor = employeeRepository.findByNik(employeeRequest.getEmployeeSupervisorId());
         if (supervisor == null) {
-            throw new DataNotFoundException(
-                    USER_NOT_FOUND.getErrorCode(),
-                    USER_NOT_FOUND.getErrorMessage()
-            );
+            throw new DataNotFoundException(USER_NOT_FOUND);
         } else if (!employeeRequest.getEmployeeSupervisorId().equals(supervisionRepository.findByEmployeeNik(employeeRequest.getEmployeeNik()).getSupervisorNik())) {
             SupervisionModel supervision = supervisionRepository.findByEmployeeNik(employeeRequest.getEmployeeNik());
 
@@ -423,7 +402,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             employeeRepository.save(previousSupervisor);
 
             if (checkCyclicSupervisingExists(employee.getNik(), employeeRequest.getEmployeeSupervisorId())) {
-                throw new UnauthorizedOperationException(CYCLIC_SUPERVISING_OCCURED.getErrorCode(), CYCLIC_SUPERVISING_OCCURED.getErrorMessage());
+                throw new UnauthorizedOperationException(CYCLIC_SUPERVISING_OCCURED);
             }
 
             supervision.setSupervisorNik(supervisor.getNik());
@@ -464,30 +443,23 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     @Override
     public void deleteEmployee(DeleteEmployeeRequest deleteEmployeeRequest) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException {
 
-        try {
-            if (!roleDeterminer.determineRole(deleteEmployeeRequest.getAdminNik()).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-                throw new UnauthorizedOperationException(
-                        EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
-                        EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
-            }
-        } catch (DataNotFoundException dataNotFoundException) {
-            throw dataNotFoundException;
-        }
+        if (!roleDeterminer.determineRole(deleteEmployeeRequest.getAdminNik()).equals(ServiceConstant.ROLE_ADMINISTRATOR))
+            throw new UnauthorizedOperationException(EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR);
 
         if (deleteEmployeeRequest.getEmployeeNik().isEmpty())
-            throw new BadRequestException(EMPTY_EMPLOYEE_NIK.getErrorCode(), EMPTY_EMPLOYEE_NIK.getErrorMessage());
+            throw new BadRequestException(EMPTY_EMPLOYEE_NIK);
 
         if (deleteEmployeeRequest.getEmployeeNik().equals(deleteEmployeeRequest.getAdminNik()))
-            throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT.getErrorCode(), SELF_DELETION_ATTEMPT.getErrorMessage());
+            throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT);
 
         if (employeeRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()) == null)
-            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(USER_NOT_FOUND);
 
         if (employeeRepository.findByNik(deleteEmployeeRequest.getEmployeeNik()).getSupervisingCount() != 0)
-            throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT.getErrorCode(), EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT.getErrorMessage());
+            throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT);
 
         if (!requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_RETURN).isEmpty())
-            throw new UnauthorizedOperationException(EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT.getErrorCode(), EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT.getErrorMessage());
+            throw new UnauthorizedOperationException(EXISTING_USED_ASSETS_ON_DELETION_ATTEMPT);
 
         List<RequestModel> requests = new ArrayList<>();
         requests.addAll(requestRepository.findAllByEmployeeNikAndStatus(deleteEmployeeRequest.getEmployeeNik(), ServiceConstant.PENDING_HANDOVER));
@@ -511,26 +483,20 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     @Override
     public void changeSupervisorOnPreviousSupervisorDeletion(DeleteEmployeeSupervisorRequest deleteEmployeeSupervisorRequest) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException {
 
-        try {
-            if (!roleDeterminer.determineRole(deleteEmployeeSupervisorRequest.getAdminNik()).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-                throw new UnauthorizedOperationException(
-                        EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
-                        EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage());
-            }
-        } catch (DataNotFoundException dataNotFoundException) {
-            throw dataNotFoundException;
-        }
+        if (!roleDeterminer.determineRole(deleteEmployeeSupervisorRequest.getAdminNik()).equals(ServiceConstant.ROLE_ADMINISTRATOR))
+            throw new UnauthorizedOperationException(EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR);
+
         if (deleteEmployeeSupervisorRequest.getOldSupervisorNik().isEmpty() || deleteEmployeeSupervisorRequest.getNewSupervisorNik().isEmpty())
-            throw new BadRequestException(EMPTY_EMPLOYEE_NIK.getErrorCode(), EMPTY_EMPLOYEE_NIK.getErrorMessage());
+            throw new BadRequestException(EMPTY_EMPLOYEE_NIK);
 
         if (deleteEmployeeSupervisorRequest.getOldSupervisorNik().equals(deleteEmployeeSupervisorRequest.getAdminNik()))
-            throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT.getErrorCode(), SELF_DELETION_ATTEMPT.getErrorMessage());
+            throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT);
 
         if (employeeRepository.findByNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik()) == null || employeeRepository.findByNik(deleteEmployeeSupervisorRequest.getNewSupervisorNik()) == null)
-            throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(USER_NOT_FOUND);
 
         if (supervisionRepository.findAllBySupervisorNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik()).isEmpty())
-            throw new DataNotFoundException(SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE.getErrorCode(), SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE.getErrorMessage());
+            throw new DataNotFoundException(SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE);
 
         List<SupervisionModel> supervisions = supervisionRepository.findAllBySupervisorNik(deleteEmployeeSupervisorRequest.getOldSupervisorNik());
 

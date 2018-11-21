@@ -5,10 +5,10 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
-import com.oasis.model.entity.AssetModel;
 import com.oasis.responsemapper.AssetsResponseMapper;
 import com.oasis.service.implementation.AssetsServiceImpl;
 import com.oasis.webmodel.request.DeleteAssetRequest;
+import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,12 +25,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @CrossOrigin(origins = "http://localhost")
 @RestController
 public class AssetsController {
@@ -74,7 +72,7 @@ public class AssetsController {
         ), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_ASSET_LIST,
+    @GetMapping(value = APIMappingValue.API_LIST_ASSET,
                 produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callGetAvailableAssetsService(
             @RequestParam final int pageNumber,
@@ -100,13 +98,13 @@ public class AssetsController {
         ), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_ASSET_DETAIL,
+    @GetMapping(value = APIMappingValue.API_DETAIL_ASSET,
                 produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callGetAssetDetailService(
             @PathVariable final String assetSku
     ) {
 
-        AssetModel asset;
+        AssetDetailResponse asset;
 
         try {
             asset = assetsServiceImpl.getAssetDetail(assetSku);
@@ -124,7 +122,7 @@ public class AssetsController {
         ), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_ASSET_DETAIL_IMAGE,
+    @GetMapping(value = APIMappingValue.API_IMAGE_ASSET,
                 produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE},
                 consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callGetAssetImageService(
@@ -153,7 +151,7 @@ public class AssetsController {
         return new ResponseEntity<>(photo, HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_ASSET_DETAIL_PDF,
+    @GetMapping(value = APIMappingValue.API_PDF_ASSET,
                 produces = MediaType.APPLICATION_PDF_VALUE, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callGetAssetDetailInPdfService(
             @PathVariable final String assetSku

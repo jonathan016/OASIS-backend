@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Component
 public class RoleDeterminer {
 
@@ -24,7 +25,7 @@ public class RoleDeterminer {
         } else {
             EmployeeModel employee = employeeRepository.findByNik(employeeNik);
             if(employee == null){
-                throw new DataNotFoundException(USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
+                throw new DataNotFoundException(USER_NOT_FOUND);
             } else if (employee.getSupervisingCount() > 0) {
                 return ServiceConstant.ROLE_SUPERIOR;
             } else {

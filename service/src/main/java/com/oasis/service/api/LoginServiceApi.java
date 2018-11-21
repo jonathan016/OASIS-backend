@@ -10,4 +10,5 @@ public interface LoginServiceApi {
             throws DataNotFoundException, UserNotAuthenticatedException;
 
     String determineUserRole(final String employeeId) throws DataNotFoundException;
+
 }

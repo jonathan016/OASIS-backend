@@ -32,7 +32,7 @@ public class EmployeesController {
     @Autowired
     private EmployeesResponseMapper employeesResponseMapper;
 
-    @GetMapping(value = APIMappingValue.API_EMPLOYEE_LIST,
+    @GetMapping(value = APIMappingValue.API_LIST_EMPLOYEE,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callViewAllEmployeesService(@RequestParam int pageNumber,
                                                       @RequestParam String sortInfo) {
@@ -47,7 +47,7 @@ public class EmployeesController {
         return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, pageNumber), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_EMPLOYEE_DETAIL,
+    @GetMapping(value = APIMappingValue.API_DETAIL_EMPLOYEE,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callViewEmployeeDetailService(@PathVariable String employeeNik) {
 
@@ -70,7 +70,7 @@ public class EmployeesController {
         return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(), employee, supervisor), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_EMPLOYEE_FIND,
+    @GetMapping(value = APIMappingValue.API_FIND_EMPLOYEE,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity callFindEmployeeService(@RequestParam String searchQuery,
                                                   @RequestParam int pageNumber,

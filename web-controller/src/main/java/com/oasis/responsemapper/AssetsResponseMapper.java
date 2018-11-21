@@ -76,23 +76,12 @@ public class AssetsResponseMapper {
     }
 
     public NoPagingResponse<AssetDetailResponse>
-    produceViewAssetDetailSuccessResult(int httpStatusCode, AssetModel asset){
+    produceViewAssetDetailSuccessResult(int httpStatusCode, AssetDetailResponse asset){
         NoPagingResponse<AssetDetailResponse> successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
-        successResponse.setValue(
-                new AssetDetailResponse(
-                        asset.getSku(),
-                        asset.getName(),
-                        asset.getBrand(),
-                        asset.getType(),
-                        asset.getLocation(),
-                        asset.getStock(),
-                        asset.getPrice(),
-                        asset.getImageDirectory()
-                )
-        );
+        successResponse.setValue(asset);
 
         return successResponse;
     }

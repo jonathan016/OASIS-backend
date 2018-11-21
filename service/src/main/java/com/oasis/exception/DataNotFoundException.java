@@ -1,13 +1,12 @@
 package com.oasis.exception;
 
 import com.oasis.exception.helper.BaseException;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import com.oasis.model.BaseError;
 
-@ResponseStatus(HttpStatus.NO_CONTENT)
 public class DataNotFoundException extends BaseException {
 
-    public DataNotFoundException(String errorCode, String errorMessage) {
-        super(errorCode, errorMessage);
+    public DataNotFoundException(BaseError error) {
+        super(error.getErrorCode(), error.getErrorMessage());
     }
+
 }

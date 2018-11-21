@@ -1,10 +1,12 @@
 package com.oasis.exception;
 
 import com.oasis.exception.helper.BaseException;
+import com.oasis.model.BaseError;
 
 public class DuplicateDataException extends BaseException {
 
-    public DuplicateDataException(String errorCode, String errorMessage) {
-        super(errorCode, errorMessage);
+    public DuplicateDataException(BaseError error) {
+        super(error.getErrorCode(), error.getErrorMessage());
     }
+
 }

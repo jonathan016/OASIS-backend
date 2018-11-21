@@ -19,17 +19,15 @@ import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.webmodel.request.AddAssetRequest;
 import com.oasis.webmodel.request.UpdateAssetRequest;
+import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -68,11 +66,11 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         int foundDataSize = assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
 
         if (pageNumber < 1 || foundDataSize == 0) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
         if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
         Set<AssetModel> availableAssets = getSortedAvailableAssets(sortInfo, ServiceConstant.ZERO);
@@ -115,7 +113,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                    DataNotFoundException {
 
         if (searchQuery.isEmpty()) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY.getErrorCode(), EMPTY_SEARCH_QUERY.getErrorMessage());
+            throw new BadRequestException(EMPTY_SEARCH_QUERY);
         }
 
         Set<AssetModel> availableAssets = new LinkedHashSet<>();
@@ -128,11 +126,11 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                     );
 
             if (pageNumber < 1 || foundDataSize == 0) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
             }
 
             if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
             }
 
             availableAssets.addAll(getSortedAvailableAssetsFromSearchQuery(searchQuery, sortInfo));
@@ -147,11 +145,11 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                         );
 
                 if (pageNumber < 1 || foundDataSize == 0) {
-                    throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                    throw new DataNotFoundException(ASSET_NOT_FOUND);
                 }
 
                 if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-                    throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                    throw new DataNotFoundException(ASSET_NOT_FOUND);
                 }
 
                 availableAssets.addAll(getSortedAvailableAssetsFromSearchQuery(query, sortInfo));
@@ -240,18 +238,48 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public AssetModel getAssetDetail(
+    public AssetDetailResponse getAssetDetail(
             final String sku
     )
             throws DataNotFoundException {
 
-        AssetModel asset = assetRepository.findBySku(sku);
+        AssetModel assetDetailData = assetRepository.findBySku(sku);
 
-        if (asset == null) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+        if (assetDetailData == null) {
+            throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
-        return asset;
+        String[] images = new String[20];
+
+        File imageDirectory = new File(assetDetailData.getImageDirectory());
+
+        int i = 0;
+        for (final File image : Objects.requireNonNull(imageDirectory.listFiles())){
+            StringBuilder extensionBuilder = new StringBuilder();
+            extensionBuilder.append(image.getName());
+            extensionBuilder.reverse();
+            extensionBuilder.replace(
+                    0,
+                    extensionBuilder.length(),
+                    extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
+            );
+            extensionBuilder.reverse();
+            images[i] = "http://localhost:8085/oasis/api/assets/" + assetDetailData.getSku() +
+                                                    "/"+ assetDetailData.getSku().concat("-")
+                                                              .concat(String.valueOf(i + 1))
+                                                              .concat(String.valueOf(extensionBuilder));
+        }
+
+        return new AssetDetailResponse(
+                assetDetailData.getSku(),
+                assetDetailData.getName(),
+                assetDetailData.getBrand(),
+                assetDetailData.getType(),
+                assetDetailData.getLocation(),
+                assetDetailData.getStock(),
+                assetDetailData.getPrice(),
+                images
+        );
     }
 
     @Override
@@ -264,7 +292,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         AssetModel asset = assetRepository.findBySku(sku);
 
         if (asset == null) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
         Document document = new Document(PageSize.A4, 36, 36, 90, 36);
@@ -291,24 +319,23 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
             document.add(Chunk.NEWLINE);
 
-            File possibleDirectory = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
+            File possibleDirectory = new File(asset.getImageDirectory());
 
             if (possibleDirectory.exists()){
-                File detailImageFile = null;
                 if (possibleDirectory.isDirectory()){
+                    //noinspection LoopStatementThatDoesntLoop
                     for (final File image : Objects.requireNonNull(possibleDirectory.listFiles())){
-                        detailImageFile = image;
-                        break;  //Takes only first result
-                    }
-                }
+                        if (Files.exists(image.toPath())){
+                            Image detailImage = Image.getInstance(
+                                    Files.readAllBytes(Paths.get(
+                                            Objects.requireNonNull(image).toURI())));
+                            detailImage.scaleToFit(detailImage.getWidth(), document.getPageSize().getWidth() / 5);
+                            detailImage.setAlignment(Element.ALIGN_CENTER);
+                            document.add(detailImage);
+                        }
 
-                if (Files.exists(detailImageFile.toPath())){
-                    Image detailImage = Image.getInstance(
-                            Files.readAllBytes(Paths.get(
-                                    Objects.requireNonNull(detailImageFile).toURI())));
-                    detailImage.scaleToFit(detailImage.getWidth(), document.getPageSize().getWidth() / 5);
-                    detailImage.setAlignment(Element.ALIGN_CENTER);
-                    document.add(detailImage);
+                        break;  //Takes only first result, but code is prepared for multiple images
+                    }
                 }
             } else {
                 Paragraph altDetailImageParagraph = new Paragraph("No Image Available!");
@@ -388,18 +415,12 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             document.add(detailTable);
 
             document.close();
-        } catch (DocumentException | FileNotFoundException e) {
-            //TODO throw real exception cause
-            e.printStackTrace();
-        } catch (MalformedURLException e) {
-            //TODO throw real exception cause
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (DocumentException | IOException e) {
             //TODO throw real exception cause
             e.printStackTrace();
         }
 
-        byte[] assetPdf = new byte[20];
+        byte[] assetPdf = new byte[100];
         try {
             assetPdf = Files.readAllBytes(Paths.get(sku.concat(".pdf")));
         } catch (IOException e) {
@@ -420,14 +441,13 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throws DataNotFoundException {
 
         byte[] image;
-        File file = new File(
-                ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(sku).concat("\\").concat(photoName).concat(".")
-                                                    .concat(extension));
+        File file = new File(assetRepository.findBySku(sku).getImageDirectory().concat("\\").concat(photoName)
+                                            .concat(".").concat(extension));
 
         try {
             image = Files.readAllBytes(file.toPath());
         } catch (IOException | NullPointerException exception) {
-            throw new DataNotFoundException(MISSING_ASSET_IMAGE.getErrorCode(), MISSING_ASSET_IMAGE.getErrorMessage());
+            throw new DataNotFoundException(MISSING_ASSET_IMAGE);
         }
 
         return image;
@@ -462,23 +482,17 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             );
         } catch (IOException e) {
             //TODO throw real exception cause
-            throw new UnauthorizedOperationException(
-                    NO_ASSET_SELECTED.getErrorCode(),
-                    NO_ASSET_SELECTED.getErrorMessage()
-            );
+            throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
         }
 
         if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(
-                    ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
-                    ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage()
-            );
+            throw new UnauthorizedOperationException(ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
         if (assetRepository.existsAssetModelByNameAndBrandAndType(
                 assetRequest.getAssetName(), assetRequest.getAssetBrand(), assetRequest.getAssetType()
         )) {
-            throw new DuplicateDataException(SAME_ASSET_EXISTS.getErrorCode(), SAME_ASSET_EXISTS.getErrorMessage());
+            throw new DuplicateDataException(SAME_ASSET_EXISTS);
         } else {
             AssetModel asset = new AssetModel();
 
@@ -518,28 +532,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 }
 
                 if (directoryCreated){
-                    String[] imageDirectory = new String[assetPhotos.length];
-                    for(int i = 0; i < assetPhotos.length; i++){
-                        StringBuilder extensionBuilder = new StringBuilder();
-                        extensionBuilder.append(assetPhotos[i].getOriginalFilename());
-                        extensionBuilder.reverse();
-                        extensionBuilder.replace(
-                                0,
-                                extensionBuilder.length(),
-                                extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
-                        );
-                        extensionBuilder.reverse();
-                        imageDirectory[i] = imageDirectory[i] = "http://localhost:8085/oasis/api/assets/" + asset.getSku() +
-                                                                "/"+ asset.getSku().concat("-")
-                                                                          .concat(String.valueOf(i + 1))
-                                                                          .concat(String.valueOf(extensionBuilder));
-//                        imageDirectory[i] =
-//                                ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())
-//                                                                    .concat(File.separator)
-//                                                                    .concat(asset.getSku()).concat("-")
-//                                                                    .concat(String.valueOf(i + 1))
-//                                                                    .concat(String.valueOf(extensionBuilder));
-                    }
+                    String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
                     asset.setImageDirectory(imageDirectory);
 
                     savePhotos(assetPhotos, asset.getSku());
@@ -658,23 +651,17 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             );
         } catch (IOException e){
             //TODO throw real exception cause
-            throw new UnauthorizedOperationException(
-                    NO_ASSET_SELECTED.getErrorCode(),
-                    NO_ASSET_SELECTED.getErrorMessage()
-            );
+            throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
         }
 
         if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(
-                    ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
-                    ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage()
-            );
+            throw new UnauthorizedOperationException(ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
         AssetModel asset = assetRepository.findBySku(assetRequest.getAssetSku());
 
         if (asset == null) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+            throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
         asset.setName(assetRequest.getAssetName());
@@ -703,28 +690,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             }
 
             if (directoryCreated){
-                String[] imageDirectory = new String[assetPhotos.length];
-                for(int i = 0; i < assetPhotos.length; i++){
-                    StringBuilder extensionBuilder = new StringBuilder();
-                    extensionBuilder.append(assetPhotos[i].getOriginalFilename());
-                    extensionBuilder.reverse();
-                    extensionBuilder.replace(
-                            0,
-                            extensionBuilder.length(),
-                            extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
-                    );
-                    extensionBuilder.reverse();
-                    imageDirectory[i] = imageDirectory[i] = "http://localhost:8085/oasis/api/assets/" + asset.getSku() +
-                                                            "/"+ asset.getSku().concat("-")
-                                                                      .concat(String.valueOf(i + 1))
-                                                                      .concat(String.valueOf(extensionBuilder));
-//                    imageDirectory[i] =
-//                            ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())
-//                                                                            .concat(File.separator)
-//                                                                            .concat(asset.getSku()).concat("-")
-//                                                                            .concat(String.valueOf(i + 1))
-//                                                                            .concat(String.valueOf(extensionBuilder));
-                }
+                String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
                 asset.setImageDirectory(imageDirectory);
 
                 savePhotos(assetPhotos, asset.getSku());
@@ -747,28 +713,22 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                    BadRequestException,
                    DataNotFoundException {
         if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(
-                    ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorCode(),
-                    ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR.getErrorMessage()
-            );
+            throw new UnauthorizedOperationException(ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
         if (skus.isEmpty()) {
-            throw new BadRequestException(NO_ASSET_SELECTED.getErrorCode(), NO_ASSET_SELECTED.getErrorMessage());
+            throw new BadRequestException(NO_ASSET_SELECTED);
         }
 
         List<AssetModel> selectedAssets = new ArrayList<>();
 
         for (String sku : skus) {
             if (assetRepository.findBySku(sku) == null) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND.getErrorCode(), ASSET_NOT_FOUND.getErrorMessage());
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
             }
 
             if (!requestRepository.findAllByAssetSku(sku).isEmpty()) {
-                throw new BadRequestException(
-                        SELECTED_ASSET_STILL_REQUESTED.getErrorCode(),
-                        SELECTED_ASSET_STILL_REQUESTED.getErrorMessage()
-                );
+                throw new BadRequestException(SELECTED_ASSET_STILL_REQUESTED);
             }
 
             selectedAssets.add(assetRepository.findBySku(sku));
@@ -778,14 +738,15 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             folder.delete();
         }
 
-        //TODO change with deleteAll
         for (AssetModel selectedAsset : selectedAssets) {
             assetRepository.delete(selectedAsset);
         }
     }
+
 }
 
 class FileHeader extends PdfPageEventHelper {
+
     private PdfPTable table;
     private float tableHeight;
 
@@ -824,7 +785,6 @@ class FileHeader extends PdfPageEventHelper {
             e.printStackTrace();
         }
         PdfPCell oasisCell = new PdfPCell(oasis, true);
-//        PdfPCell oasisCell = new PdfPCell(new Paragraph("OASIS"));
         oasisCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         oasisCell.setBorder(Rectangle.NO_BORDER);
         table.addCell(oasisCell);
@@ -832,14 +792,16 @@ class FileHeader extends PdfPageEventHelper {
         tableHeight = table.getTotalHeight();
     }
 
+    @SuppressWarnings("unused")
     public float getTableHeight() {
         return tableHeight;
     }
 
     public void onEndPage(PdfWriter writer, Document document) {
-        table.writeSelectedRows(0, -1,
-                                document.left(),
+        table.writeSelectedRows(0, -1, document.left(),
                                 document.top() + ((document.topMargin() + tableHeight) / 2),
-                                writer.getDirectContent());
+                                writer.getDirectContent()
+        );
     }
+
 }

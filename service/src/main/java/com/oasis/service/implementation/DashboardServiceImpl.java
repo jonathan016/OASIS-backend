@@ -22,6 +22,7 @@ import java.util.*;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_EMPLOYEE_NIK;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.REQUESTS_NOT_FOUND;
 
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Service
 public class DashboardServiceImpl implements DashboardServiceApi {
 
@@ -67,15 +68,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
 
     @Override
     public String determineUserRole(final String employeeNik) throws DataNotFoundException {
-        String role;
-
-        try {
-            role = roleDeterminer.determineRole(employeeNik);
-        } catch (DataNotFoundException e){
-            throw e;
-        }
-
-        return role;
+        return roleDeterminer.determineRole(employeeNik);
     }
 
     @Override
@@ -130,26 +123,15 @@ public class DashboardServiceImpl implements DashboardServiceApi {
         List<RequestModel> requestedRequests = new ArrayList<>();
         List<RequestModel> pendingHandoverRequests = new ArrayList<>();
 
-        String role;
-
-        try {
-            role = roleDeterminer.determineRole(employeeNik);
-        } catch (DataNotFoundException e){
-            e.setErrorCode(INCORRECT_EMPLOYEE_NIK.getErrorCode());
-            e.setErrorMessage(INCORRECT_EMPLOYEE_NIK.getErrorMessage());
-
-            throw e;
-        }
-
-        switch (role) {
-            case "ADMINISTRATOR":
+        switch (roleDeterminer.determineRole(employeeNik)) {
+            case ServiceConstant.ROLE_ADMINISTRATOR:
                 requestedRequests.addAll(getOthersRequestedRequests(employeeNik));
                 pendingHandoverRequests.addAll(getOthersPendingHandoverRequests(employeeNik));
                 break;
-            case "SUPERIOR":
+            case ServiceConstant.ROLE_SUPERIOR:
                 requestedRequests.addAll(getOthersRequestedRequests(employeeNik));
                 break;
-            case "EMPLOYEE":
+            case ServiceConstant.ROLE_EMPLOYEE:
                 requestedRequests.addAll(getMyRequestedRequests(employeeNik));
                 break;
         }
@@ -282,9 +264,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     )
             throws DataNotFoundException {
         if (getEmployeeData(employeeNik) == null) {
-            throw new DataNotFoundException(INCORRECT_EMPLOYEE_NIK.getErrorCode(),
-                    INCORRECT_EMPLOYEE_NIK.getErrorMessage()
-            );
+            throw new DataNotFoundException(INCORRECT_EMPLOYEE_NIK);
         }
         String role = determineUserRole(employeeNik);
 
@@ -292,16 +272,12 @@ public class DashboardServiceImpl implements DashboardServiceApi {
                 new ArrayList<>(fillData(employeeNik, currentTab, role));
 
         if (requestUpdates.size() == 0) {
-            throw new DataNotFoundException(REQUESTS_NOT_FOUND.getErrorCode(),
-                    REQUESTS_NOT_FOUND.getErrorMessage()
-            );
+            throw new DataNotFoundException(REQUESTS_NOT_FOUND);
         }
 
         if ((int) Math.ceil((float) requestUpdates.size() /
                 ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE) < pageNumber) {
-            throw new DataNotFoundException(REQUESTS_NOT_FOUND.getErrorCode(),
-                    REQUESTS_NOT_FOUND.getErrorMessage()
-            );
+            throw new DataNotFoundException(REQUESTS_NOT_FOUND);
         }
 
         sortData(requestUpdates, sortInfo);

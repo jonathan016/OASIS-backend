@@ -5,12 +5,10 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.model.entity.SupervisionModel;
 import com.oasis.webmodel.request.AddEmployeeRequest;
 import com.oasis.webmodel.request.DeleteEmployeeRequest;
 import com.oasis.webmodel.request.DeleteEmployeeSupervisorRequest;
 import com.oasis.webmodel.request.UpdateEmployeeRequest;
-import com.oasis.webmodel.response.success.employees.EmployeeDetailResponse;
 import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
 
 import java.util.List;

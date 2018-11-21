@@ -5,7 +5,7 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
-import com.oasis.webmodel.request.UpdateAssetRequest;
+import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,7 +43,7 @@ public interface AssetsServiceApi {
             final Set<AssetModel> assetsFound
     );
 
-    AssetModel getAssetDetail(
+    AssetDetailResponse getAssetDetail(
             final String sku
     )
             throws DataNotFoundException;

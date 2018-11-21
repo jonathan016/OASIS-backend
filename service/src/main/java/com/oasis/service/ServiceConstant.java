@@ -4,8 +4,8 @@ public class ServiceConstant {
 
     public static final int DASHBOARD_REQUEST_UPDATE_PAGE_SIZE = 5;
     public static final int EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE = 10;
+    public static final int ASSETS_FIND_ASSET_PAGE_SIZE = 10;
     public static final int ZERO = 0;
-    public static final Integer ASSETS_FIND_ASSET_PAGE_SIZE = 10;
 
     public static final String REQUESTED = "Requested";
     public static final String PENDING_HANDOVER = "Pending Handover";
@@ -22,5 +22,5 @@ public class ServiceConstant {
     public static final String NIK_PREFIX = "GDN";
     public static final String SKU_PREFIX = "SKU";
 
-    public static final String IMAGE_ROOT_DIRECTORY = "C:\\oasis\\images";
+    public static final String IMAGE_ROOT_DIRECTORY = "C:\\oasis\\images\\assets";
 }
