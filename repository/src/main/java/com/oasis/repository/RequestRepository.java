@@ -10,4 +10,6 @@ import java.util.List;
 public interface RequestRepository extends MongoRepository<RequestModel, String> {
 
     List<RequestModel> findAllByEmployeeNikAndStatus(String employeeNik, String status);
+
+    List<RequestModel> findAllByAssetSku(String assetSku);
 }
