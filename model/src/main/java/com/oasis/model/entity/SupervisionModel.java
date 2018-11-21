@@ -11,9 +11,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = CollectionName.SUPERVISION_COLLECTION_NAME)
 public class SupervisionModel extends BaseEntity {
 
-    @Field(SupervisionFieldName.SUPERVISION_SUPERVISOR_ID)
+    @Field(SupervisionFieldName.SUPERVISOR_NIK)
     private String supervisorNik;
 
-    @Field(SupervisionFieldName.SUPERVISION_EMPLOYEE_ID)
+    @Field(SupervisionFieldName.EMPLOYEE_NIK)
     private String employeeNik;
 }
