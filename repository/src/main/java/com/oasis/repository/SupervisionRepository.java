@@ -13,5 +13,7 @@ public interface SupervisionRepository extends MongoRepository<SupervisionModel,
 
     SupervisionModel findByEmployeeNik(String employeeNik);
 
+    @SuppressWarnings("unchecked")
     SupervisionModel save(SupervisionModel supervision);
+    
 }

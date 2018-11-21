@@ -137,7 +137,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         Set<EmployeeModel> employeesFound = new HashSet<>();
 
         if (!searchQuery.contains(" ")) {
-            if (pageNumber < 1 || employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(searchQuery, searchQuery).size() == 0) {
+            if (pageNumber < 1 || employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(searchQuery, searchQuery).size() == 0) {
                 throw new DataNotFoundException(
                         USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
             }
@@ -146,7 +146,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                     Math.ceil(
                             (float)
                                     employeeRepository
-                                            .findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(searchQuery, searchQuery)
+                                            .findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(searchQuery, searchQuery)
                                             .size()
                                     / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
                     < pageNumber) {
@@ -159,15 +159,15 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             String[] queries = searchQuery.split(" ");
 
             for (String query : queries) {
-                if (pageNumber < 1 || (employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(query, query).size() == 0 &&
-                        employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(query.toLowerCase(), query.toLowerCase()).size() == 0)) {
+                if (pageNumber < 1 || (employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(query, query).size() == 0 &&
+                                       employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(query.toLowerCase(), query.toLowerCase()).size() == 0)) {
                     throw new DataNotFoundException(
                             USER_NOT_FOUND.getErrorCode(), USER_NOT_FOUND.getErrorMessage());
                 }
 
                 if ((int)
                         Math.ceil(
-                                (float) employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(query, query).size()
+                                (float) employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(query, query).size()
                                         / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
                         < pageNumber) {
                     throw new DataNotFoundException(
@@ -188,18 +188,18 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (sortInfo.substring(1).equals("employeeNik")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 employeesFound.addAll(
-                        employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByNikAsc(searchQuery, searchQuery));
+                        employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNikAsc(searchQuery, searchQuery));
             } else if (sortInfo.substring(0, 1).equals("D")) {
                 employeesFound.addAll(
-                        employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByNikDesc(searchQuery, searchQuery));
+                        employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNikDesc(searchQuery, searchQuery));
             }
         } else if (sortInfo.substring(1).equals("employeeFullname")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 employeesFound.addAll(
-                        employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByFullnameAsc(searchQuery, searchQuery));
+                        employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(searchQuery, searchQuery));
             } else if (sortInfo.substring(0, 1).equals("D")) {
                 employeesFound.addAll(
-                        employeeRepository.findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByFullnameDesc(searchQuery, searchQuery));
+                        employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(searchQuery, searchQuery));
             }
         }
 
@@ -218,7 +218,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         List<EmployeeModel> matchingEmployees = new ArrayList<>();
         try {
-            matchingEmployees.addAll(employeeRepository.findAllByFullnameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
+            matchingEmployees.addAll(employeeRepository.findAllByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
                     employeeRequest.getFullname(),
                     new SimpleDateFormat("dd-MM-yyyy").parse(employeeRequest.getDob()),
                     employeeRequest.getPhone(),

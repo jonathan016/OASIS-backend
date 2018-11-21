@@ -9,7 +9,9 @@ public interface AdminRepository extends MongoRepository<AdminModel, String> {
 
     AdminModel findByNik(String nik);
 
+    @SuppressWarnings("unchecked")
     AdminModel save(AdminModel admin);
 
     void deleteByNik(String adminNik);
+
 }

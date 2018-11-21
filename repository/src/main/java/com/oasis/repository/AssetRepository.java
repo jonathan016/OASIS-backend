@@ -13,8 +13,6 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     AssetModel findBySku(String sku);
 
-
-
     int countAllByStockGreaterThan(long stockLimit);
 
     List<AssetModel> findAllByStockGreaterThanOrderBySkuAsc(long stockLimit);
@@ -35,8 +33,7 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String sku, String name);
 
-
-
+    @SuppressWarnings("unchecked")
     AssetModel save(AssetModel assetModel);
 
     AssetModel findFirstBySkuContainsOrderBySkuDesc(String sku);
@@ -50,4 +47,5 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
 
     void delete(AssetModel entity);
+
 }

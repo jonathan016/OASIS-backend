@@ -14,16 +14,17 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     EmployeeModel findByNik(String nik);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCase(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(String nik, String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByNikAsc(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNikAsc(String nik, String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByNikDesc(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNikDesc(String nik, String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByFullnameAsc(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String nik, String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrFullnameContainsIgnoreCaseOrderByFullnameDesc(String nik, String fullname);
+    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String nik, String name);
 
+    @SuppressWarnings("unchecked")
     EmployeeModel save(EmployeeModel employee);
 
     EmployeeModel findFirstByDivisionOrderByNikDesc(String division);
@@ -32,9 +33,11 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     EmployeeModel findFirstByNikContainsAndDivisionOrderByNikDesc(String nik, String division);
 
-    List<EmployeeModel> findAllByFullnameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String fullname, Date dob, String phone, String jobTitle, String division, String location);
+    List<EmployeeModel> findAllByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String name, Date dob, String phone
+            , String jobTitle, String division, String location);
 
     List<EmployeeModel> findAllByUsernameContains(String username);
 
     void deleteByNik(String employeeNik);
+
 }
