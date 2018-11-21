@@ -11,6 +11,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = CollectionName.ASSET_COLLECTION_NAME)
 public class AssetModel extends BaseEntity {
 
+    @Field(AssetFieldName.ASSET_ID)
+    private String sku;
+
     @Field(AssetFieldName.ASSET_NAME)
     private String name;
 
@@ -21,11 +24,14 @@ public class AssetModel extends BaseEntity {
     private double price;
 
     @Field(AssetFieldName.ASSET_STOCK)
-    private int stock;
+    private long stock;
 
     @Field(AssetFieldName.ASSET_BRAND)
     private String brand;
 
     @Field(AssetFieldName.ASSET_TYPE)
     private String type;
+
+    @Field(AssetFieldName.ASSET_IMAGES_DIRECTORY)
+    private String[] imageDirectory;
 }

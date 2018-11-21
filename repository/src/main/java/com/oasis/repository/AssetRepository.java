@@ -9,7 +9,45 @@ import java.util.List;
 @Repository
 public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
-    List<AssetModel> findAllByStockGreaterThan(int stockLimit);
+    List<AssetModel> findAllByStockGreaterThan(long stockLimit);
 
-    AssetModel findBy_id(String assetId);
+    AssetModel findBySku(String sku);
+
+
+
+    int countAllByStockGreaterThan(long stockLimit);
+
+    List<AssetModel> findAllByStockGreaterThanOrderBySkuAsc(long stockLimit);
+
+    List<AssetModel> findAllByStockGreaterThanOrderBySkuDesc(long stockLimit);
+
+    List<AssetModel> findAllByStockGreaterThanOrderByNameAsc(long stockLimit);
+
+    List<AssetModel> findAllByStockGreaterThanOrderByNameDesc(long stockLimit);
+
+    int countAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(String sku, String name);
+
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(String sku, String name);
+
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(String sku, String name);
+
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String sku, String name);
+
+    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String sku, String name);
+
+
+
+    AssetModel save(AssetModel assetModel);
+
+    AssetModel findFirstBySkuContainsOrderBySkuDesc(String sku);
+
+    boolean existsAssetModelByNameAndBrandAndType(String name, String brand, String type);
+
+    boolean existsAssetModelByBrand(String brand);
+
+    boolean existsAssetModelByBrandAndType(String brand, String type);
+
+
+
+    void delete(AssetModel entity);
 }

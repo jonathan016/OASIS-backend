@@ -70,4 +70,32 @@ public class ErrorCodeAndMessage {
             "SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE",
             "Selected employee for change of supervisor does not supervise any employee"
     );
+    public static final FailedResponse ASSET_NOT_FOUND = new FailedResponse(
+            "ASSET_NOT_FOUND",
+            "Asset with given search query cannot be found"
+    );
+    public static final FailedResponse SAME_ASSET_EXISTS = new FailedResponse(
+            "SAME_ASSET_EXISTS",
+            "Same asset exists and so insertion process cannot continue"
+    );
+    public static final FailedResponse ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR = new FailedResponse(
+            "ASSET_INSERTION_ATTEMPT_BY_NON_ADMINISTRATOR",
+            "Non-administrator attempted to create new asset"
+    );
+    public static final FailedResponse ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR = new FailedResponse(
+            "ASSET_UPDATE_ATTEMPT_BY_NON_ADMINISTRATOR",
+            "Non-administrator attempted to update existing asset"
+    );
+    public static final FailedResponse NO_ASSET_SELECTED = new FailedResponse(
+            "NO_ASSET_SELECTED",
+            "No asset has been selected for deletion"
+    );
+    public static final FailedResponse SELECTED_ASSET_STILL_REQUESTED = new FailedResponse(
+            "SELECTED_ASSET_STILL_REQUESTED",
+            "Selected asset for deletion is still being requested, thus cannot be deleted"
+    );
+    public static final FailedResponse MISSING_ASSET_IMAGE = new FailedResponse(
+            "MISSING_ASSET_IMAGE",
+            "No image(s) can be found for specified asset"
+    );
 }
