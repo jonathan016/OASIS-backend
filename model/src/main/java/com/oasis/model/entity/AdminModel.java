@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
+@SuppressWarnings("Lombok")
 @Document(collection = CollectionName.ADMIN_COLLECTION_NAME)
 public class AdminModel extends BaseEntity {
 
@@ -19,4 +20,5 @@ public class AdminModel extends BaseEntity {
 
     @Field(AdminFieldName.PASSWORD)
     private String password;
+    
 }

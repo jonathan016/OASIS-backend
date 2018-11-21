@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
+@SuppressWarnings("Lombok")
 @Document(collection = CollectionName.ASSET_COLLECTION_NAME)
 public class AssetModel extends BaseEntity {
 
@@ -34,4 +35,5 @@ public class AssetModel extends BaseEntity {
 
     @Field(AssetFieldName.IMAGE_DIRECTORY)
     private String imageDirectory;
+
 }

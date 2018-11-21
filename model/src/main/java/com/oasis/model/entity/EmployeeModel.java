@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.util.Date;
 
 @Data
+@SuppressWarnings("Lombok")
 @Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 public class EmployeeModel extends BaseEntity {
 
@@ -45,4 +46,5 @@ public class EmployeeModel extends BaseEntity {
 
     @Field(EmployeeFieldName.SUPERVISION_ID)
     private String supervisionId;
+
 }

@@ -468,7 +468,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         AddAssetRequest.Asset assetRequest;
 
         try {
-            adminNik = new ObjectMapper().readTree(rawAssetData).path("employeeNik").asText();
+            adminNik = new ObjectMapper().readTree(rawAssetData).path("nik").asText();
 
             JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
 
@@ -636,12 +636,12 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         UpdateAssetRequest.Asset assetRequest;
 
         try {
-            adminNik = new ObjectMapper().readTree(rawAssetData).path("employeeNik").asText();
+            adminNik = new ObjectMapper().readTree(rawAssetData).path("nik").asText();
 
             JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
 
             assetRequest = new UpdateAssetRequest.Asset(
-                    asset.path("assetSku").asText(),
+                    asset.path("sku").asText(),
                     asset.path("assetName").asText(),
                     asset.path("assetLocation").asText(),
                     asset.path("assetBrand").asText(),

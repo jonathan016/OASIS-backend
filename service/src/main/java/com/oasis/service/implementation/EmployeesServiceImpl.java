@@ -179,7 +179,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     public Set<EmployeeModel> fillData(String searchQuery, String sortInfo) {
         Set<EmployeeModel> employeesFound = new LinkedHashSet<>();
 
-        if (sortInfo.substring(1).equals("employeeNik")) {
+        if (sortInfo.substring(1).equals("nik")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 employeesFound.addAll(
                         employeeRepository.findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNikAsc(searchQuery, searchQuery));

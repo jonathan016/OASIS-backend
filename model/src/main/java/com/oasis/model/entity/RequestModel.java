@@ -8,16 +8,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
+@SuppressWarnings("Lombok")
 @Document(collection = CollectionName.REQUEST_COLLECTION_NAME)
 public class RequestModel extends BaseEntity {
 
-    @Field(RequestFieldName.EMPLOYEE_NIK)
-    private String employeeNik;
+    @Field(RequestFieldName.NIK)
+    private String nik;
 
-    @Field(RequestFieldName.ASSET_SKU)
-    private String assetSku;
+    @Field(RequestFieldName.SKU)
+    private String sku;
 
-    @Field(RequestFieldName.ASSET_QUANTITY)
+    @Field(RequestFieldName.QUANTITY)
     private int assetQuantity;
 
     @Field(RequestFieldName.STATUS)
@@ -28,4 +29,5 @@ public class RequestModel extends BaseEntity {
 
     @Field(RequestFieldName.TRANSACTION_NOTE)
     private String transactionNote;
+
 }

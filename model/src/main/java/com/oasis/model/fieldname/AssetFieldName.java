@@ -10,4 +10,5 @@ public class AssetFieldName {
     public static final String BRAND = "brand";
     public static final String TYPE = "type";
     public static final String IMAGE_DIRECTORY = "imageDirectory";
+
 }

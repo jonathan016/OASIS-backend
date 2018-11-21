@@ -18,4 +18,5 @@ public class BaseEntity {
     private Date updatedDate;
     private String createdBy;
     private String updatedBy;
+
 }

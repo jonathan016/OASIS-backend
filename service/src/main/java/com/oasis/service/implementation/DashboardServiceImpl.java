@@ -232,20 +232,20 @@ public class DashboardServiceImpl implements DashboardServiceApi {
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Employee employee =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Employee(
-                            requestUpdate.getEmployeeNik(),
-                            getEmployeeData(requestUpdate.getEmployeeNik()).getName()
+                            requestUpdate.getNik(),
+                            getEmployeeData(requestUpdate.getNik()).getName()
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Supervisor supervisor =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Supervisor(
                             getEmployeeSupervisorData(
-                                    requestUpdate.getEmployeeNik()).getSupervisorNik(),
+                                    requestUpdate.getNik()).getSupervisorNik(),
                             getEmployeeData(getEmployeeSupervisorData(
-                                    requestUpdate.getEmployeeNik()).getSupervisorNik()).getName()
+                                    requestUpdate.getNik()).getSupervisorNik()).getName()
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Asset asset =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Asset(
-                            requestUpdate.getAssetSku(),
-                            getAssetData(requestUpdate.getAssetSku()).getName(),
+                            requestUpdate.getSku(),
+                            getAssetData(requestUpdate.getSku()).getName(),
                             requestUpdate.getAssetQuantity()
                     );
 
