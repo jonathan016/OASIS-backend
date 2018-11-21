@@ -10,6 +10,7 @@ public class EmployeeFieldName {
     public static final String EMPLOYEE_PHONE = "phone";
     public static final String EMPLOYEE_JOB_TITLE = "jobTitle";
     public static final String EMPLOYEE_DIVISION = "division";
+    public static final String EMPLOYEE_LOCATION = "location";
     public static final String EMPLOYEE_SUPERVISING_COUNT = "supervisingCount";
     public static final String EMPLOYEE_SUPERVISION_ID = "supervisionId";
 

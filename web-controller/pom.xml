@@ -38,6 +38,10 @@
             <artifactId>orika-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.oasis</groupId>
             <artifactId>service</artifactId>
         </dependency>

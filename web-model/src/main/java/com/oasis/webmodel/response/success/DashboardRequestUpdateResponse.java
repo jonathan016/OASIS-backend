@@ -51,7 +51,7 @@ public class DashboardRequestUpdateResponse {
         @AllArgsConstructor
         public static class Asset {
 
-            private String assetId;
+            private String assetSku;
             private String assetName;
             private int assetQuantity;
         }
