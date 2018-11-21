@@ -12,4 +12,6 @@ public interface SupervisionRepository extends MongoRepository<SupervisionModel,
     List<SupervisionModel> findAllBySupervisorNik(String supervisorNik);
 
     SupervisionModel findByEmployeeNik(String employeeNik);
+
+    SupervisionModel save(SupervisionModel supervision);
 }
