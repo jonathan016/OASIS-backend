@@ -102,4 +102,9 @@ public class ErrorCodeAndMessage {
             "No image(s) can be found for specified asset!"
     );
 
+    public static final BaseError INCORRECT_DATE_FORMAT = new BaseError(
+            "INCORRECT_DATE_FORMAT",
+            "Incorrect date format given, please use format dd-MM-yyyy!"
+    );
+
 }

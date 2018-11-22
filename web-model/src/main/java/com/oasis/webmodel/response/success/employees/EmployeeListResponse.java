@@ -2,6 +2,7 @@ package com.oasis.webmodel.response.success.employees;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -12,18 +13,19 @@ public class EmployeeListResponse {
 
     @Data
     @AllArgsConstructor
+    @RequiredArgsConstructor
     public static class Employee {
-        private String employeeNik;
-        private String employeeName;
-        private String employeeJobTitle;
-        private String employeeLocation;
-        private Supervisor supervisor;
+        private String nik;
+        private String name;
+        private String jobTitle;
+        private String location;
+        private Supervisor supervisor = null;
 
         @Data
         @AllArgsConstructor
         public static class Supervisor {
-            private String supervisorNik;
-            private String supervisorName;
+            private String nik;
+            private String name;
         }
     }
 }

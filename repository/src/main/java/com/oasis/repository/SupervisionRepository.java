@@ -16,4 +16,8 @@ public interface SupervisionRepository extends MongoRepository<SupervisionModel,
     @SuppressWarnings("unchecked")
     SupervisionModel save(SupervisionModel supervision);
 
+    void deleteByEmployeeNik(String employeeNik);
+
+    boolean existsByEmployeeNik(String employeeNik);
+
 }

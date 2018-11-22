@@ -16,19 +16,19 @@ import java.util.Set;
 
 public interface EmployeesServiceApi {
 
-    List<EmployeeListResponse.Employee> getAllEmployees(final int pageNumber, final String sortInfo) throws DataNotFoundException;
+    List<EmployeeListResponse.Employee> getEmployeesList(final int pageNumber, final String sortInfo) throws DataNotFoundException;
 
-    List<EmployeeListResponse.Employee> mapEmployeesFound(Set<EmployeeModel> employees);
+    List<EmployeeListResponse.Employee> mapEmployeesList(Set<EmployeeModel> employees);
 
-    EmployeeModel getEmployeeData(String employeeNik) throws DataNotFoundException;
+    EmployeeModel getEmployeeDetail(String employeeNik) throws DataNotFoundException;
 
     EmployeeModel getEmployeeSupervisorData(String employeeNik) throws DataNotFoundException;
 
-    List<EmployeeListResponse.Employee> getEmployeesBySearchQuery(String searchQuery, int pageNumber, String sortInfo) throws BadRequestException, DataNotFoundException;
+    List<EmployeeListResponse.Employee> getEmployeesListBySearchQuery(String searchQuery, int pageNumber, String sortInfo) throws BadRequestException, DataNotFoundException;
 
-    Set<EmployeeModel> fillData(String searchQuery, String sortInfo);
+    Set<EmployeeModel> getSortedEmployeesListFromSearchQuery(String searchQuery, String sortInfo);
 
-    void insertToDatabase(AddEmployeeRequest.Employee employee, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException;
+    void addEmployee(AddEmployeeRequest.Employee employee, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException, BadRequestException;
 
     String generateEmployeeNik(String division);
 
@@ -42,7 +42,7 @@ public interface EmployeesServiceApi {
 
     void updateSupervisorSupervisingCount(String adminNik, String supervisorNik);
 
-    void updateEmployee(UpdateEmployeeRequest.Employee employeeRequest, String adminNik) throws DataNotFoundException, UnauthorizedOperationException;
+    void updateEmployee(UpdateEmployeeRequest.Employee employeeRequest, String adminNik) throws DataNotFoundException, UnauthorizedOperationException, BadRequestException;
 
     boolean checkCyclicSupervisingExists(String employeeNik, String supervisorNik);
 

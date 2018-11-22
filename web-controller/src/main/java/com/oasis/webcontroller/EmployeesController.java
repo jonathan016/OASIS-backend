@@ -39,7 +39,7 @@ public class EmployeesController {
         List<EmployeeListResponse.Employee> employeesFound;
 
         try {
-            employeesFound = employeesServiceImpl.getAllEmployees(pageNumber, sortInfo);
+            employeesFound = employeesServiceImpl.getEmployeesList(pageNumber, sortInfo);
         } catch (DataNotFoundException e) {
             return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), e.getErrorCode(), e.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
@@ -54,7 +54,7 @@ public class EmployeesController {
         EmployeeModel employee;
 
         try {
-            employee = employeesServiceImpl.getEmployeeData(employeeNik);
+            employee = employeesServiceImpl.getEmployeeDetail(employeeNik);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
@@ -78,7 +78,7 @@ public class EmployeesController {
         List<EmployeeListResponse.Employee> employeesFound;
 
         try {
-            employeesFound = employeesServiceImpl.getEmployeesBySearchQuery(searchQuery, pageNumber, sortInfo);
+            employeesFound = employeesServiceImpl.getEmployeesListBySearchQuery(searchQuery, pageNumber, sortInfo);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
@@ -93,7 +93,7 @@ public class EmployeesController {
     public ResponseEntity callInsertToDatabaseService(@RequestBody AddEmployeeRequest request) {
 
         try {
-            employeesServiceImpl.insertToDatabase(request.getEmployee(), request.getEmployeeNik());
+            employeesServiceImpl.addEmployee(request.getEmployee(), request.getEmployeeNik());
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(employeesResponseMapper.produceEmployeesFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
