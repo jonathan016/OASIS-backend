@@ -5,8 +5,6 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
-import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
-import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -15,7 +13,7 @@ import java.util.Set;
 public interface AssetsServiceApi {
 
     /*-------------Assets List Methods-------------*/
-    List<AssetListResponse.Asset> getAvailableAssets(
+    List<AssetModel> getAvailableAssets(
             final int pageNumber,
             final String sortInfo
     )
@@ -26,7 +24,7 @@ public interface AssetsServiceApi {
             final long stockLimit
     );
 
-    List<AssetListResponse.Asset> getAvailableAssetsBySearchQuery(
+    List<AssetModel> getAvailableAssetsBySearchQuery(
             final String searchQuery,
             final int pageNumber,
             final String sortInfo
@@ -39,14 +37,15 @@ public interface AssetsServiceApi {
             final String sortInfo
     );
 
-    List<AssetListResponse.Asset> mapAvailableAssets(
-            final Set<AssetModel> assetsFound
-    );
-
-    AssetDetailResponse getAssetDetail(
+    AssetModel getAssetDetailData(
             final String sku
     )
             throws DataNotFoundException;
+
+    String[] getAssetDetailImages(
+            final String sku,
+            final String imageDirectory
+    );
 
     byte[] getAssetDetailInPdf(
             final String sku,

@@ -5,6 +5,7 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.model.entity.AssetModel;
 import com.oasis.responsemapper.AssetsResponseMapper;
 import com.oasis.service.implementation.AssetsServiceImpl;
 import com.oasis.webmodel.request.assets.DeleteAssetRequest;
@@ -46,7 +47,7 @@ public class AssetsController {
             @RequestParam final String sortInfo
     ) {
 
-        List<AssetListResponse.Asset> availableAssets;
+        List<AssetModel> availableAssets;
 
         try {
             availableAssets = new ArrayList<>(
@@ -80,7 +81,7 @@ public class AssetsController {
             @RequestParam final String sortInfo
     ) {
 
-        List<AssetListResponse.Asset> assetsFound;
+        List<AssetModel> assetsFound;
 
         try {
             assetsFound = new ArrayList<>(assetsServiceImpl.getAvailableAssets(pageNumber, sortInfo));
@@ -106,10 +107,10 @@ public class AssetsController {
             @PathVariable final String sku
     ) {
 
-        AssetDetailResponse asset;
+        AssetModel asset;
 
         try {
-            asset = assetsServiceImpl.getAssetDetail(sku);
+            asset = assetsServiceImpl.getAssetDetailData(sku);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
                     HttpStatus.NOT_FOUND.value(),
@@ -118,10 +119,13 @@ public class AssetsController {
             ), HttpStatus.NOT_FOUND);
         }
 
+        String[] images = assetsServiceImpl.getAssetDetailImages(asset.getSku(), asset.getImageDirectory());
+
         return new ResponseEntity<>(assetsResponseMapper.produceViewAssetDetailSuccessResult(
                 HttpStatus.OK.value(),
                 assetsServiceImpl.getAssetDetailActiveComponents(),
-                asset
+                asset,
+                images
         ), HttpStatus.OK);
     }
 

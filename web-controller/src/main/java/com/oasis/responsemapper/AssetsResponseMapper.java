@@ -6,8 +6,11 @@ import com.oasis.webmodel.response.*;
 import com.oasis.webmodel.response.failed.FailedResponse;
 import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
 import com.oasis.webmodel.response.success.assets.AssetListResponse;
+import ma.glasnost.orika.MapperFactory;
+import ma.glasnost.orika.impl.DefaultMapperFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +18,7 @@ import java.util.Map;
 public class AssetsResponseMapper {
 
     public PagingResponse<AssetListResponse>
-    produceViewFoundAssetSuccessResult(final int httpStatusCode, final List<AssetListResponse.Asset> mappedAssets,
+    produceViewFoundAssetSuccessResult(final int httpStatusCode, final List<AssetModel> assets,
                                        final Map<String, Boolean> components, final int pageNumber) {
         PagingResponse<AssetListResponse> successResponse = new PagingResponse<>();
 
@@ -34,6 +37,20 @@ public class AssetsResponseMapper {
 //                    )
 //            );
 //        }
+        MapperFactory assetDataFactory = new DefaultMapperFactory.Builder().build();
+        assetDataFactory.classMap(AssetModel.class, AssetListResponse.Asset.class)
+                        .field("location", "location")
+                        .field("stock", "quantity")
+                        .exclude("expendable")
+                        .byDefault()
+                        .register();
+        List<AssetListResponse.Asset> mappedAssets = new ArrayList<>();
+        for (AssetModel asset : assets) {
+            mappedAssets.add(
+                    assetDataFactory
+                            .getMapperFacade(AssetModel.class, AssetListResponse.Asset.class).map(asset)
+            );
+        }
         successResponse.setValue(
                 new AssetListResponse(
                         mappedAssets
@@ -44,7 +61,7 @@ public class AssetsResponseMapper {
                 new Paging(
                         pageNumber,
                         ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE,
-                        mappedAssets.size()
+                        assets.size()
                 )
         );
 
@@ -79,13 +96,19 @@ public class AssetsResponseMapper {
 
     public NoPagingResponse<AssetDetailResponse>
     produceViewAssetDetailSuccessResult(final int httpStatusCode, final Map<String, Boolean> components,
-                                        final AssetDetailResponse asset){
+                                        final AssetModel asset, final String[] images){
         NoPagingResponse<AssetDetailResponse> successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
         successResponse.setComponents(components);
-        successResponse.setValue(asset);
+
+        MapperFactory assetDataFactory = new DefaultMapperFactory.Builder().build();
+        assetDataFactory.classMap(AssetModel.class, AssetDetailResponse.class);
+        AssetDetailResponse mappedAsset = assetDataFactory.getMapperFacade(AssetModel.class,
+                                                                            AssetDetailResponse.class).map(asset);
+        mappedAsset.setImages(images);
+        successResponse.setValue(mappedAsset);
 
         return successResponse;
     }

@@ -18,8 +18,6 @@ import com.oasis.repository.RequestRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.webmodel.request.assets.SaveAssetRequest;
-import com.oasis.webmodel.response.success.assets.AssetDetailResponse;
-import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,7 +48,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
     /*-------------Assets List Methods-------------*/
     @Override
-    public List<AssetListResponse.Asset> getAvailableAssets(
+    public List<AssetModel> getAvailableAssets(
             final int pageNumber,
             final String sortInfo
     )
@@ -66,9 +64,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
-        Set<AssetModel> availableAssets = getSortedAvailableAssets(sortInfo, ServiceConstant.ZERO);
-
-        return mapAvailableAssets(availableAssets);
+        return new ArrayList<>(getSortedAvailableAssets(sortInfo, ServiceConstant.ZERO));
     }
 
     @Override
@@ -97,7 +93,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public List<AssetListResponse.Asset> getAvailableAssetsBySearchQuery(
+    public List<AssetModel> getAvailableAssetsBySearchQuery(
             final String searchQuery,
             final int pageNumber,
             final String sortInfo
@@ -149,7 +145,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             }
         }
 
-        return mapAvailableAssets(availableAssets);
+        return new ArrayList<>(availableAssets);
     }
 
     @Override
@@ -208,30 +204,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public List<AssetListResponse.Asset> mapAvailableAssets(
-            final Set<AssetModel> availableAssets
-    ) {
-        List<AssetListResponse.Asset> mappedAvailableAssets = new ArrayList<>();
-
-        for (AssetModel availableAsset : availableAssets) {
-            AssetListResponse.Asset asset =
-                    new AssetListResponse.Asset(
-                            availableAsset.getSku(),
-                            availableAsset.getName(),
-                            availableAsset.getBrand(),
-                            availableAsset.getType(),
-                            availableAsset.getLocation(),
-                            availableAsset.getStock()
-                    );
-
-            mappedAvailableAssets.add(asset);
-        }
-
-        return mappedAvailableAssets;
-    }
-
-    @Override
-    public AssetDetailResponse getAssetDetail(
+    public AssetModel getAssetDetailData(
             final String sku
     )
             throws DataNotFoundException {
@@ -242,13 +215,22 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
-        File imageDirectory = new File(assetDetailData.getImageDirectory());
+        return assetDetailData;
+    }
+
+    @Override
+    public String[] getAssetDetailImages(
+            final String sku,
+            final String imageDirectory
+    ) {
+
+        File directory = new File(imageDirectory);
         String[] images = new String[0];
-        if(Files.exists(imageDirectory.toPath()) && imageDirectory.getPath().startsWith(ServiceConstant.IMAGE_ROOT_DIRECTORY)) {
-            images = new String[requireNonNull(imageDirectory.listFiles()).length];
+        if(Files.exists(directory.toPath()) && directory.getPath().startsWith(ServiceConstant.IMAGE_ROOT_DIRECTORY)) {
+            images = new String[requireNonNull(directory.listFiles()).length];
 
             int i = 0;
-            for (final File image : requireNonNull(imageDirectory.listFiles())){
+            for (final File image : requireNonNull(directory.listFiles())){
                 StringBuilder extensionBuilder = new StringBuilder();
                 extensionBuilder.append(image.getName());
                 extensionBuilder.reverse();
@@ -258,24 +240,15 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                         extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
                 );
                 extensionBuilder.reverse();
-                images[i] = "http://localhost:8085/oasis/api/assets/" + assetDetailData.getSku() +
-                            "/"+ assetDetailData.getSku().concat("-")
-                                                .concat(String.valueOf(++i))
-                                                .concat(String.valueOf(extensionBuilder));
+                images[i] = "http://localhost:8085/oasis/api/assets/" + sku +
+                            "/"+ sku.concat("-")
+                                    .concat(String.valueOf(++i))
+                                    .concat(String.valueOf(extensionBuilder));
             }
         }
 
-        return new AssetDetailResponse(
-                assetDetailData.getSku(),
-                assetDetailData.getName(),
-                assetDetailData.getLocation(),
-                assetDetailData.getStock(),
-                assetDetailData.getBrand(),
-                assetDetailData.getType(),
-                assetDetailData.getPrice(),
-                (assetDetailData.isExpendable()) ? "Yes" : "No",
-                images
-        );
+        return images;
+
     }
 
     @Override
