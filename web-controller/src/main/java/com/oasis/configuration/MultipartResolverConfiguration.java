@@ -17,7 +17,7 @@ public class MultipartResolverConfiguration {
 
     @Bean(name = "multipartResolver")
     public CommonsMultipartResolver multipartResolver(){
-        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+        ExtendedMultipartResolver multipartResolver = new ExtendedMultipartResolver();
         multipartResolver.setMaxUploadSize(20971520);
         multipartResolver.setMaxInMemorySize(1048576);
         return multipartResolver;

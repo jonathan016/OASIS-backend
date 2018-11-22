@@ -205,36 +205,34 @@ public class AssetsController {
         ), HttpStatus.CREATED);
     }
 
-    //TODO fix bug here, cannot receive multipartFile
-    @PutMapping(value = "/update",
+    @PutMapping(value = APIMappingValue.API_SAVE_ASSET,
                 produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity callUpdateAssetService(
             @RequestParam("assetPhotos") final MultipartFile[] assetPhotos,
             @RequestParam("assetData") final String assetData
     ) {
         //TODO Handle concurrency
-        //TODO Handle existing requests with the asset
 
-//        try {
-//            assetsServiceImpl.updateAsset(assetPhotos, assetData);
-//        } catch (UnauthorizedOperationException unauthorizedOperationException) {
-//            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
-//                    HttpStatus.UNAUTHORIZED.value(),
-//                    unauthorizedOperationException.getErrorCode(),
-//                    unauthorizedOperationException.getErrorMessage()
-//            ), HttpStatus.UNAUTHORIZED);
-//        } catch (DataNotFoundException dataNotFoundException) {
-//            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
-//                    HttpStatus.NOT_FOUND.value(),
-//                    dataNotFoundException.getErrorCode(),
-//                    dataNotFoundException.getErrorMessage()
-//            ), HttpStatus.NOT_FOUND);
-//        }
-//
-//        return new ResponseEntity<>(assetsResponseMapper.produceAssetSaveSuccessResult(
-//                HttpStatus.OK.value()
-//        ), HttpStatus.OK);
-        return null;
+        try {
+            assetsServiceImpl.updateAsset(assetPhotos, assetData);
+        } catch (UnauthorizedOperationException unauthorizedOperationException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    unauthorizedOperationException.getErrorCode(),
+                    unauthorizedOperationException.getErrorMessage()
+            ), HttpStatus.UNAUTHORIZED);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
+            ), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(assetsResponseMapper.produceAssetSaveSuccessResult(
+                HttpStatus.OK.value()
+        ), HttpStatus.OK);
+//        return null;
     }
 
     @DeleteMapping(value = APIMappingValue.API_DELETE_ASSET,

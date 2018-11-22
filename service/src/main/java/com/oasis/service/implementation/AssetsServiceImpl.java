@@ -35,6 +35,7 @@ import java.util.*;
 import java.util.List;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
+import static java.util.Objects.*;
 
 @Service
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
@@ -242,10 +243,10 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         File imageDirectory = new File(assetDetailData.getImageDirectory());
-        String[] images = new String[Objects.requireNonNull(imageDirectory.listFiles()).length];
+        String[] images = new String[requireNonNull(imageDirectory.listFiles()).length];
 
         int i = 0;
-        for (final File image : Objects.requireNonNull(imageDirectory.listFiles())){
+        for (final File image : requireNonNull(imageDirectory.listFiles())){
             StringBuilder extensionBuilder = new StringBuilder();
             extensionBuilder.append(image.getName());
             extensionBuilder.reverse();
@@ -316,11 +317,11 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             if (possibleDirectory.exists()){
                 if (possibleDirectory.isDirectory()){
                     //noinspection LoopStatementThatDoesntLoop
-                    for (final File image : Objects.requireNonNull(possibleDirectory.listFiles())){
+                    for (final File image : requireNonNull(possibleDirectory.listFiles())){
                         if (Files.exists(image.toPath())){
                             Image detailImage = Image.getInstance(
                                     Files.readAllBytes(Paths.get(
-                                            Objects.requireNonNull(image).toURI())));
+                                            requireNonNull(image).toURI())));
                             detailImage.scaleToFit(detailImage.getWidth(), document.getPageSize().getWidth() / 5);
                             detailImage.setAlignment(Element.ALIGN_CENTER);
                             document.add(detailImage);
@@ -509,7 +510,6 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             asset.setUpdatedDate(new Date());
 
             boolean rootDirectoryCreated;
-            boolean directoryCreated;
 
             if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
                 rootDirectoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
@@ -521,17 +521,14 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
 
                 if (!Files.exists(saveDir)) {
-                    directoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
-                } else {
-                    directoryCreated = false;
+                    //noinspection ResultOfMethodCallIgnored
+                    new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
                 }
 
-                if (directoryCreated){
-                    String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
-                    asset.setImageDirectory(imageDirectory);
+                String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
+                asset.setImageDirectory(imageDirectory);
 
-                    savePhotos(assetPhotos, asset.getSku());
-                }
+                savePhotos(assetPhotos, asset.getSku());
             }
 
             assetRepository.save(asset);
@@ -619,7 +616,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
     /*-------------Update Asset Method-------------*/
     @Override
-    @SuppressWarnings("Duplicates")
+    @SuppressWarnings({"Duplicates", "ResultOfMethodCallIgnored"})
     public void updateAsset(
             final MultipartFile[] assetPhotos,
             final String rawAssetData
@@ -656,9 +653,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
         AssetModel asset = assetRepository.findBySku(assetRequest.getSku());
 
-        if (asset == null) {
+        if (asset == null)
             throw new DataNotFoundException(ASSET_NOT_FOUND);
-        }
 
         asset.setName(assetRequest.getName());
         asset.setLocation(assetRequest.getLocation());
@@ -669,7 +665,6 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         asset.setExpendable(assetRequest.isExpendable());
 
         boolean rootDirectoryCreated;
-        boolean directoryCreated;
 
         if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
             rootDirectoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
@@ -680,18 +675,20 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         if(rootDirectoryCreated){
             Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
 
-            if (!Files.exists(saveDir)) {
-                directoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
-            } else {
-                directoryCreated = false;
+            if (Files.exists(saveDir)) {
+                File assetImageFolder =
+                        new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
+                for (File image : requireNonNull(assetImageFolder.listFiles())){
+                    image.delete();
+                }
+                assetImageFolder.delete();
             }
+            new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
 
-            if (directoryCreated){
-                String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
-                asset.setImageDirectory(imageDirectory);
+            String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
+            asset.setImageDirectory(imageDirectory);
 
-                savePhotos(assetPhotos, asset.getSku());
-            }
+            savePhotos(assetPhotos, asset.getSku());
         }
         asset.setUpdatedBy(adminNik);
         asset.setUpdatedDate(new Date());
@@ -756,7 +753,7 @@ class FileHeader extends PdfPageEventHelper {
         try {
             blibli = Image.getInstance(
                     Files.readAllBytes(Paths.get(
-                            Objects.requireNonNull(loader.getResource("pdf_header_images/blibli.png"))
+                            requireNonNull(loader.getResource("pdf_header_images/blibli.png"))
                                    .toURI())));
             } catch (IOException | BadElementException | URISyntaxException e) {
             e.printStackTrace();
@@ -776,7 +773,7 @@ class FileHeader extends PdfPageEventHelper {
         try {
             oasis = Image.getInstance(
                     Files.readAllBytes(Paths.get(
-                            Objects.requireNonNull(loader.getResource("pdf_header_images/oasis.png"))
+                            requireNonNull(loader.getResource("pdf_header_images/oasis.png"))
                                    .toURI())));
         } catch (IOException | BadElementException | URISyntaxException e) {
             e.printStackTrace();
