@@ -9,13 +9,14 @@ import com.oasis.webmodel.response.success.assets.AssetListResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class AssetsResponseMapper {
 
     public PagingResponse<AssetListResponse>
-    produceViewFoundAssetSuccessResult(int httpStatusCode, List<AssetListResponse.Asset> mappedAssets,
-                                       Integer pageNumber) {
+    produceViewFoundAssetSuccessResult(final int httpStatusCode, final List<AssetListResponse.Asset> mappedAssets,
+                                       final Map<String, Boolean> components, final int pageNumber) {
         PagingResponse<AssetListResponse> successResponse = new PagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
@@ -38,6 +39,7 @@ public class AssetsResponseMapper {
                         mappedAssets
                 )
         );
+        successResponse.setComponents(components);
         successResponse.setPaging(
                 new Paging(
                         pageNumber,
@@ -50,7 +52,7 @@ public class AssetsResponseMapper {
     }
 
     public NoPagingResponse<FailedResponse>
-    produceAssetsFailedResult(int httpStatusCode, String errorCode, String errorMessage) {
+    produceAssetsFailedResult(final int httpStatusCode, final String errorCode, final String errorMessage) {
         NoPagingResponse<FailedResponse> failedResponse = new NoPagingResponse<>();
 
         failedResponse.setCode(httpStatusCode);
@@ -66,7 +68,7 @@ public class AssetsResponseMapper {
     }
 
     public BaseResponse
-    produceAssetSaveSuccessResult(int httpStatusCode) {
+    produceAssetSaveSuccessResult(final int httpStatusCode) {
         BaseResponse successResponse = new BaseResponse();
 
         successResponse.setCode(httpStatusCode);
@@ -76,11 +78,13 @@ public class AssetsResponseMapper {
     }
 
     public NoPagingResponse<AssetDetailResponse>
-    produceViewAssetDetailSuccessResult(int httpStatusCode, AssetDetailResponse asset){
+    produceViewAssetDetailSuccessResult(final int httpStatusCode, final Map<String, Boolean> components,
+                                        final AssetDetailResponse asset){
         NoPagingResponse<AssetDetailResponse> successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
+        successResponse.setComponents(components);
         successResponse.setValue(asset);
 
         return successResponse;

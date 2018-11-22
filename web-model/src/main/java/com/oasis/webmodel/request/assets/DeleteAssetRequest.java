@@ -8,6 +8,6 @@ import java.util.List;
 public class DeleteAssetRequest {
 
     private String nik;
-    private List<String> assets;
+    private List<String> assetSkus;
 
 }

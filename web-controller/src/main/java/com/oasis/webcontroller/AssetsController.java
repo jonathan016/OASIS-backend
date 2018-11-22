@@ -68,6 +68,7 @@ public class AssetsController {
         return new ResponseEntity<>(assetsResponseMapper.produceViewFoundAssetSuccessResult(
                 HttpStatus.OK.value(),
                 availableAssets,
+                assetsServiceImpl.getAssetsListActiveComponents(),
                 pageNumber
         ), HttpStatus.OK);
     }
@@ -94,6 +95,7 @@ public class AssetsController {
         return new ResponseEntity<>(assetsResponseMapper.produceViewFoundAssetSuccessResult(
                 HttpStatus.OK.value(),
                 assetsFound,
+                assetsServiceImpl.getAssetsListActiveComponents(),
                 pageNumber
         ), HttpStatus.OK);
     }
@@ -118,6 +120,7 @@ public class AssetsController {
 
         return new ResponseEntity<>(assetsResponseMapper.produceViewAssetDetailSuccessResult(
                 HttpStatus.OK.value(),
+                assetsServiceImpl.getAssetDetailActiveComponents(),
                 asset
         ), HttpStatus.OK);
     }
@@ -243,7 +246,7 @@ public class AssetsController {
         //TODO Handle concurrency
 
         try {
-            assetsServiceImpl.deleteAssets(request.getAssets(), request.getNik());
+            assetsServiceImpl.deleteAssets(request.getAssetSkus(), request.getNik());
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
                     HttpStatus.UNAUTHORIZED.value(),

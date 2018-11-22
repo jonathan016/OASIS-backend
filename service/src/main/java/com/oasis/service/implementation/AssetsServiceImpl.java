@@ -243,23 +243,26 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         File imageDirectory = new File(assetDetailData.getImageDirectory());
-        String[] images = new String[requireNonNull(imageDirectory.listFiles()).length];
+        String[] images = null;
+        if(Files.exists(imageDirectory.toPath())) {
+            images = new String[requireNonNull(imageDirectory.listFiles()).length];
 
-        int i = 0;
-        for (final File image : requireNonNull(imageDirectory.listFiles())){
-            StringBuilder extensionBuilder = new StringBuilder();
-            extensionBuilder.append(image.getName());
-            extensionBuilder.reverse();
-            extensionBuilder.replace(
-                    0,
-                    extensionBuilder.length(),
-                    extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
-            );
-            extensionBuilder.reverse();
-            images[i] = "http://localhost:8085/oasis/api/assets/" + assetDetailData.getSku() +
-                                                    "/"+ assetDetailData.getSku().concat("-")
-                                                              .concat(String.valueOf(i + 1))
-                                                              .concat(String.valueOf(extensionBuilder));
+            int i = 0;
+            for (final File image : requireNonNull(imageDirectory.listFiles())){
+                StringBuilder extensionBuilder = new StringBuilder();
+                extensionBuilder.append(image.getName());
+                extensionBuilder.reverse();
+                extensionBuilder.replace(
+                        0,
+                        extensionBuilder.length(),
+                        extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
+                );
+                extensionBuilder.reverse();
+                images[i] = "http://localhost:8085/oasis/api/assets/" + assetDetailData.getSku() +
+                            "/"+ assetDetailData.getSku().concat("-")
+                                                .concat(String.valueOf(++i))
+                                                .concat(String.valueOf(extensionBuilder));
+            }
         }
 
         return new AssetDetailResponse(
@@ -737,6 +740,25 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
     }
 
+    /*-------------Utility Methods-------------*/
+    public Map<String, Boolean> getAssetsListActiveComponents() {
+        Map<String, Boolean> activeComponents = new HashMap<>();
+
+        activeComponents.put("btn-asset-list-add", true);
+        activeComponents.put("btn-asset-list-delete", true);
+        activeComponents.put("table-content-asset-admin-edit", true);
+
+        return activeComponents;
+    }
+
+    public Map<String, Boolean> getAssetDetailActiveComponents() {
+        Map<String, Boolean> activeComponents = new HashMap<>();
+
+        activeComponents.put("btn-asset-detail-edit", true);
+        activeComponents.put("btn-asset-detail-delete", true);
+
+        return activeComponents;
+    }
 }
 
 class FileHeader extends PdfPageEventHelper {
