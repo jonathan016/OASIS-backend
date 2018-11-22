@@ -243,8 +243,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         File imageDirectory = new File(assetDetailData.getImageDirectory());
-        String[] images = null;
-        if(Files.exists(imageDirectory.toPath())) {
+        String[] images = new String[0];
+        if(Files.exists(imageDirectory.toPath()) && imageDirectory.getPath().startsWith(ServiceConstant.IMAGE_ROOT_DIRECTORY)) {
             images = new String[requireNonNull(imageDirectory.listFiles()).length];
 
             int i = 0;
