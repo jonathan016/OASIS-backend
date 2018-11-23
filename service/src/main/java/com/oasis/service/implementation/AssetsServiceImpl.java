@@ -717,9 +717,9 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     public Map<String, Boolean> getAssetsListActiveComponents() {
         Map<String, Boolean> activeComponents = new HashMap<>();
 
-        activeComponents.put("btn-asset-list-add", true);
-        activeComponents.put("btn-asset-list-delete", true);
-        activeComponents.put("table-content-asset-admin-edit", true);
+        activeComponents.put("btnAssetListAdd", true);
+        activeComponents.put("btnAssetListDelete", true);
+        activeComponents.put("btnAssetTableEdit", true);
 
         return activeComponents;
     }

@@ -104,9 +104,10 @@ public class AssetsResponseMapper {
         successResponse.setComponents(components);
 
         MapperFactory assetDataFactory = new DefaultMapperFactory.Builder().build();
-        assetDataFactory.classMap(AssetModel.class, AssetDetailResponse.class);
+        assetDataFactory.classMap(AssetModel.class, AssetDetailResponse.class).byDefault().exclude("expendable").register();
         AssetDetailResponse mappedAsset = assetDataFactory.getMapperFacade(AssetModel.class,
                                                                             AssetDetailResponse.class).map(asset);
+        mappedAsset.setExpendable((asset.isExpendable()) ? "Yes" : "No");
         mappedAsset.setImages(images);
         successResponse.setValue(mappedAsset);
 
