@@ -433,8 +433,9 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                    UnauthorizedOperationException,
                    DataNotFoundException {
 
-        String adminNik;
-        SaveAssetRequest.Asset assetRequest;
+        String adminNik = "";
+        SaveAssetRequest.Asset assetRequest = null;
+        boolean hasNewImage = true;
 
         try {
             adminNik = new ObjectMapper().readTree(rawAssetData).path("nik").asText();
@@ -451,6 +452,9 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                     asset.path("price").asDouble(),
                     asset.path("expendable").asBoolean()
             );
+
+            hasNewImage = new ObjectMapper().readTree(rawAssetData).path("hasNewImage").asBoolean();
+
         } catch (IOException e) {
             //TODO throw real exception cause
             throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
@@ -485,26 +489,28 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             asset.setCreatedDate(new Date());
             asset.setUpdatedDate(new Date());
 
-            boolean rootDirectoryCreated;
+            if (hasNewImage) {
+                boolean rootDirectoryCreated;
 
-            if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
-                rootDirectoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
-            } else {
-                rootDirectoryCreated = true;
-            }
-
-            if(rootDirectoryCreated){
-                Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
-
-                if (!Files.exists(saveDir)) {
-                    //noinspection ResultOfMethodCallIgnored
-                    new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
+                if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
+                    rootDirectoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
+                } else {
+                    rootDirectoryCreated = true;
                 }
 
-                String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
-                asset.setImageDirectory(imageDirectory);
+                if(rootDirectoryCreated){
+                    Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
 
-                savePhotos(assetPhotos, asset.getSku());
+                    if (!Files.exists(saveDir)) {
+                        //noinspection ResultOfMethodCallIgnored
+                        new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
+                    }
+
+                    String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
+                    asset.setImageDirectory(imageDirectory);
+
+                    savePhotos(assetPhotos, asset.getSku());
+                }
             }
 
             assetRepository.save(asset);
@@ -600,8 +606,9 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throws UnauthorizedOperationException,
                    DataNotFoundException {
 
-        String adminNik;
-        SaveAssetRequest.Asset assetRequest;
+        String adminNik = "";
+        SaveAssetRequest.Asset assetRequest = null;
+        boolean hasNewImage = true;
 
         try {
             adminNik = new ObjectMapper().readTree(rawAssetData).path("nik").asText();
@@ -618,6 +625,9 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                     asset.path("price").asDouble(),
                     asset.path("expendable").asBoolean()
             );
+
+            hasNewImage = new ObjectMapper().readTree(rawAssetData).path("hasNewImage").asBoolean();
+
         } catch (IOException e){
             //TODO throw real exception cause
             throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
@@ -640,31 +650,33 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         asset.setType(assetRequest.getType());
         asset.setExpendable(assetRequest.isExpendable());
 
-        boolean rootDirectoryCreated;
+        if (hasNewImage) {
+            boolean rootDirectoryCreated;
 
-        if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
-            rootDirectoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
-        } else {
-            rootDirectoryCreated = true;
-        }
-
-        if(rootDirectoryCreated){
-            Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
-
-            if (Files.exists(saveDir)) {
-                File assetImageFolder =
-                        new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
-                for (File image : requireNonNull(assetImageFolder.listFiles())){
-                    image.delete();
-                }
-                assetImageFolder.delete();
+            if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
+                rootDirectoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
+            } else {
+                rootDirectoryCreated = true;
             }
-            new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
 
-            String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
-            asset.setImageDirectory(imageDirectory);
+            if(rootDirectoryCreated){
+                Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
 
-            savePhotos(assetPhotos, asset.getSku());
+                if (Files.exists(saveDir)) {
+                    File assetImageFolder =
+                            new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
+                    for (File image : requireNonNull(assetImageFolder.listFiles())){
+                        image.delete();
+                    }
+                    assetImageFolder.delete();
+                }
+                new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
+
+                String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
+                asset.setImageDirectory(imageDirectory);
+
+                savePhotos(assetPhotos, asset.getSku());
+            }
         }
         asset.setUpdatedBy(adminNik);
         asset.setUpdatedDate(new Date());

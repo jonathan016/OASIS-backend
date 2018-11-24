@@ -8,6 +8,7 @@ public class SaveAssetRequest {
 
     private String nik;
     private SaveAssetRequest.Asset asset;
+    private boolean hasNewImage;
 
     @Data
     @AllArgsConstructor
