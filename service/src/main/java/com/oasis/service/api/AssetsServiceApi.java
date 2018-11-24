@@ -68,7 +68,7 @@ public interface AssetsServiceApi {
     )
             throws DuplicateDataException,
                    UnauthorizedOperationException,
-                   DataNotFoundException;
+                   DataNotFoundException, BadRequestException;
 
     String generateAssetSkuCode(
             final String brand,

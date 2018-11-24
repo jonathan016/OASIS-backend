@@ -197,6 +197,12 @@ public class AssetsController {
                     dataNotFoundException.getErrorCode(),
                     dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
+            ), HttpStatus.BAD_REQUEST);
         }
 
         return new ResponseEntity<>(assetsResponseMapper.produceAssetSaveSuccessResult(

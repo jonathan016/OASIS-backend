@@ -224,8 +224,11 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             final String imageDirectory
     ) {
 
-        File directory = new File(imageDirectory);
         String[] images = new String[0];
+        if (imageDirectory == null || imageDirectory.isEmpty())
+            return images;
+
+        File directory = new File(imageDirectory);
         if(Files.exists(directory.toPath()) && directory.getPath().startsWith(ServiceConstant.IMAGE_ROOT_DIRECTORY)) {
             images = new String[requireNonNull(directory.listFiles()).length];
 
@@ -431,7 +434,12 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     )
             throws DuplicateDataException,
                    UnauthorizedOperationException,
-                   DataNotFoundException {
+                   DataNotFoundException,
+                   BadRequestException {
+
+        //TODO throw real exception
+        if (assetPhotos.length == 0)
+            throw new BadRequestException(MISSING_ASSET_IMAGE);
 
         String adminNik = "";
         SaveAssetRequest.Asset assetRequest = null;
