@@ -277,7 +277,8 @@ public class AssetsController {
     @RequestMapping(value = "**/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT,
                                                RequestMethod.DELETE})
     public ResponseEntity returnIncorrectMappingCalls() {
-        return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                                HttpStatus.BAD_REQUEST.name(), "Incorrect mapping/method"), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(assetsResponseMapper.produceAssetsFailedResult(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.name(), "Incorrect mapping/method"), HttpStatus.BAD_REQUEST);
     }
 }

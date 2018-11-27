@@ -78,13 +78,13 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         if (sortInfo.substring(1).equals("sku")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuAsc(stockLimit));
-            } else if (sortInfo.substring(0, 1).equals("D")) {
+            } else {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuDesc(stockLimit));
             }
         } else if (sortInfo.substring(1).equals("name")) {
             if (sortInfo.substring(0, 1).equals("A")) {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderByNameAsc(stockLimit));
-            } else if (sortInfo.substring(0, 1).equals("D")) {
+            } else {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderByNameDesc(stockLimit));
             }
         }
@@ -156,38 +156,22 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
         Set<AssetModel> sortedAvailableAssets = new LinkedHashSet<>();
 
-        if (sortInfo.substring(1)
-                    .equals("sku")) {
-            if (sortInfo.substring(0, 1)
-                        .equals("A")) {
+        if (sortInfo.substring(1).equals("sku")) {
+            if (sortInfo.substring(0, 1).equals("A")) {
                 sortedAvailableAssets.addAll(
-                        assetRepository
-                                .findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
-                                        searchQuery,
-                                        searchQuery
-                                )
-                );
-            } else if (sortInfo.substring(0, 1)
-                               .equals("D")) {
+                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
+                                        searchQuery, searchQuery));
+            } else if (sortInfo.substring(0, 1).equals("D")) {
                 sortedAvailableAssets.addAll(
-                        assetRepository
-                                .findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
-                                        searchQuery,
-                                        searchQuery
-                                )
-                );
+                        assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
+                                        searchQuery, searchQuery));
             }
-        } else if (sortInfo.substring(1)
-                           .equals("name")) {
-            if (sortInfo.substring(0, 1)
-                        .equals("A")) {
+        } else if (sortInfo.substring(1).equals("name")) {
+            if (sortInfo.substring(0, 1).equals("A")) {
                 sortedAvailableAssets.addAll(
                         assetRepository
                                 .findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-                                        searchQuery,
-                                        searchQuery
-                                )
-                );
+                                        searchQuery, searchQuery));
             } else if (sortInfo.substring(0, 1)
                                .equals("D")) {
                 sortedAvailableAssets.addAll(
@@ -229,7 +213,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             return images;
 
         File directory = new File(imageDirectory);
-        if(Files.exists(directory.toPath()) && directory.getPath().startsWith(ServiceConstant.IMAGE_ROOT_DIRECTORY)) {
+        if(Files.exists(directory.toPath())) {
             images = new String[requireNonNull(directory.listFiles()).length];
 
             int i = 0;
@@ -244,7 +228,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 );
                 extensionBuilder.reverse();
                 images[i] = "http://localhost:8085/oasis/api/assets/" + sku +
-                            "/"+ sku.concat("-")
+                            File.separator + sku.concat("-")
                                     .concat(String.valueOf(++i))
                                     .concat(String.valueOf(extensionBuilder));
             }
@@ -532,9 +516,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             final String name
     ) {
 
-        StringBuilder sku = new StringBuilder();
-
-        sku.append(ServiceConstant.SKU_PREFIX);
+        StringBuilder sku = new StringBuilder(ServiceConstant.SKU_PREFIX);
 
         if (assetRepository.existsAssetModelByBrand(brand)) {
             String lastBrandSku = assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
@@ -733,6 +715,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
     }
 
+    //TODO Move to different class
     /*-------------Utility Methods-------------*/
     public Map<String, Boolean> getAssetsListActiveComponents() {
         Map<String, Boolean> activeComponents = new HashMap<>();
