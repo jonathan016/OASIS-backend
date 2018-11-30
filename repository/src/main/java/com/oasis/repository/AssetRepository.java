@@ -33,17 +33,6 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String sku, String name);
 
-    @SuppressWarnings("unchecked")
-    AssetModel save(AssetModel assetModel);
-
-    AssetModel findFirstBySkuContainsOrderBySkuDesc(String sku);
-
     boolean existsAssetModelByNameAndBrandAndType(String name, String brand, String type);
-
-    boolean existsAssetModelByBrand(String brand);
-
-    boolean existsAssetModelByBrandAndType(String brand, String type);
-
-    void delete(AssetModel entity);
 
 }

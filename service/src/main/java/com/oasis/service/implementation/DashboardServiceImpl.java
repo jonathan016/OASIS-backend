@@ -1,6 +1,7 @@
 package com.oasis.service.implementation;
 
 import com.oasis.RoleDeterminer;
+import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.BaseEntity;
 import com.oasis.model.entity.AssetModel;
@@ -13,12 +14,13 @@ import com.oasis.repository.RequestRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.DashboardServiceApi;
-import com.oasis.webmodel.response.success.DashboardRequestUpdateResponse;
+import com.oasis.web_model.response.success.dashboard.DashboardRequestUpdateResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+import static com.oasis.exception.helper.ErrorCodeAndMessage.EMPTY_EMPLOYEE_NIK;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.REQUESTS_NOT_FOUND;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
@@ -39,74 +41,75 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     private RoleDeterminer roleDeterminer;
 
     @Override
-    public List<RequestModel> getMyPendingHandoverRequests(final String employeeNik) {
-        return requestRepository.findAllByNikAndStatus(employeeNik,
-                                                       ServiceConstant.PENDING_HANDOVER
-        );
+    public List<RequestModel> getMyPendingHandoverRequests(final String username) {
+
+        return requestRepository.findAllByUsernameAndStatus(username, ServiceConstant.PENDING_HANDOVER);
     }
 
     @Override
-    public List<RequestModel> getMyRequestedRequests(final String employeeNik) {
-        return requestRepository.findAllByNikAndStatus(employeeNik,
-                                                       ServiceConstant.REQUESTED
-        );
+    public List<RequestModel> getMyRequestedRequests(final String username) {
+
+        return requestRepository.findAllByUsernameAndStatus(username, ServiceConstant.REQUESTED);
     }
 
     @Override
-    public List<RequestModel> getOthersRequestedRequests(final String supervisorNik) {
-        List<String> supervisedEmployeeNikList = getSupervisedEmployeeNikList(supervisorNik);
+    public List<RequestModel> getOthersRequestedRequests(final String username) {
 
-        return getRequestsList(ServiceConstant.REQUESTED, supervisedEmployeeNikList);
+        List<String> supervisedEmployeeUsernameList = getSupervisedEmployeeUsernameList(username);
+
+        return getRequestsList(ServiceConstant.REQUESTED, supervisedEmployeeUsernameList);
     }
 
     @Override
-    public List<RequestModel> getOthersPendingHandoverRequests(final String supervisorNik) {
-        List<String> supervisedEmployeeNikList = getSupervisedEmployeeNikList(supervisorNik);
+    public List<RequestModel> getOthersPendingHandoverRequests(final String username) {
 
-        return getRequestsList(ServiceConstant.PENDING_HANDOVER, supervisedEmployeeNikList);
+        List<String> supervisedEmployeeUsernameList = getSupervisedEmployeeUsernameList(username);
+
+        return getRequestsList(ServiceConstant.PENDING_HANDOVER, supervisedEmployeeUsernameList);
     }
 
     @Override
-    public String determineUserRole(final String employeeNik) throws DataNotFoundException {
-        return roleDeterminer.determineRole(employeeNik);
+    public String determineUserRole(final String username) throws DataNotFoundException {
+
+        return roleDeterminer.determineRole(username);
     }
 
     @Override
-    public List<String> getSupervisedEmployeeNikList(final String supervisorNik) {
+    public List<String> getSupervisedEmployeeUsernameList(final String username) {
+
         List<SupervisionModel> supervisions =
-                supervisionRepository.findAllBySupervisorNik(supervisorNik);
+                supervisionRepository.findAllBySupervisorUsername(username);
 
-        List<String> supervisedEmployeeNikList = new ArrayList<>();
+        List<String> supervisedEmployeeUsernameList = new ArrayList<>();
 
         for (SupervisionModel supervision : supervisions) {
-            supervisedEmployeeNikList.add(supervision.getEmployeeNik());
+            supervisedEmployeeUsernameList.add(supervision.getEmployeeUsername());
         }
 
-        return supervisedEmployeeNikList;
+        return supervisedEmployeeUsernameList;
     }
 
     @Override
     public List<RequestModel> getRequestsList(
-            final String requestStatus, final List<String> supervisedEmployeeNikList
+            final String requestStatus, final List<String> supervisedEmployeeUsernameList
     ) {
+
         List<RequestModel> assignedRequests = new ArrayList<>();
 
-        for (String supervisedEmployeeNik : supervisedEmployeeNikList) {
+        for (String supervisedEmployeeUsername : supervisedEmployeeUsernameList) {
             assignedRequests.addAll(
-                    requestRepository.findAllByNikAndStatus(supervisedEmployeeNik,
+                    requestRepository.findAllByUsernameAndStatus(supervisedEmployeeUsername,
                                                             requestStatus
                     ));
 
-            int employeeSupervisingCount = employeeRepository.findByNik(supervisedEmployeeNik)
-                    .getSupervisingCount();
-            boolean isAdminOrSuperior = employeeSupervisingCount > 0;
+            boolean isAdminOrSuperior = supervisionRepository.existsSupervisionModelsBySupervisorUsername(supervisedEmployeeUsername);
 
             if (isAdminOrSuperior) {
                 if (requestStatus.equals(ServiceConstant.PENDING_HANDOVER)) {
                     assignedRequests.addAll(
-                            getOthersPendingHandoverRequests(supervisedEmployeeNik));
+                            getOthersPendingHandoverRequests(supervisedEmployeeUsername));
                 } else if (requestStatus.equals(ServiceConstant.REQUESTED)) {
-                    assignedRequests.addAll(getOthersRequestedRequests(supervisedEmployeeNik));
+                    assignedRequests.addAll(getOthersRequestedRequests(supervisedEmployeeUsername));
                 }
             }
         }
@@ -116,26 +119,32 @@ public class DashboardServiceImpl implements DashboardServiceApi {
 
     /*--------------Status Section--------------*/
     @Override
-    public Map<String, Integer> getStatusSectionData(final String employeeNik) throws DataNotFoundException {
+    public Map<String, Integer> getStatusSectionData(final String username) throws DataNotFoundException, BadRequestException {
+
+        if (!username.matches("([A-Za-z0-9]+\\.?)*[A-Za-z0-9]+")){
+            //TODO throw real exception
+            throw new BadRequestException(EMPTY_EMPLOYEE_NIK);
+        }
+
         int availableAssetCount = assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO)
                 .size();
 
         List<RequestModel> requestedRequests = new ArrayList<>();
         List<RequestModel> pendingHandoverRequests = new ArrayList<>();
 
-        switch (roleDeterminer.determineRole(employeeNik)) {
+        switch (roleDeterminer.determineRole(username)) {
             case ServiceConstant.ROLE_ADMINISTRATOR:
-                requestedRequests.addAll(getOthersRequestedRequests(employeeNik));
-                pendingHandoverRequests.addAll(getOthersPendingHandoverRequests(employeeNik));
+                requestedRequests.addAll(getOthersRequestedRequests(username));
+                pendingHandoverRequests.addAll(getOthersPendingHandoverRequests(username));
                 break;
             case ServiceConstant.ROLE_SUPERIOR:
-                requestedRequests.addAll(getOthersRequestedRequests(employeeNik));
+                requestedRequests.addAll(getOthersRequestedRequests(username));
                 break;
             case ServiceConstant.ROLE_EMPLOYEE:
-                requestedRequests.addAll(getMyRequestedRequests(employeeNik));
+                requestedRequests.addAll(getMyRequestedRequests(username));
                 break;
         }
-        pendingHandoverRequests.addAll(getMyPendingHandoverRequests(employeeNik));
+        pendingHandoverRequests.addAll(getMyPendingHandoverRequests(username));
 
         Map<String, Integer> statusData = new HashMap<>();
         statusData.put("requestedRequestsCount", requestedRequests.size());
@@ -150,41 +159,45 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     public AssetModel getAssetData(
             final String sku
     ) {
+
         return assetRepository.findBySku(sku);
     }
 
     @Override
     public EmployeeModel getEmployeeData(
-            final String employeeNik
+            final String username
     ) {
-        return employeeRepository.findByNik(employeeNik);
+
+        return employeeRepository.findByUsername(username);
     }
 
     @Override
     public SupervisionModel getEmployeeSupervisorData(
-            final String employeeNik
+            final String username
     ) {
-        return supervisionRepository.findByEmployeeNik(employeeNik);
+
+        return supervisionRepository.findByEmployeeUsername(username);
     }
 
     @Override
     public List<RequestModel> fillData(
-            final String employeeNik, final String currentTab, final String role
+            final String username, final String tab, final String role
     ) {
+
         List<RequestModel> requestUpdates = new ArrayList<>();
 
         switch (role) {
             case ServiceConstant.ROLE_ADMINISTRATOR:
             case ServiceConstant.ROLE_SUPERIOR:
-                if (currentTab.equals(ServiceConstant.TAB_OTHERS)) {
-                    requestUpdates.addAll(getOthersRequestedRequests(employeeNik));
-                } else if (currentTab.equals(ServiceConstant.TAB_SELF)) {
-                    requestUpdates.addAll(getMyRequestedRequests(employeeNik));
-                    requestUpdates.addAll(getMyPendingHandoverRequests(employeeNik));
+                if (tab.equals(ServiceConstant.TAB_OTHERS)) {
+                    requestUpdates.addAll(getOthersRequestedRequests(username));
+                } else if (tab.equals(ServiceConstant.TAB_SELF)) {
+                    requestUpdates.addAll(getMyRequestedRequests(username));
+                    requestUpdates.addAll(getMyPendingHandoverRequests(username));
                 }
                 break;
             case ServiceConstant.ROLE_EMPLOYEE:
-                requestUpdates.addAll(getMyPendingHandoverRequests(employeeNik));
+                requestUpdates.addAll(getMyPendingHandoverRequests(username));
                 break;
         }
 
@@ -195,23 +208,24 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     public void sortData(
             List<RequestModel> requestUpdates, final String sortInfo
     ) {
+
         if (sortInfo.substring(1)
                 .equals("createdDate")) {
             if (sortInfo.substring(0, 1)
-                    .equals("A")) {
+                    .equals(ServiceConstant.ASCENDING)) {
                 requestUpdates.sort(Comparator.comparing(BaseEntity::getCreatedDate));
             } else if (sortInfo.substring(0, 1)
-                    .equals("D")) {
+                    .equals(ServiceConstant.DESCENDING)) {
                 requestUpdates.sort(Comparator.comparing(BaseEntity::getCreatedDate)
                         .reversed());
             }
         } else if (sortInfo.substring(1)
                 .equals("updatedDate")) {
             if (sortInfo.substring(0, 1)
-                    .equals("A")) {
+                    .equals(ServiceConstant.ASCENDING)) {
                 requestUpdates.sort(Comparator.comparing(BaseEntity::getUpdatedDate));
             } else if (sortInfo.substring(0, 1)
-                    .equals("D")) {
+                    .equals(ServiceConstant.DESCENDING)) {
                 requestUpdates.sort(Comparator.comparing(BaseEntity::getUpdatedDate)
                         .reversed());
             }
@@ -222,6 +236,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     public List<DashboardRequestUpdateResponse.RequestUpdateModel> mapRequests(
             final List<RequestModel> requestUpdates
     ) {
+
         List<DashboardRequestUpdateResponse.RequestUpdateModel> mappedRequests = new ArrayList<>();
 
         for (RequestModel requestUpdate : requestUpdates) {
@@ -232,15 +247,15 @@ public class DashboardServiceImpl implements DashboardServiceApi {
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Employee employee =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Employee(
-                            requestUpdate.getNik(),
-                            getEmployeeData(requestUpdate.getNik()).getName()
+                            requestUpdate.getUsername(),
+                            getEmployeeData(requestUpdate.getUsername()).getName()
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Supervisor supervisor =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Supervisor(
                             getEmployeeSupervisorData(
-                                    requestUpdate.getNik()).getSupervisorNik(),
+                                    requestUpdate.getUsername()).getSupervisorUsername(),
                             getEmployeeData(getEmployeeSupervisorData(
-                                    requestUpdate.getNik()).getSupervisorNik()).getName()
+                                    requestUpdate.getUsername()).getSupervisorUsername()).getName()
                     );
             DashboardRequestUpdateResponse.RequestUpdateModel.Asset asset =
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Asset(
@@ -260,28 +275,30 @@ public class DashboardServiceImpl implements DashboardServiceApi {
 
     @Override
     public List<DashboardRequestUpdateResponse.RequestUpdateModel> getRequestUpdateSectionData(
-            final String employeeNik, final String currentTab, final int pageNumber, final String sortInfo
+            final String username, final String tab, final int page, final String sort
     )
             throws DataNotFoundException {
-        if (getEmployeeData(employeeNik) == null) {
+
+        if (getEmployeeData(username) == null) {
             throw new DataNotFoundException(USER_NOT_FOUND);
         }
-        String role = determineUserRole(employeeNik);
+        String role = determineUserRole(username);
 
         List<RequestModel> requestUpdates =
-                new ArrayList<>(fillData(employeeNik, currentTab, role));
+                new ArrayList<>(fillData(username, tab, role));
 
         if (requestUpdates.size() == 0) {
             throw new DataNotFoundException(REQUESTS_NOT_FOUND);
         }
 
         if ((int) Math.ceil((float) requestUpdates.size() /
-                ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE) < pageNumber) {
+                ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE) < page) {
             throw new DataNotFoundException(REQUESTS_NOT_FOUND);
         }
 
-        sortData(requestUpdates, sortInfo);
+        sortData(requestUpdates, sort);
 
         return mapRequests(requestUpdates);
     }
+
 }

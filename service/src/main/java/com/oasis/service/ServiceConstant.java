@@ -1,5 +1,7 @@
 package com.oasis.service;
 
+import java.io.File;
+
 public class ServiceConstant {
 
     public static final int DASHBOARD_REQUEST_UPDATE_PAGE_SIZE = 5;
@@ -22,5 +24,13 @@ public class ServiceConstant {
     public static final String NIK_PREFIX = "GDN";
     public static final String SKU_PREFIX = "SKU";
 
-    public static final String IMAGE_ROOT_DIRECTORY = "C:\\oasis\\images\\assets";
+    private static final String ROOT_IMAGE_DIRECTORY =
+            "C:".concat(File.separator).concat("oasis").concat(File.separator).concat("images");
+    public static final String RESOURCE_IMAGE_DIRECTORY = ROOT_IMAGE_DIRECTORY.concat(File.separator).concat("static");
+    public static final String ASSET_IMAGE_DIRECTORY = ROOT_IMAGE_DIRECTORY.concat(File.separator).concat("assets");
+
+    public static final String PDF_EXTENSION = ".pdf";
+    public static final String SPACE = " ";
+    public static final String ASCENDING = "A";
+    public static final String DESCENDING = "D";
 }

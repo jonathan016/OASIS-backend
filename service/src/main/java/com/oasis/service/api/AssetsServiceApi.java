@@ -1,5 +1,7 @@
 package com.oasis.service.api;
 
+import com.itextpdf.text.Font;
+import com.itextpdf.text.pdf.PdfPTable;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
@@ -13,28 +15,27 @@ import java.util.Set;
 public interface AssetsServiceApi {
 
     /*-------------Assets List Methods-------------*/
-    List<AssetModel> getAvailableAssets(
-            final int pageNumber,
-            final String sortInfo
-    )
-            throws DataNotFoundException;
-
-    Set<AssetModel> getSortedAvailableAssets(
-            final String sortInfo,
-            final long stockLimit
-    );
-
-    List<AssetModel> getAvailableAssetsBySearchQuery(
-            final String searchQuery,
-            final int pageNumber,
-            final String sortInfo
+    List<AssetModel> getAvailableAssetsList(
+            final String query,
+            final int page,
+            final String sort
     )
             throws BadRequestException,
                    DataNotFoundException;
 
+    Set<AssetModel> getSortedAvailableAssets(
+            final String sort,
+            final long stockLimit
+    );
+
     Set<AssetModel> getSortedAvailableAssetsFromSearchQuery(
-            final String searchQuery,
-            final String sortInfo
+            final String query,
+            final String sort
+    );
+
+    int getAvailableAssetsCount(
+            final String query,
+            final String sort
     );
 
     AssetModel getAssetDetailData(
@@ -42,7 +43,7 @@ public interface AssetsServiceApi {
     )
             throws DataNotFoundException;
 
-    String[] getAssetDetailImages(
+    List<String> getAssetDetailImages(
             final String sku,
             final String imageDirectory
     );
@@ -53,48 +54,53 @@ public interface AssetsServiceApi {
     )
             throws DataNotFoundException;
 
+    void addHeaderCellToTable(
+            PdfPTable table,
+            final String value,
+            final Font font
+    );
+
+    void addContentCellToTable(
+            PdfPTable table,
+            final String name,
+            final String data
+    );
+
     byte[] getAssetImage(
             final String sku,
-            final String photoName,
-            final String extension,
-            final ClassLoader classLoader
-    )
-            throws DataNotFoundException;
+            final String imageName,
+            final String extension
+    );
 
-    /*-------------Add Asset Methods-------------*/
-    void addAsset(
-            final MultipartFile[] assetPhotos,
-            final String rawAssetData
+    /*-------------Save Asset Methods-------------*/
+    void saveAsset(
+            final List<MultipartFile> photos,
+            final String username,
+            final AssetModel asset,
+            final boolean isAddOperation
     )
             throws DuplicateDataException,
                    UnauthorizedOperationException,
                    DataNotFoundException, BadRequestException;
 
-    String generateAssetSkuCode(
+    String generateSkuCode(
+            final String username,
             final String brand,
-            final String type,
-            final String name
+            final String type
     );
 
     void savePhotos(
-            final MultipartFile[] photos,
+            final List<MultipartFile> photos,
             final String sku
     );
-
-    /*-------------Update Asset Method-------------*/
-    void updateAsset(
-            final MultipartFile[] assetPhotos,
-            final String rawAssetData
-    )
-            throws UnauthorizedOperationException,
-                   DataNotFoundException;
 
     /*-------------Delete Asset(s) Method-------------*/
     void deleteAssets(
             final List<String> skus,
-            final String adminNik
+            final String username
     )
             throws UnauthorizedOperationException,
                    BadRequestException,
                    DataNotFoundException;
+
 }

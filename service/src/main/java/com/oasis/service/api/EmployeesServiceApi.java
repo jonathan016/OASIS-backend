@@ -5,48 +5,48 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.webmodel.request.AddEmployeeRequest;
-import com.oasis.webmodel.request.DeleteEmployeeRequest;
-import com.oasis.webmodel.request.DeleteEmployeeSupervisorRequest;
-import com.oasis.webmodel.request.UpdateEmployeeRequest;
-import com.oasis.webmodel.response.success.employees.EmployeeListResponse;
+import com.oasis.web_model.request.employees.AddEmployeeRequest;
+import com.oasis.web_model.request.employees.DeleteEmployeeRequest;
+import com.oasis.web_model.request.employees.DeleteEmployeeSupervisorRequest;
+import com.oasis.web_model.request.employees.UpdateEmployeeRequest;
+import com.oasis.web_model.response.success.employees.EmployeeListResponse;
 
 import java.util.List;
 import java.util.Set;
 
 public interface EmployeesServiceApi {
 
-    List<EmployeeListResponse.Employee> getEmployeesList(final int pageNumber, final String sortInfo) throws DataNotFoundException;
+    List<EmployeeListResponse.Employee> getEmployeesList(final int page, final String sort) throws DataNotFoundException;
 
-    List<EmployeeListResponse.Employee> mapEmployeesList(Set<EmployeeModel> employees);
+    List<EmployeeListResponse.Employee> mapEmployeesList(Set<EmployeeModel> employeesFound);
 
-    EmployeeModel getEmployeeDetail(String employeeNik) throws DataNotFoundException;
+    EmployeeModel getEmployeeDetail(String username) throws DataNotFoundException;
 
-    EmployeeModel getEmployeeSupervisorData(String employeeNik) throws DataNotFoundException;
+    EmployeeModel getEmployeeSupervisorData(String username) throws DataNotFoundException;
 
-    List<EmployeeListResponse.Employee> getEmployeesListBySearchQuery(String searchQuery, int pageNumber, String sortInfo) throws BadRequestException, DataNotFoundException;
+    List<EmployeeListResponse.Employee> getEmployeesListBySearchQuery(String query, int page, String sort) throws BadRequestException, DataNotFoundException;
 
-    Set<EmployeeModel> getSortedEmployeesListFromSearchQuery(String searchQuery, String sortInfo);
+    Set<EmployeeModel> getSortedEmployeesListFromSearchQuery(String query, String sort);
 
-    void addEmployee(AddEmployeeRequest.Employee employee, String employeeNik) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException, BadRequestException;
+    void addEmployee(AddEmployeeRequest.Employee request, String username) throws UnauthorizedOperationException,
+                                                                            DataNotFoundException, DuplicateDataException, BadRequestException;
 
-    String generateEmployeeNik(String division);
-
-    String generateEmployeeUsername(String fullname, String dob);
+    String generateEmployeeUsername(String name, String dob);
 
     String generateEmployeeDefaultPassword(String dob);
 
-    String getSupervisionId(String employeeNik, String supervisorNik, String adminNik) throws DataNotFoundException;
+    String getSupervisionId(String employeeUsername, String supervisorUsername, String adminUsername) throws DataNotFoundException;
 
-    void createSupervision(String employeeNik, String supervisorNik, String adminNik);
+    void createSupervision(String employeeUsername, String supervisorUsername, String adminUsername);
 
-    void updateSupervisorSupervisingCount(String adminNik, String supervisorNik);
+    void updateEmployee(UpdateEmployeeRequest.Employee request, String adminUsername) throws DataNotFoundException,
+                                                                                  UnauthorizedOperationException, BadRequestException;
 
-    void updateEmployee(UpdateEmployeeRequest.Employee employeeRequest, String adminNik) throws DataNotFoundException, UnauthorizedOperationException, BadRequestException;
+    boolean checkCyclicSupervisingExists(String employeeUsername, String supervisorUsername);
 
-    boolean checkCyclicSupervisingExists(String employeeNik, String supervisorNik);
+    void deleteEmployee(DeleteEmployeeRequest request) throws UnauthorizedOperationException, DataNotFoundException,
+                                                        BadRequestException;
 
-    void deleteEmployee(DeleteEmployeeRequest deleteEmployeeRequest) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException;
+    void changeSupervisorOnPreviousSupervisorDeletion(DeleteEmployeeSupervisorRequest request) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException;
 
-    void changeSupervisorOnPreviousSupervisorDeletion(DeleteEmployeeSupervisorRequest deleteEmployeeSupervisorRequest) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException;
 }

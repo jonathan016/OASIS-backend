@@ -22,4 +22,5 @@ public class DatabaseConfiguration {
     public MongoTemplate mongoTemplate() {
         return new MongoTemplate(mongoDbFactory());
     }
+
 }

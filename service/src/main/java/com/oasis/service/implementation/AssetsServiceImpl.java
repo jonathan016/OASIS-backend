@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.oasis.RoleDeterminer;
 import com.oasis.exception.BadRequestException;
@@ -13,11 +12,13 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
+import com.oasis.model.entity.LastUniqueIdentifierModel;
 import com.oasis.repository.AssetRepository;
+import com.oasis.repository.LastUniqueIdentifierRepository;
 import com.oasis.repository.RequestRepository;
+import com.oasis.service.DocumentHeader;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
-import com.oasis.webmodel.request.assets.SaveAssetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,44 +45,132 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     private RequestRepository requestRepository;
     @Autowired
     private RoleDeterminer roleDeterminer;
+    @Autowired
+    private DocumentHeader documentHeader;
+    @Autowired
+    private LastUniqueIdentifierRepository lastUniqueIdentifierRepository;
 
     /*-------------Assets List Methods-------------*/
     @Override
-    public List<AssetModel> getAvailableAssets(
-            final int pageNumber,
-            final String sortInfo
+    public List<AssetModel> getAvailableAssetsList(
+            final String query,
+            final int page,
+            final String sort
     )
-            throws DataNotFoundException {
+            throws BadRequestException,
+                   DataNotFoundException {
 
-        int foundDataSize = assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
-
-        if (pageNumber < 1 || foundDataSize == 0) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND);
+        if (query.isEmpty()) {
+            throw new BadRequestException(EMPTY_SEARCH_QUERY);
         }
 
-        if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND);
-        }
+        if (query.equals("defaultQuery")){
+            int foundDataSize = assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
 
-        return new ArrayList<>(getSortedAvailableAssets(sortInfo, ServiceConstant.ZERO));
+            if (page < 1 || foundDataSize == 0) {
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
+            }
+
+            if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < page) {
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
+            }
+
+            List<AssetModel> availableAssetsList = new ArrayList<>(getSortedAvailableAssets(sort, ServiceConstant.ZERO));
+            if(availableAssetsList.size() - page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE > 0) {
+                return availableAssetsList
+                        .subList(
+                                page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE -
+                                ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE,
+                                page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE
+                        );
+            } else {
+                return availableAssetsList
+                        .subList(
+                                page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE -
+                                ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE,
+                                page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE -
+                                ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE +
+                                availableAssetsList.size() % ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE
+                        );
+            }
+        } else {
+            Set<AssetModel> availableAssets = new LinkedHashSet<>();
+
+            if (!query.contains(ServiceConstant.SPACE)) {
+                int foundDataSize = assetRepository
+                        .countAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(
+                                query,
+                                query
+                        );
+
+                if (page < 1 || foundDataSize == 0) {
+                    throw new DataNotFoundException(ASSET_NOT_FOUND);
+                }
+
+                if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < page) {
+                    throw new DataNotFoundException(ASSET_NOT_FOUND);
+                }
+
+                availableAssets.addAll(getSortedAvailableAssetsFromSearchQuery(query, sort));
+            } else {
+                String[] queries = query.split(ServiceConstant.SPACE);
+
+                for (String word : queries) {
+                    int foundDataSize = assetRepository
+                            .countAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(
+                                    word,
+                                    word
+                            );
+
+                    if (page < 1 || foundDataSize == 0) {
+                        throw new DataNotFoundException(ASSET_NOT_FOUND);
+                    }
+
+                    if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < page) {
+                        throw new DataNotFoundException(ASSET_NOT_FOUND);
+                    }
+
+                    availableAssets.addAll(getSortedAvailableAssetsFromSearchQuery(word, sort));
+                }
+            }
+
+            List<AssetModel> availableAssetsList = new ArrayList<>(availableAssets);
+            if(availableAssetsList.size() - page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE > 0) {
+                return availableAssetsList
+                        .subList(
+                                page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE -
+                                ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE,
+                                page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE
+                        );
+            } else {
+                return availableAssetsList
+                        .subList(
+                                page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE -
+                                ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE,
+                                page * ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE -
+                                ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE +
+                                availableAssetsList.size() % ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE
+                        );
+            }
+        }
     }
 
     @Override
     public Set<AssetModel> getSortedAvailableAssets(
-            final String sortInfo,
+            final String sort,
             final long stockLimit
     ) {
 
         Set<AssetModel> sortedAvailableAssets = new LinkedHashSet<>();
 
-        if (sortInfo.substring(1).equals("sku")) {
-            if (sortInfo.substring(0, 1).equals("A")) {
+        if (sort.substring(2).equals("SKU")) {
+            if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuAsc(stockLimit));
             } else {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuDesc(stockLimit));
             }
-        } else if (sortInfo.substring(1).equals("name")) {
-            if (sortInfo.substring(0, 1).equals("A")) {
+        } else if (sort.substring(2).equals("name")) {
+            if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderByNameAsc(stockLimit));
             } else {
                 sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderByNameDesc(stockLimit));
@@ -93,98 +181,54 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public List<AssetModel> getAvailableAssetsBySearchQuery(
-            final String searchQuery,
-            final int pageNumber,
-            final String sortInfo
-    )
-            throws BadRequestException,
-                   DataNotFoundException {
-
-        if (searchQuery.isEmpty()) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY);
-        }
-
-        Set<AssetModel> availableAssets = new LinkedHashSet<>();
-
-        if (!searchQuery.contains(" ")) {
-            int foundDataSize = assetRepository
-                    .countAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(
-                            searchQuery,
-                            searchQuery
-                    );
-
-            if (pageNumber < 1 || foundDataSize == 0) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND);
-            }
-
-            if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND);
-            }
-
-            availableAssets.addAll(getSortedAvailableAssetsFromSearchQuery(searchQuery, sortInfo));
-        } else {
-            String[] queries = searchQuery.split(" ");
-
-            for (String query : queries) {
-                int foundDataSize = assetRepository
-                        .countAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(
-                                query,
-                                query
-                        );
-
-                if (pageNumber < 1 || foundDataSize == 0) {
-                    throw new DataNotFoundException(ASSET_NOT_FOUND);
-                }
-
-                if ((int) Math.ceil((float) foundDataSize / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < pageNumber) {
-                    throw new DataNotFoundException(ASSET_NOT_FOUND);
-                }
-
-                availableAssets.addAll(getSortedAvailableAssetsFromSearchQuery(query, sortInfo));
-            }
-        }
-
-        return new ArrayList<>(availableAssets);
-    }
-
-    @Override
     public Set<AssetModel> getSortedAvailableAssetsFromSearchQuery(
-            final String searchQuery,
-            final String sortInfo
+            final String query,
+            final String sort
     ) {
 
         Set<AssetModel> sortedAvailableAssets = new LinkedHashSet<>();
 
-        if (sortInfo.substring(1).equals("sku")) {
-            if (sortInfo.substring(0, 1).equals("A")) {
+        if (sort.substring(2).equals("SKU")) {
+            if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                 sortedAvailableAssets.addAll(
                         assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
-                                        searchQuery, searchQuery));
-            } else if (sortInfo.substring(0, 1).equals("D")) {
+                                        query, query));
+            } else if (sort.substring(0, 1).equals(ServiceConstant.DESCENDING)) {
                 sortedAvailableAssets.addAll(
                         assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
-                                        searchQuery, searchQuery));
+                                        query, query));
             }
-        } else if (sortInfo.substring(1).equals("name")) {
-            if (sortInfo.substring(0, 1).equals("A")) {
+        } else if (sort.substring(2).equals("name")) {
+            if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                 sortedAvailableAssets.addAll(
                         assetRepository
                                 .findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-                                        searchQuery, searchQuery));
-            } else if (sortInfo.substring(0, 1)
-                               .equals("D")) {
+                                        query, query));
+            } else if (sort.substring(0, 1)
+                               .equals(ServiceConstant.DESCENDING)) {
                 sortedAvailableAssets.addAll(
                         assetRepository
                                 .findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
-                                        searchQuery,
-                                        searchQuery
+                                        query,
+                                        query
                                 )
                 );
             }
         }
 
         return sortedAvailableAssets;
+    }
+
+    @Override
+    public int getAvailableAssetsCount(
+            final String query,
+            final String sort
+    ) {
+        if (query.equals("defaultQuery")){
+            return getSortedAvailableAssets(sort, ServiceConstant.ZERO).size();
+        } else {
+            return getSortedAvailableAssetsFromSearchQuery(query, sort).size();
+        }
     }
 
     @Override
@@ -203,19 +247,17 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
-    public String[] getAssetDetailImages(
+    public List<String> getAssetDetailImages(
             final String sku,
             final String imageDirectory
     ) {
 
-        String[] images = new String[0];
+        List<String> images = new ArrayList<>();
         if (imageDirectory == null || imageDirectory.isEmpty())
             return images;
 
         File directory = new File(imageDirectory);
         if(Files.exists(directory.toPath())) {
-            images = new String[requireNonNull(directory.listFiles()).length];
-
             int i = 0;
             for (final File image : requireNonNull(directory.listFiles())){
                 StringBuilder extensionBuilder = new StringBuilder();
@@ -224,13 +266,14 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 extensionBuilder.replace(
                         0,
                         extensionBuilder.length(),
-                        extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
+                        extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf("."))
                 );
                 extensionBuilder.reverse();
-                images[i] = "http://localhost:8085/oasis/api/assets/" + sku +
-                            File.separator + sku.concat("-")
+                images.add("http://localhost:8085/oasis/api/assets/" + sku +
+                           "/" + sku.concat("-")
                                     .concat(String.valueOf(++i))
-                                    .concat(String.valueOf(extensionBuilder));
+                                    .concat("?extension=")
+                                    .concat(String.valueOf(extensionBuilder)));
             }
         }
 
@@ -253,14 +296,14 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
         Document document = new Document(PageSize.A4, 36, 36, 90, 36);
 
-        if (!Files.exists(Paths.get(sku.concat(".pdf")))) {
-            new File(sku.concat(".pdf"));
+        if (!Files.exists(Paths.get(sku.concat(ServiceConstant.PDF_EXTENSION)))) {
+            new File(sku.concat(ServiceConstant.PDF_EXTENSION));
         }
 
         try {
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(sku.concat(".pdf")));
+            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(sku.concat(ServiceConstant.PDF_EXTENSION)));
 
-            FileHeader event = new FileHeader(classLoader);
+            DocumentHeader event = documentHeader;
             writer.setPageEvent(event);
 
             document.open();
@@ -304,69 +347,17 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             detailTable.setWidths(new float[] { 2, 7 });
 
             Font infoFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 12, BaseColor.BLACK);
-            Paragraph attribute = new Paragraph("Attribute", infoFont);
-            attribute.setAlignment(Element.ALIGN_CENTER);
-            PdfPCell attrCell = new PdfPCell(attribute);
-            attrCell.setPadding(5);
-            attrCell.setPaddingBottom(10);
 
-            Paragraph description = new Paragraph("Description", infoFont);
-            description.setAlignment(Element.ALIGN_CENTER);
-            PdfPCell descCell = new PdfPCell(description);
-            descCell.setPadding(5);
-            descCell.setPaddingBottom(10);
+            addHeaderCellToTable(detailTable, "Description", infoFont);
+            addHeaderCellToTable(detailTable, "Attribute", infoFont);
 
-            detailTable.addCell(attrCell);
-            detailTable.addCell(descCell);
-
-            detailTable.addCell("SKU");
-            PdfPCell skuCell = new PdfPCell(new Phrase(asset.getSku()));
-            skuCell.setPadding(2);
-            skuCell.setPaddingLeft(10);
-            skuCell.setPaddingBottom(5);
-            detailTable.addCell(skuCell);
-
-            detailTable.addCell("Name");
-            PdfPCell nameCell = new PdfPCell(new Phrase(asset.getName()));
-            nameCell.setPadding(2);
-            nameCell.setPaddingLeft(10);
-            nameCell.setPaddingBottom(5);
-            detailTable.addCell(nameCell);
-
-            detailTable.addCell("Brand");
-            PdfPCell brandCell = new PdfPCell(new Phrase(asset.getBrand()));
-            brandCell.setPadding(2);
-            brandCell.setPaddingLeft(10);
-            brandCell.setPaddingBottom(5);
-            detailTable.addCell(brandCell);
-
-            detailTable.addCell("Type");
-            PdfPCell typeCell = new PdfPCell(new Phrase(asset.getType()));
-            typeCell.setPadding(2);
-            typeCell.setPaddingLeft(10);
-            typeCell.setPaddingBottom(5);
-            detailTable.addCell(typeCell);
-
-            detailTable.addCell("Stock");
-            PdfPCell stockCell = new PdfPCell(new Phrase(String.valueOf(asset.getStock())));
-            stockCell.setPadding(2);
-            stockCell.setPaddingLeft(10);
-            stockCell.setPaddingBottom(5);
-            detailTable.addCell(stockCell);
-
-            detailTable.addCell("Location");
-            PdfPCell locationCell = new PdfPCell(new Phrase(asset.getLocation()));
-            locationCell.setPadding(2);
-            locationCell.setPaddingLeft(10);
-            locationCell.setPaddingBottom(5);
-            detailTable.addCell(locationCell);
-
-            detailTable.addCell("Price");
-            PdfPCell priceCell = new PdfPCell(new Phrase(String.format("Rp. %.2f", asset.getPrice())));
-            priceCell.setPadding(2);
-            priceCell.setPaddingLeft(10);
-            priceCell.setPaddingBottom(5);
-            detailTable.addCell(priceCell);
+            addContentCellToTable(detailTable, "SKU", asset.getSku());
+            addContentCellToTable(detailTable, "Name", asset.getName());
+            addContentCellToTable(detailTable, "Brand", asset.getBrand());
+            addContentCellToTable(detailTable, "Type", asset.getType());
+            addContentCellToTable(detailTable, "Stock", String.valueOf(asset.getStock()));
+            addContentCellToTable(detailTable, "Location", asset.getLocation());
+            addContentCellToTable(detailTable, "Price", String.format("Rp. %.2f", asset.getPrice()));
 
             document.add(detailTable);
 
@@ -378,7 +369,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
         byte[] assetPdf = new byte[100];
         try {
-            assetPdf = Files.readAllBytes(Paths.get(sku.concat(".pdf")));
+            assetPdf = Files.readAllBytes(Paths.get(sku.concat(ServiceConstant.PDF_EXTENSION)));
         } catch (IOException e) {
             //TODO throw real exception cause
             e.printStackTrace();
@@ -388,162 +379,213 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     }
 
     @Override
+    public void addHeaderCellToTable(
+            PdfPTable table,
+            final String value,
+            final Font font
+    ) {
+
+        Paragraph description = new Paragraph(value, font);
+        description.setAlignment(Element.ALIGN_CENTER);
+
+        PdfPCell headerCell = new PdfPCell(description);
+        headerCell.setPadding(5);
+        headerCell.setPaddingBottom(10);
+
+        table.addCell(headerCell);
+    }
+
+    @Override
+    public void addContentCellToTable(
+            PdfPTable table,
+            final String name,
+            final String data
+    ) {
+
+        table.addCell(name);
+
+        PdfPCell contentCell = new PdfPCell(new Phrase(data));
+        contentCell.setPadding(2);
+        contentCell.setPaddingLeft(10);
+        contentCell.setPaddingBottom(5);
+
+        table.addCell(contentCell);
+    }
+
+    @Override
     public byte[] getAssetImage(
             final String sku,
-            final String photoName,
-            final String extension,
-            final ClassLoader classLoader
-    )
-            throws DataNotFoundException {
+            final String imageName,
+            final String extension
+    ) {
 
         byte[] image;
-        File file = new File(assetRepository.findBySku(sku).getImageDirectory().concat("\\").concat(photoName)
-                                            .concat(".").concat(extension));
+
+        File file =
+                new File(assetRepository.findBySku(sku).getImageDirectory().concat(File.separator).concat(imageName).concat(".").concat(extension));
+
+        if (!file.exists()) {
+            file = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator).concat("image_not_found.jpeg"));
+        }
 
         try {
             image = Files.readAllBytes(file.toPath());
         } catch (IOException | NullPointerException exception) {
-            throw new DataNotFoundException(MISSING_ASSET_IMAGE);
+            image = new byte[0];
         }
 
         return image;
     }
 
-    /*-------------Add Asset Methods-------------*/
+    /*-------------Save Asset Methods-------------*/
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
-    @SuppressWarnings("Duplicates")
-    public void addAsset(
-            final MultipartFile[] assetPhotos,
-            final String rawAssetData
+    public void saveAsset(
+            final List<MultipartFile> photos,
+            final String username,
+            final AssetModel asset,
+            final boolean isAddOperation
     )
             throws DuplicateDataException,
                    UnauthorizedOperationException,
                    DataNotFoundException,
                    BadRequestException {
 
-        //TODO throw real exception
-        if (assetPhotos.length == 0)
-            throw new BadRequestException(MISSING_ASSET_IMAGE);
-
-        String adminNik = "";
-        SaveAssetRequest.Asset assetRequest = null;
-        boolean hasNewImage = true;
-
-        try {
-            adminNik = new ObjectMapper().readTree(rawAssetData).path("nik").asText();
-
-            JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
-
-            assetRequest = new SaveAssetRequest.Asset(
-                    null,
-                    asset.path("name").asText(),
-                    asset.path("location").asText(),
-                    asset.path("brand").asText(),
-                    asset.path("type").asText(),
-                    asset.path("quantity").asLong(),
-                    asset.path("price").asDouble(),
-                    asset.path("expendable").asBoolean()
-            );
-
-            hasNewImage = new ObjectMapper().readTree(rawAssetData).path("hasNewImage").asBoolean();
-
-        } catch (IOException e) {
-            //TODO throw real exception cause
-            throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
-        }
-
-        if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+        if (!roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
             throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
-        if (assetRepository.existsAssetModelByNameAndBrandAndType(
-                assetRequest.getName(), assetRequest.getBrand(), assetRequest.getType()
-        )) {
-            throw new DuplicateDataException(DUPLICATE_ASSET_DATA_FOUND);
+        AssetModel savedAsset;
+        if (isAddOperation) {
+            savedAsset = asset;
+
+            if (assetRepository.existsAssetModelByNameAndBrandAndType(
+                    savedAsset.getName(), savedAsset.getBrand(), savedAsset.getType()
+            )) {
+                throw new DuplicateDataException(DUPLICATE_ASSET_DATA_FOUND);
+            } else {
+                savedAsset.setSku(
+                        generateSkuCode(
+                                username,
+                                asset.getBrand(),
+                                asset.getType()
+                        ));
+                savedAsset.setCreatedBy(username);
+                savedAsset.setCreatedDate(new Date());
+            }
         } else {
-            AssetModel asset = new AssetModel();
+            savedAsset = assetRepository.findBySku(asset.getSku());
 
-            asset.setSku(
-                    generateAssetSkuCode(
-                            assetRequest.getBrand(),
-                            assetRequest.getType(),
-                            assetRequest.getName()
-                    ));
-            asset.setName(assetRequest.getName());
-            asset.setLocation(assetRequest.getLocation());
-            asset.setPrice(assetRequest.getPrice());
-            asset.setStock(assetRequest.getQuantity());
-            asset.setBrand(assetRequest.getBrand());
-            asset.setType(assetRequest.getType());
-            asset.setExpendable(assetRequest.isExpendable());
-            asset.setCreatedBy(adminNik);
-            asset.setUpdatedBy(adminNik);
-            asset.setCreatedDate(new Date());
-            asset.setUpdatedDate(new Date());
+            if (savedAsset == null)
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
 
-            if (hasNewImage) {
-                boolean rootDirectoryCreated;
+            savedAsset.setName(asset.getName());
+            savedAsset.setBrand(asset.getBrand());
+            savedAsset.setType(asset.getType());
+            savedAsset.setStock(asset.getStock());
+            savedAsset.setPrice(asset.getPrice());
+            savedAsset.setExpendable(asset.isExpendable());
+            savedAsset.setLocation(asset.getLocation());
+        }
 
-                if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
-                    rootDirectoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
-                } else {
-                    rootDirectoryCreated = true;
-                }
+        //TODO throw real exception
+        if (photos.size() == 0){
+            throw new BadRequestException(MISSING_ASSET_IMAGE);
+        } else {
+            boolean rootDirectoryCreated;
 
-                if(rootDirectoryCreated){
-                    Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
-
-                    if (!Files.exists(saveDir)) {
-                        //noinspection ResultOfMethodCallIgnored
-                        new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
-                    }
-
-                    String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
-                    asset.setImageDirectory(imageDirectory);
-
-                    savePhotos(assetPhotos, asset.getSku());
-                }
+            if (!Files.exists(Paths.get(ServiceConstant.ASSET_IMAGE_DIRECTORY))) {
+                rootDirectoryCreated = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY).mkdir();
+            } else {
+                rootDirectoryCreated = true;
             }
 
-            assetRepository.save(asset);
+            if(rootDirectoryCreated){
+                Path saveDir = Paths.get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()));
+
+                if (isAddOperation) {
+                    if (!Files.exists(saveDir)) {
+                        //noinspection ResultOfMethodCallIgnored
+                        new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku())).mkdir();
+                    }
+                } else {
+                    if (Files.exists(saveDir)) {
+                        File assetImageFolder =
+                                new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()));
+                        for (File image : requireNonNull(assetImageFolder.listFiles())){
+                            image.delete();
+                        }
+                        assetImageFolder.delete();
+                    }
+                    new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku())).mkdir();
+                }
+
+                String imageDirectory = ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku());
+                savedAsset.setImageDirectory(imageDirectory);
+
+                savePhotos(photos, savedAsset.getSku());
+            }
         }
+        savedAsset.setUpdatedBy(username);
+        savedAsset.setUpdatedDate(new Date());
+
+        assetRepository.save(savedAsset);
     }
 
     @Override
-    public String generateAssetSkuCode(
+    public String generateSkuCode(
+            final String username,
             final String brand,
-            final String type,
-            final String name
+            final String type
     ) {
 
-        StringBuilder sku = new StringBuilder(ServiceConstant.SKU_PREFIX);
+        StringBuilder sku;
+        LastUniqueIdentifierModel lastUniqueIdentifier;
 
-        if (assetRepository.existsAssetModelByBrand(brand)) {
-            String lastBrandSku = assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
-            int lastBrandCode = Integer.valueOf(lastBrandSku.substring(4, 7));
+        if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrandAndType(brand, type)) {
+            lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrandAndType(brand, type);
 
-            sku.append(String.format("-%03d", lastBrandCode));
+            int lastProductIdCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(12, 15));
+            lastProductIdCode++;
 
-            int lastTypeCode = Integer.valueOf(lastBrandSku.substring(8, 11));
+            sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 11));
+            sku.append(String.format("-%03d", lastProductIdCode));
+        } else {
+            if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrand(brand)) {
+                lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrand(brand);
 
-            if (assetRepository.existsAssetModelByBrandAndType(brand, type)) {
+                int lastTypeCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(8, 11));
+                lastTypeCode++;
+
+                sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 7));
                 sku.append(String.format("-%03d", lastTypeCode));
-
-                int lastProductIdCode = Integer.valueOf(lastBrandSku.substring(12, 15));
-                sku.append(String.format("-%03d", lastProductIdCode + 1));
+                sku.append(String.format("-%03d", 1));
             } else {
-                sku.append(String.format("-%03d", lastTypeCode + 1));
+                sku = new StringBuilder(ServiceConstant.SKU_PREFIX);
 
+                lastUniqueIdentifier =
+                        lastUniqueIdentifierRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku));
+
+                int lastBrandCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(4, 7));
+                lastBrandCode++;
+
+                sku.append(String.format("-%03d", lastBrandCode));
+                sku.append(String.format("-%03d", 1));
                 sku.append(String.format("-%03d", 1));
             }
-        } else {
-            String lastBrandSku = assetRepository.findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku)).getSku();
-            int lastBrandCode = Integer.valueOf(lastBrandSku.substring(4, 7));
 
-            sku.append(String.format("-%03d", lastBrandCode + 1));
-            sku.append(String.format("-%03d", 1));
-            sku.append(String.format("-%03d", 1));
+            lastUniqueIdentifier = new LastUniqueIdentifierModel();
+            lastUniqueIdentifier.setBrand(brand);
+            lastUniqueIdentifier.setType(type);
+            lastUniqueIdentifier.setCreatedBy(username);
+            lastUniqueIdentifier.setCreatedDate(new Date());
         }
+
+        lastUniqueIdentifier.setSku(String.valueOf(sku));
+        lastUniqueIdentifier.setUpdatedBy(username);
+        lastUniqueIdentifier.setUpdatedDate(new Date());
+
+        lastUniqueIdentifierRepository.save(lastUniqueIdentifier);
 
         return String.valueOf(sku);
     }
@@ -551,21 +593,21 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void savePhotos(
-            final MultipartFile[] photos,
+            final List<MultipartFile> photos,
             final String sku
     ) {
 
-        if (photos.length != 0) {
+        if (photos.size() != 0) {
             try {
-                for (int i = 0; i < photos.length; i++) {
-                    Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(sku));
+                for (int i = 0; i < photos.size(); i++) {
+                    Path saveDir = Paths.get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku));
 
                     if (!Files.exists(saveDir)) {
-                        new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(sku)).mkdir();
+                        new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)).mkdir();
                     }
 
                     StringBuilder extensionBuilder = new StringBuilder();
-                    extensionBuilder.append(photos[i].getOriginalFilename());
+                    extensionBuilder.append(photos.get(i).getOriginalFilename());
                     extensionBuilder.reverse();
                     extensionBuilder.replace(
                             0,
@@ -574,11 +616,11 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                     );
                     extensionBuilder.reverse();
                     File photo = new File(
-                            ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(sku).concat(File.separator)
-                                                                .concat(sku).concat("-").concat(String.valueOf(i + 1))
-                                                                .concat(String.valueOf(extensionBuilder)));
+                            ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku).concat(File.separator)
+                                                                 .concat(sku).concat("-").concat(String.valueOf(i + 1))
+                                                                 .concat(String.valueOf(extensionBuilder)));
 
-                    photos[i].transferTo(photo);
+                    photos.get(i).transferTo(photo);
                 }
             } catch (IOException ioException) {
                 //TODO throw real exception cause
@@ -586,105 +628,18 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
     }
 
-    /*-------------Update Asset Method-------------*/
-    @Override
-    @SuppressWarnings({"Duplicates", "ResultOfMethodCallIgnored"})
-    public void updateAsset(
-            final MultipartFile[] assetPhotos,
-            final String rawAssetData
-    )
-            throws UnauthorizedOperationException,
-                   DataNotFoundException {
-
-        String adminNik = "";
-        SaveAssetRequest.Asset assetRequest = null;
-        boolean hasNewImage = true;
-
-        try {
-            adminNik = new ObjectMapper().readTree(rawAssetData).path("nik").asText();
-
-            JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
-
-            assetRequest = new SaveAssetRequest.Asset(
-                    asset.path("sku").asText(),
-                    asset.path("name").asText(),
-                    asset.path("location").asText(),
-                    asset.path("brand").asText(),
-                    asset.path("type").asText(),
-                    asset.path("quantity").asLong(),
-                    asset.path("price").asDouble(),
-                    asset.path("expendable").asBoolean()
-            );
-
-            hasNewImage = new ObjectMapper().readTree(rawAssetData).path("hasNewImage").asBoolean();
-
-        } catch (IOException e){
-            //TODO throw real exception cause
-            throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
-        }
-
-        if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
-        }
-
-        AssetModel asset = assetRepository.findBySku(assetRequest.getSku());
-
-        if (asset == null)
-            throw new DataNotFoundException(ASSET_NOT_FOUND);
-
-        asset.setName(assetRequest.getName());
-        asset.setLocation(assetRequest.getLocation());
-        asset.setPrice(assetRequest.getPrice());
-        asset.setStock(assetRequest.getQuantity());
-        asset.setBrand(assetRequest.getBrand());
-        asset.setType(assetRequest.getType());
-        asset.setExpendable(assetRequest.isExpendable());
-
-        if (hasNewImage) {
-            boolean rootDirectoryCreated;
-
-            if (!Files.exists(Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY))) {
-                rootDirectoryCreated = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY).mkdir();
-            } else {
-                rootDirectoryCreated = true;
-            }
-
-            if(rootDirectoryCreated){
-                Path saveDir = Paths.get(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
-
-                if (Files.exists(saveDir)) {
-                    File assetImageFolder =
-                            new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku()));
-                    for (File image : requireNonNull(assetImageFolder.listFiles())){
-                        image.delete();
-                    }
-                    assetImageFolder.delete();
-                }
-                new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku())).mkdir();
-
-                String imageDirectory = ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(asset.getSku());
-                asset.setImageDirectory(imageDirectory);
-
-                savePhotos(assetPhotos, asset.getSku());
-            }
-        }
-        asset.setUpdatedBy(adminNik);
-        asset.setUpdatedDate(new Date());
-
-        assetRepository.save(asset);
-    }
-
     /*-------------Delete Asset(s) Method-------------*/
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void deleteAssets(
             final List<String> skus,
-            final String adminNik
+            final String username
     )
             throws UnauthorizedOperationException,
                    BadRequestException,
                    DataNotFoundException {
-        if (!roleDeterminer.determineRole(adminNik).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+
+        if (!roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
             throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
@@ -705,95 +660,17 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
             selectedAssets.add(assetRepository.findBySku(sku));
 
-            File folder = new File(ServiceConstant.IMAGE_ROOT_DIRECTORY.concat("\\").concat(sku).concat(File.separator)
-                                                                  .concat(sku));
+            //TODO fix bug not deleting folder
+            File folder = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku));
+            for (File image : requireNonNull(folder.listFiles())){
+                image.delete();
+            }
             folder.delete();
         }
 
         for (AssetModel selectedAsset : selectedAssets) {
             assetRepository.delete(selectedAsset);
         }
-    }
-
-    //TODO Move to different class
-    /*-------------Utility Methods-------------*/
-    public Map<String, Boolean> getAssetsListActiveComponents() {
-        Map<String, Boolean> activeComponents = new HashMap<>();
-
-        activeComponents.put("btnAssetListAdd", true);
-        activeComponents.put("btnAssetListDelete", true);
-        activeComponents.put("btnAssetTableEdit", true);
-
-        return activeComponents;
-    }
-
-    public Map<String, Boolean> getAssetDetailActiveComponents() {
-        Map<String, Boolean> activeComponents = new HashMap<>();
-
-        activeComponents.put("btn-asset-detail-edit", true);
-        activeComponents.put("btn-asset-detail-delete", true);
-
-        return activeComponents;
-    }
-}
-
-class FileHeader extends PdfPageEventHelper {
-
-    private PdfPTable table;
-    private float tableHeight;
-
-    FileHeader(final ClassLoader loader) {
-        table = new PdfPTable(5);
-        table.setTotalWidth(523);
-        table.setLockedWidth(true);
-
-        Image blibli = null;
-        try {
-            blibli = Image.getInstance(
-                    Files.readAllBytes(Paths.get(
-                            requireNonNull(loader.getResource("pdf_header_images/blibli.png"))
-                                   .toURI())));
-            } catch (IOException | BadElementException | URISyntaxException e) {
-            e.printStackTrace();
-        }
-        PdfPCell blibliCell = new PdfPCell(blibli, true);
-        blibliCell.setHorizontalAlignment(Element.ALIGN_LEFT);
-        blibliCell.setBorder(Rectangle.NO_BORDER);
-        table.addCell(blibliCell);
-
-        PdfPCell emptyCell = new PdfPCell();
-        emptyCell.setBorder(Rectangle.NO_BORDER);
-        for(int i = 0; i < 3; i++){
-            table.addCell(emptyCell);
-        }
-
-        Image oasis = null;
-        try {
-            oasis = Image.getInstance(
-                    Files.readAllBytes(Paths.get(
-                            requireNonNull(loader.getResource("pdf_header_images/oasis.png"))
-                                   .toURI())));
-        } catch (IOException | BadElementException | URISyntaxException e) {
-            e.printStackTrace();
-        }
-        PdfPCell oasisCell = new PdfPCell(oasis, true);
-        oasisCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        oasisCell.setBorder(Rectangle.NO_BORDER);
-        table.addCell(oasisCell);
-
-        tableHeight = table.getTotalHeight();
-    }
-
-    @SuppressWarnings("unused")
-    public float getTableHeight() {
-        return tableHeight;
-    }
-
-    public void onEndPage(PdfWriter writer, Document document) {
-        table.writeSelectedRows(0, -1, document.left(),
-                                document.top() + ((document.topMargin() + tableHeight) / 2),
-                                writer.getDirectContent()
-        );
     }
 
 }

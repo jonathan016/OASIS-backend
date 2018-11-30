@@ -12,26 +12,25 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     EmployeeModel findByUsername(String username);
 
-    EmployeeModel findByNik(String nik);
+    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCase(String username, String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCase(String nik, String name);
+    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByUsernameAsc(String username,
+                                                                                                String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNikAsc(String nik, String name);
+    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByUsernameDesc(String username,
+                                                                                                String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNikDesc(String nik, String name);
+    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String username,
+                                                                                                String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String nik, String name);
+    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String username,
+                                                                                                String name);
 
-    List<EmployeeModel> findAllByNikContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String nik, String name);
+    EmployeeModel findFirstByDivisionOrderByUsernameDesc(String division);
 
-    @SuppressWarnings("unchecked")
-    EmployeeModel save(EmployeeModel employee);
+    EmployeeModel findFirstByUsernameContainsOrderByUsernameDesc(String username);
 
-    EmployeeModel findFirstByDivisionOrderByNikDesc(String division);
-
-    EmployeeModel findFirstByNikContainsOrderByNikDesc(String nik);
-
-    EmployeeModel findFirstByNikContainsAndDivisionOrderByNikDesc(String nik, String division);
+    EmployeeModel findFirstByUsernameContainsAndDivisionOrderByUsernameDesc(String username, String division);
 
     boolean existsByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String name, Date dob, String phone,
                                                                         String jobTitle, String division,
@@ -39,6 +38,6 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     List<EmployeeModel> findAllByUsernameContains(String username);
 
-    void deleteByNik(String employeeNik);
+    void deleteByUsername(String username);
 
 }

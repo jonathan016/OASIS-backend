@@ -2,7 +2,6 @@ package com.oasis.model.fieldname;
 
 public class EmployeeFieldName {
 
-    public static final String NIK = "NIK";
     public static final String NAME = "name";
     public static final String DOB = "dob";
     public static final String USERNAME = "username";
@@ -11,7 +10,6 @@ public class EmployeeFieldName {
     public static final String JOB_TITLE = "jobTitle";
     public static final String DIVISION = "division";
     public static final String LOCATION = "location";
-    public static final String SUPERVISING_COUNT = "supervisingCount";
     public static final String SUPERVISION_ID = "supervisionId";
 
 }

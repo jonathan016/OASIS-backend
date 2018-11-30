@@ -2,7 +2,7 @@ package com.oasis.model.fieldname;
 
 public class SupervisionFieldName {
 
-    public static final String SUPERVISOR_NIK = "supervisorNik";
-    public static final String EMPLOYEE_NIK = "employeeNik";
+    public static final String SUPERVISOR_USERNAME = "supervisorUsername";
+    public static final String EMPLOYEE_USERNAME = "employeeUsername";
 
 }

@@ -14,9 +14,6 @@ import java.util.Date;
 @Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 public class EmployeeModel extends BaseEntity {
 
-    @Field(EmployeeFieldName.NIK)
-    private String nik;
-
     @Field(EmployeeFieldName.NAME)
     private String name;
 
@@ -40,9 +37,6 @@ public class EmployeeModel extends BaseEntity {
 
     @Field(EmployeeFieldName.LOCATION)
     private String location;
-
-    @Field(EmployeeFieldName.SUPERVISING_COUNT)
-    private Integer supervisingCount;
 
     @Field(EmployeeFieldName.SUPERVISION_ID)
     private String supervisionId;

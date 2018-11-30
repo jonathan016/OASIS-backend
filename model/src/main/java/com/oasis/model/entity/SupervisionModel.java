@@ -12,10 +12,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = CollectionName.SUPERVISION_COLLECTION_NAME)
 public class SupervisionModel extends BaseEntity {
 
-    @Field(SupervisionFieldName.SUPERVISOR_NIK)
-    private String supervisorNik;
+    @Field(SupervisionFieldName.SUPERVISOR_USERNAME)
+    private String supervisorUsername;
 
-    @Field(SupervisionFieldName.EMPLOYEE_NIK)
-    private String employeeNik;
+    @Field(SupervisionFieldName.EMPLOYEE_USERNAME)
+    private String employeeUsername;
 
 }

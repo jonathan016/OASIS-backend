@@ -12,8 +12,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = CollectionName.REQUEST_COLLECTION_NAME)
 public class RequestModel extends BaseEntity {
 
-    @Field(RequestFieldName.NIK)
-    private String nik;
+    @Field(RequestFieldName.USERNAME)
+    private String username;
 
     @Field(RequestFieldName.SKU)
     private String sku;

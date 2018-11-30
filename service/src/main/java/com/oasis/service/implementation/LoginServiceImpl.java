@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Service
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class LoginServiceImpl implements LoginServiceApi {
 
     @Autowired
@@ -25,20 +25,35 @@ public class LoginServiceImpl implements LoginServiceApi {
     @Override
     public EmployeeModel checkLoginCredentials(final String username, final String password)
             throws DataNotFoundException, UserNotAuthenticatedException {
-        EmployeeModel result = employeeRepository.findByUsername(username);
+
+        if (!username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+@gdn-commerce.com") && !username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+")) {
+            throw new DataNotFoundException(USER_NOT_FOUND);
+        }
+
+        EmployeeModel result;
+
+        if (username.contains("@")) {
+            result = employeeRepository.findByUsername(username.substring(0, username.indexOf('@')));
+        } else {
+            result = employeeRepository.findByUsername(username);
+        }
+
         if (result == null) {
             throw new DataNotFoundException(USER_NOT_FOUND);
         } else {
             BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
             if (!encoder.matches(password, result.getPassword())) {
                 throw new UserNotAuthenticatedException(PASSWORD_DOES_NOT_MATCH);
             }
         }
+
         return result;
     }
 
     @Override
-    public String determineUserRole(final String employeeNik) throws DataNotFoundException {
-        return roleDeterminer.determineRole(employeeNik);
+    public String determineUserRole(final String username) throws DataNotFoundException {
+        return roleDeterminer.determineRole(username);
     }
+
 }

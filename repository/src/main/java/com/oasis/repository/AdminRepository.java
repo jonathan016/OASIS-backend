@@ -7,11 +7,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AdminRepository extends MongoRepository<AdminModel, String> {
 
-    AdminModel findByNik(String nik);
+    AdminModel findByUsername(String username);
 
-    @SuppressWarnings("unchecked")
-    AdminModel save(AdminModel admin);
-
-    void deleteByNik(String adminNik);
+    void deleteByUsername(String username);
 
 }

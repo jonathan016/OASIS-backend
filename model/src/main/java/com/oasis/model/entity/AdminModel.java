@@ -12,9 +12,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = CollectionName.ADMIN_COLLECTION_NAME)
 public class AdminModel extends BaseEntity {
 
-    @Field(AdminFieldName.NIK)
-    private String nik;
-
     @Field(AdminFieldName.USERNAME)
     private String username;
 

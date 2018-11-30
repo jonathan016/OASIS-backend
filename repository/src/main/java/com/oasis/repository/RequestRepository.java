@@ -9,10 +9,7 @@ import java.util.List;
 @Repository
 public interface RequestRepository extends MongoRepository<RequestModel, String> {
 
-    List<RequestModel> findAllByNikAndStatus(String employeeNik, String status);
-
-    @SuppressWarnings("unchecked")
-    RequestModel save(RequestModel request);
+    List<RequestModel> findAllByUsernameAndStatus(String username, String status);
 
     List<RequestModel> findAllBySku(String assetSku);
 
