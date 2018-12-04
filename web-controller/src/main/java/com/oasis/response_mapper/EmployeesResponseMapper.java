@@ -6,9 +6,12 @@ import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.*;
 import com.oasis.web_model.response.success.employees.EmployeeDetailResponse;
 import com.oasis.web_model.response.success.employees.EmployeeListResponse;
+import ma.glasnost.orika.MapperFactory;
+import ma.glasnost.orika.impl.DefaultMapperFactory;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -16,34 +19,51 @@ public class EmployeesResponseMapper {
 
     public PagingResponse<EmployeeListResponse>
     produceViewFoundEmployeesSuccessResult(final int httpStatusCode,
-                                           final List<EmployeeListResponse.Employee> mappedEmployees,
-                                           final int pageNumber) {
+                                           final List<EmployeeModel> employees,
+                                           final List<EmployeeModel> supervisors,
+                                           final int pageNumber,
+                                           final int totalRecords) {
 
         PagingResponse<EmployeeListResponse> successResponse = new PagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
 
-        if(mappedEmployees.size() - ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber > 0){
-            successResponse.setValue(
-                    new EmployeeListResponse(
-                            mappedEmployees.subList(ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber - ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber)
-                    )
+        MapperFactory employeeDataFactory = new DefaultMapperFactory.Builder().build();
+        employeeDataFactory.classMap(EmployeeModel.class, EmployeeListResponse.Employee.class);
+        MapperFactory employeeSupervisorDataFactory = new DefaultMapperFactory.Builder().build();
+        employeeSupervisorDataFactory.classMap(EmployeeModel.class, EmployeeListResponse.Employee.Supervisor.class);
+
+        List<EmployeeListResponse.Employee> mappedEmployees = new ArrayList<>();
+
+        for (int i = 0; i < employees.size(); i++) {
+            mappedEmployees.add(
+                    employeeDataFactory.getMapperFacade(EmployeeModel.class,
+                                                        EmployeeListResponse.Employee.class).map(employees.get(i))
             );
-        } else {
-            successResponse.setValue(
-                    new EmployeeListResponse(
-                            mappedEmployees.subList(ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber - ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE * pageNumber - ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE + mappedEmployees.size() % ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
-                    )
-            );
+            if (supervisors.get(i) != null) {
+                mappedEmployees.get(mappedEmployees.size() - 1).setSupervisor(
+                        employeeSupervisorDataFactory.getMapperFacade(EmployeeModel.class,
+                                                                      EmployeeListResponse.Employee.Supervisor.class).map(supervisors.get(i))
+                );
+            } else {
+                // For top administrator, who does not have any supervisor at all
+                mappedEmployees.get(mappedEmployees.size() - 1).setSupervisor(null);
+            }
         }
+
+        successResponse.setValue(
+                new EmployeeListResponse(
+                        mappedEmployees
+                )
+        );
 
         successResponse.setPaging(
                 new Paging(
                         pageNumber,
                         ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE,
-                        (int) Math.ceil((double) mappedEmployees.size() / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE),
-                        mappedEmployees.size()
+                        (int) Math.ceil((double) totalRecords / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE),
+                        totalRecords
                 )
         );
 

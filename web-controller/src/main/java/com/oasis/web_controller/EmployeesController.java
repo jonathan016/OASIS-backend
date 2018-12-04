@@ -13,6 +13,7 @@ import com.oasis.web_model.request.employees.AddEmployeeRequest;
 import com.oasis.web_model.request.employees.DeleteEmployeeRequest;
 import com.oasis.web_model.request.employees.DeleteEmployeeSupervisorRequest;
 import com.oasis.web_model.request.employees.UpdateEmployeeRequest;
+import com.oasis.web_model.response.BaseResponse;
 import com.oasis.web_model.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,21 +38,28 @@ public class EmployeesController {
     @Autowired
     private FailedResponseMapper failedResponseMapper;
 
-    @GetMapping(value = APIMappingValue.API_LIST_EMPLOYEE,
+    @GetMapping(value = APIMappingValue.API_LIST,
                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity callViewAllEmployeesService(@RequestParam final int page,
-                                                      @RequestParam final String sort) {
+    public ResponseEntity callFindEmployeeService(
+            @RequestParam(value = "query", required = false, defaultValue = "defaultQuery") final String query,
+            @RequestParam(value = "page") final int page,
+            @RequestParam(value = "sort") final String sort
+    ) {
 
-        List<EmployeeListResponse.Employee> employeesFound;
+        List<EmployeeModel> employeesFound, supervisorsFound;
+        int totalRecords;
 
         try {
-            employeesFound = employeesServiceImpl.getEmployeesList(page, sort);
+            employeesFound = employeesServiceImpl.getEmployeesList(query, page, sort);
+            supervisorsFound = employeesServiceImpl.getSupervisorsList(employeesFound);
+            totalRecords = employeesServiceImpl.getEmployeesCount(query, sort);
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(),
-                                                               dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, page), HttpStatus.OK);
+        return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, supervisorsFound, page, totalRecords), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_DETAIL_EMPLOYEE,
@@ -62,32 +70,13 @@ public class EmployeesController {
         EmployeeModel supervisor;
 
         try {
-            employee = employeesServiceImpl.getEmployeeDetail(username);
+            employee = employeesServiceImpl.getEmployeeDetailData(username);
             supervisor = employeesServiceImpl.getEmployeeSupervisorData(username);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(), employee, supervisor), HttpStatus.OK);
-    }
-
-    @GetMapping(value = APIMappingValue.API_FIND_EMPLOYEE,
-                produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity callFindEmployeeService(@RequestParam final String query,
-                                                  @RequestParam final int page,
-                                                  @RequestParam final String sort) {
-
-        List<EmployeeListResponse.Employee> employeesFound;
-
-        try {
-            employeesFound = employeesServiceImpl.getEmployeesListBySearchQuery(query, page, sort);
-        } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
-        } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
-        }
-
-        return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, page), HttpStatus.OK);
     }
 
     @PostMapping(value = APIMappingValue.API_SAVE_EMPLOYEE,

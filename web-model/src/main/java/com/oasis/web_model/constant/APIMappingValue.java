@@ -20,8 +20,6 @@ public class APIMappingValue {
     public static final String API_STATUS = "/status/{username:.+}";
     public static final String API_REQUEST_UPDATE = "/request-update/{username:.+}";
 
-    public static final String API_LIST_EMPLOYEE = "/";
-    public static final String API_FIND_EMPLOYEE = "/find";
     public static final String API_SAVE_EMPLOYEE = "/save";
     public static final String API_DELETE_EMPLOYEE = "/delete";
     public static final String API_CHANGE_SUPERVISOR_ON_DELETE = "/delete/change-supervisor";

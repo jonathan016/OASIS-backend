@@ -24,11 +24,13 @@ public interface AssetsServiceApi {
                    DataNotFoundException;
 
     Set<AssetModel> getSortedAvailableAssets(
+            final int page,
             final String sort,
             final long stockLimit
     );
 
-    Set<AssetModel> getSortedAvailableAssetsFromSearchQuery(
+    Set<AssetModel> getSortedAvailableAssetsFromQuery(
+            final int page,
             final String query,
             final String sort
     );

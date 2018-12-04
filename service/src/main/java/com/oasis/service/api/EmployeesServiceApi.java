@@ -16,17 +16,37 @@ import java.util.Set;
 
 public interface EmployeesServiceApi {
 
-    List<EmployeeListResponse.Employee> getEmployeesList(final int page, final String sort) throws DataNotFoundException;
+    List<EmployeeModel> getEmployeesList(
+            final String query,
+            final int page,
+            final String sort
+    ) throws BadRequestException, DataNotFoundException;
+
+    Set<EmployeeModel> getSortedEmployeesList(
+            final int page,
+            final String sort
+    );
+
+    Set<EmployeeModel> getSortedEmployeesListFromQuery(
+            final int page,
+            final String query,
+            final String sort
+    );
+
+    int getEmployeesCount(
+            final String query,
+            final String sort
+    );
+
+    List<EmployeeModel> getSupervisorsList(
+            final List<EmployeeModel> employees
+    );
 
     List<EmployeeListResponse.Employee> mapEmployeesList(Set<EmployeeModel> employeesFound);
 
-    EmployeeModel getEmployeeDetail(String username) throws DataNotFoundException;
+    EmployeeModel getEmployeeDetailData(String username) throws DataNotFoundException;
 
     EmployeeModel getEmployeeSupervisorData(String username) throws DataNotFoundException;
-
-    List<EmployeeListResponse.Employee> getEmployeesListBySearchQuery(String query, int page, String sort) throws BadRequestException, DataNotFoundException;
-
-    Set<EmployeeModel> getSortedEmployeesListFromSearchQuery(String query, String sort);
 
     void addEmployee(AddEmployeeRequest.Employee request, String username) throws UnauthorizedOperationException,
                                                                             DataNotFoundException, DuplicateDataException, BadRequestException;

@@ -1,6 +1,8 @@
 package com.oasis.repository;
 
 import com.oasis.model.entity.EmployeeModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,27 +12,29 @@ import java.util.List;
 @Repository
 public interface EmployeeRepository extends MongoRepository<EmployeeModel, String> {
 
+    int countAllByUsernameContains(String username);
+
+    int countAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCase(String username, String name);
+
+    Page<EmployeeModel> findAllByUsernameContainsOrderByNameAsc(String username, Pageable pageable);
+
+    Page<EmployeeModel> findAllByUsernameContainsOrderByNameDesc(String username, Pageable pageable);
+
     EmployeeModel findByUsername(String username);
 
-    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCase(String username, String name);
+    Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String username,
+                                                                                                  String name,
+                                                                                                  Pageable pageable);
 
-    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByUsernameAsc(String username,
-                                                                                                String name);
-
-    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByUsernameDesc(String username,
-                                                                                                String name);
+    Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String username,
+                                                                                                   String name,
+                                                                                                   Pageable pageable);
 
     List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String username,
                                                                                                 String name);
 
     List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String username,
                                                                                                 String name);
-
-    EmployeeModel findFirstByDivisionOrderByUsernameDesc(String division);
-
-    EmployeeModel findFirstByUsernameContainsOrderByUsernameDesc(String username);
-
-    EmployeeModel findFirstByUsernameContainsAndDivisionOrderByUsernameDesc(String username, String division);
 
     boolean existsByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String name, Date dob, String phone,
                                                                         String jobTitle, String division,

@@ -126,8 +126,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
             throw new BadRequestException(EMPTY_EMPLOYEE_NIK);
         }
 
-        int availableAssetCount = assetRepository.findAllByStockGreaterThan(ServiceConstant.ZERO)
-                .size();
+        int availableAssetCount = assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
 
         List<RequestModel> requestedRequests = new ArrayList<>();
         List<RequestModel> pendingHandoverRequests = new ArrayList<>();

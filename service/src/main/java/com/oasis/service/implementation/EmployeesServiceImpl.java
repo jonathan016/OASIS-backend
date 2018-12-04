@@ -22,7 +22,10 @@ import com.oasis.web_model.request.employees.UpdateEmployeeRequest;
 import com.oasis.web_model.response.success.employees.EmployeeListResponse;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,116 +39,159 @@ import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class EmployeesServiceImpl implements EmployeesServiceApi {
 
+    private static Logger logger = LoggerFactory.getLogger(EmployeesServiceImpl.class);
+
     @Autowired
     private RoleDeterminer roleDeterminer;
-    @Autowired
-    private EmployeeRepository employeeRepository;
-    @Autowired
-    private SupervisionRepository supervisionRepository;
     @Autowired
     private AdminRepository adminRepository;
     @Autowired
     private RequestRepository requestRepository;
+    @Autowired
+    private EmployeeRepository employeeRepository;
+    @Autowired
+    private SupervisionRepository supervisionRepository;
 
     /*-------------Employees List Methods-------------*/
     @Override
-    public List<EmployeeListResponse.Employee> getEmployeesList(final int page, final String sort) throws DataNotFoundException {
+    public List<EmployeeModel> getEmployeesList(
+            final String query,
+            final int page,
+            final String sort
+    ) throws BadRequestException, DataNotFoundException {
 
-        int totalEmployees = employeeRepository.findAll().size();
-
-        if (page < 1 || totalEmployees == 0)
-            throw new DataNotFoundException(USER_NOT_FOUND);
-
-        if ((int) Math.ceil((float) totalEmployees / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page)
-            throw new DataNotFoundException(USER_NOT_FOUND);
-
-        Set<EmployeeModel> employees = getSortedEmployeesListFromSearchQuery("", sort);
-
-        return mapEmployeesList(employees);
-    }
-
-    @Override
-    public List<EmployeeListResponse.Employee> getEmployeesListBySearchQuery(final String query,
-                                                                             final int pageNumber,
-                                                                             final String sortInfo) throws BadRequestException, DataNotFoundException {
-
-        if (query.isEmpty())
+        if (query.isEmpty()) {
             throw new BadRequestException(EMPTY_SEARCH_QUERY);
+        }
 
-        if (pageNumber < 1)
-            throw new DataNotFoundException(USER_NOT_FOUND);
+        if (query.equals("defaultQuery")){
+            int foundDataSize = employeeRepository.countAllByUsernameContains("");
 
-        Set<EmployeeModel> employeesFound = new LinkedHashSet<>();
+            if (page < 1 || foundDataSize == 0) {
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
+            }
 
-        String[] queries = query.split(" ");
-
-        for (String word : queries) {
-            int totalEmployees = employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCase(
-                    word,
-                    word
-            ).size();
-            if (totalEmployees == 0)
-                throw new DataNotFoundException(USER_NOT_FOUND);
-
-            if ((int) Math.ceil((float) totalEmployees / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
-                < pageNumber) {
+            if ((int) Math.ceil((float) foundDataSize / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
                 throw new DataNotFoundException(USER_NOT_FOUND);
             }
 
-            employeesFound.addAll(getSortedEmployeesListFromSearchQuery(word, sortInfo));
-        }
+            return new ArrayList<>(getSortedEmployeesList(page, sort));
+        } else {
+            Set<EmployeeModel> employeesSet = new LinkedHashSet<>();
 
-        return mapEmployeesList(employeesFound);
+            String[] queries = query.split(ServiceConstant.SPACE);
+
+            for (String word : queries) {
+                int foundDataSize = employeeRepository
+                        .countAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCase(
+                                word,
+                                word
+                        );
+
+                if (page < 1 || foundDataSize == 0 ||
+                    (int) Math.ceil((double) getEmployeesCount(word, sort)
+                                    / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
+                    throw new DataNotFoundException(USER_NOT_FOUND);
+                }
+
+                employeesSet.addAll(getSortedEmployeesListFromQuery(page, word, sort));
+            }
+
+            return new ArrayList<>(employeesSet);
+        }
     }
 
     @Override
-    public Set<EmployeeModel> getSortedEmployeesListFromSearchQuery(final String searchQuery, final String sortInfo) {
+    public Set<EmployeeModel> getSortedEmployeesList(
+            final int page,
+            final String sort
+    ) {
 
-        Set<EmployeeModel> sortedEmployeesList = new LinkedHashSet<>();
+        if (sort.equals(ServiceConstant.ASCENDING)) {
+            return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsOrderByNameAsc("",
+                                                                                                  PageRequest.of(page - 1
+                                                                                                          ,
+                                                                                                                 ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
+        } else if (sort.equals(ServiceConstant.DESCENDING)) {
+            return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsOrderByNameDesc("",
+                                                                                                  PageRequest.of(page - 1
+                                                                                                          ,
+                                                                                                                 ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
+        }
 
-        if (sortInfo.substring(1).equals("nik")) {
-            if (sortInfo.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
-                sortedEmployeesList.addAll(
-                        employeeRepository
-                                .findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByUsernameAsc(
-                                        searchQuery,
-                                        searchQuery
-                                )
-                );
-            } else if (sortInfo.substring(0, 1).equals(ServiceConstant.DESCENDING)) {
-                sortedEmployeesList.addAll(
-                        employeeRepository
-                                .findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByUsernameDesc(
-                                        searchQuery,
-                                        searchQuery
-                                )
-                );
+        return new LinkedHashSet<>();
+    }
+
+    @Override
+    public Set<EmployeeModel> getSortedEmployeesListFromQuery(
+            final int page,
+            final String query,
+            final String sort
+    ) {
+
+        if (page == -1) {
+            if (sort.equals(ServiceConstant.ASCENDING)) {
+                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(query
+                        , query));
+            } else if (sort.equals(ServiceConstant.DESCENDING)) {
+                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(query,
+                                                                                                                                         query));
             }
-        } else if (sortInfo.substring(1).equals("name")) {
-            if (sortInfo.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
-                sortedEmployeesList.addAll(
-                        employeeRepository
-                                .findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-                                        searchQuery,
-                                        searchQuery
-                                )
-                );
-            } else if (sortInfo.substring(0, 1).equals(ServiceConstant.DESCENDING)) {
-                sortedEmployeesList.addAll(
-                        employeeRepository
-                                .findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
-                                        searchQuery,
-                                        searchQuery
-                                )
+        } else {
+            if (sort.equals(ServiceConstant.ASCENDING)) {
+                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(query
+                        , query, PageRequest.of(page,ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
+            } else if (sort.equals(ServiceConstant.DESCENDING)) {
+                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(query,
+                                                                                                                                         query, PageRequest.of(page,ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
+            }
+        }
+
+        return new LinkedHashSet<>();
+    }
+
+    @Override
+    public int getEmployeesCount(
+            final String query,
+            final String sort
+    ) {
+        if (query.equals("defaultQuery")){
+            return employeeRepository.countAllByUsernameContains("");
+        } else {
+            Set<EmployeeModel> employees = new LinkedHashSet<>();
+            for (String word : query.split(ServiceConstant.SPACE)) {
+                employees.addAll(getSortedEmployeesListFromQuery(-1, word, sort));
+            }
+            return employees.size();
+        }
+    }
+
+    @Override
+    public List<EmployeeModel> getSupervisorsList(
+            final List<EmployeeModel> employees
+    ) {
+        List<EmployeeModel> supervisors = new ArrayList<>();
+
+        for (EmployeeModel employee : employees) {
+            if (supervisionRepository.findByEmployeeUsername(employee.getUsername()) == null) {
+                // For top administrator, who does not have any supervisor at all
+                supervisors.add(null);
+            } else {
+                supervisors.add(
+                        employeeRepository.findByUsername(
+                                supervisionRepository.findByEmployeeUsername(employee.getUsername()).getSupervisorUsername()
+                        )
                 );
             }
         }
 
-        return sortedEmployeesList;
+        return supervisors;
     }
 
     @Override
-    public List<EmployeeListResponse.Employee> mapEmployeesList(final Set<EmployeeModel> employeesFound) {
+    public List<EmployeeListResponse.Employee> mapEmployeesList(
+            final Set<EmployeeModel> employeesFound
+    ) {
 
         List<EmployeeListResponse.Employee> mappedEmployees = new ArrayList<>();
 
@@ -168,12 +214,14 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                 MapperFactory employeeSupervisorDataFactory = new DefaultMapperFactory.Builder().build();
                 employeeSupervisorDataFactory.classMap(EmployeeModel.class, EmployeeListResponse.Employee.Supervisor.class);
 
-                employee.setSupervisor(employeeSupervisorDataFactory
-                                               .getMapperFacade(
-                                                       EmployeeModel.class,
-                                                       EmployeeListResponse.Employee.Supervisor.class
-                                               )
-                                               .map(supervisor));
+                employee.setSupervisor(
+                        employeeSupervisorDataFactory
+                                .getMapperFacade(
+                                        EmployeeModel.class,
+                                        EmployeeListResponse.Employee.Supervisor.class
+                                )
+                                .map(supervisor)
+                );
             }
 
             mappedEmployees.add(employee);
@@ -183,7 +231,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public EmployeeModel getEmployeeDetail(final String username) throws DataNotFoundException {
+    public EmployeeModel getEmployeeDetailData(
+            final String username
+    )
+            throws DataNotFoundException {
 
         EmployeeModel employee = employeeRepository.findByUsername(username);
 
@@ -194,7 +245,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public EmployeeModel getEmployeeSupervisorData(final String username) throws DataNotFoundException {
+    public EmployeeModel getEmployeeSupervisorData(
+            final String username
+    )
+            throws DataNotFoundException {
 
         SupervisionModel supervision = supervisionRepository.findByEmployeeUsername(username);
         boolean isAdmin = roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR);
@@ -210,7 +264,14 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     /*-------------Add Employee Methods-------------*/
     @Override
-    public void addEmployee(final AddEmployeeRequest.Employee request, final String adminUsername) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException, BadRequestException {
+    public void addEmployee(
+            final AddEmployeeRequest.Employee request,
+            final String adminUsername
+    )
+            throws UnauthorizedOperationException,
+                   DataNotFoundException,
+                   DuplicateDataException,
+                   BadRequestException {
 
         if (!roleDeterminer.determineRole(adminUsername).equals(ServiceConstant.ROLE_ADMINISTRATOR))
             throw new UnauthorizedOperationException(EMPLOYEE_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
@@ -263,7 +324,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public String generateEmployeeUsername(final String name, final String dob) {
+    public String generateEmployeeUsername(
+            final String name,
+            final String dob
+    ) {
 
         StringBuilder username = new StringBuilder();
 
@@ -281,18 +345,18 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             username.append(name);
         }
 
-        if (employeeRepository.findByUsername(String.valueOf(username).concat("@gdn-commerce.com")) != null) {
+        if (employeeRepository.findByUsername(String.valueOf(username)) != null) {
             int suffix = employeeRepository.findAllByUsernameContains(String.valueOf(username)).size();
             username.append(suffix);
         }
-
-        username.append("@gdn-commerce.com");
 
         return String.valueOf(username);
     }
 
     @Override
-    public String generateEmployeeDefaultPassword(final String dob) {
+    public String generateEmployeeDefaultPassword(
+            final String dob
+    ) {
 
         StringBuilder password = new StringBuilder(ServiceConstant.NIK_PREFIX.toLowerCase());
 
@@ -305,7 +369,11 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public void createSupervision(final String employeeUsername, final String supervisorUsername, final String adminUsername) {
+    public void createSupervision(
+            final String employeeUsername,
+            final String supervisorUsername,
+            final String adminUsername
+    ) {
 
         SupervisionModel supervision = new SupervisionModel();
         supervision.setSupervisorUsername(supervisorUsername);
@@ -319,7 +387,12 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public String getSupervisionId(final String employeeUsername, final String supervisorUsername, final String adminUsername) throws DataNotFoundException {
+    public String getSupervisionId(
+            final String employeeUsername,
+            final String supervisorUsername,
+            final String adminUsername
+    )
+            throws DataNotFoundException {
 
         if (employeeRepository.findByUsername(supervisorUsername) == null)
             throw new DataNotFoundException(USER_NOT_FOUND);
@@ -331,7 +404,13 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     /*-------------Update Employee Methods-------------*/
     @Override
-    public void updateEmployee(final UpdateEmployeeRequest.Employee request, final String adminUsername) throws DataNotFoundException, UnauthorizedOperationException, BadRequestException {
+    public void updateEmployee(
+            final UpdateEmployeeRequest.Employee request,
+            final String adminUsername
+    )
+            throws DataNotFoundException,
+                   UnauthorizedOperationException,
+                   BadRequestException {
 
         if (!roleDeterminer.determineRole(adminUsername).equals(ServiceConstant.ROLE_ADMINISTRATOR))
             throw new UnauthorizedOperationException(EMPLOYEE_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
@@ -401,7 +480,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public boolean checkCyclicSupervisingExists(final String employeeUsername, String supervisorUsername) {
+    public boolean checkCyclicSupervisingExists(
+            final String employeeUsername,
+            String supervisorUsername
+    ) {
 
         String supervisorSupervisorNik = supervisionRepository.findByEmployeeUsername(supervisorUsername).getSupervisorUsername();
 
@@ -410,8 +492,12 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     /*-------------Delete Employee Methods-------------*/
     @Override
-    public void deleteEmployee(final DeleteEmployeeRequest request) throws UnauthorizedOperationException,
-                                                                                    DataNotFoundException, BadRequestException {
+    public void deleteEmployee(
+            final DeleteEmployeeRequest request
+    )
+            throws UnauthorizedOperationException,
+                   DataNotFoundException,
+                   BadRequestException {
 
         if (!roleDeterminer.determineRole(request.getAdminUsername()).equals(ServiceConstant.ROLE_ADMINISTRATOR))
             throw new UnauthorizedOperationException(EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR);
@@ -457,7 +543,12 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public void changeSupervisorOnPreviousSupervisorDeletion(final DeleteEmployeeSupervisorRequest request) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException {
+    public void changeSupervisorOnPreviousSupervisorDeletion(
+            final DeleteEmployeeSupervisorRequest request
+    )
+            throws UnauthorizedOperationException,
+                   DataNotFoundException,
+                   BadRequestException {
 
         boolean isNotAdmin =
                 !roleDeterminer.determineRole(request.getAdminUsername()).equals(ServiceConstant.ROLE_ADMINISTRATOR);

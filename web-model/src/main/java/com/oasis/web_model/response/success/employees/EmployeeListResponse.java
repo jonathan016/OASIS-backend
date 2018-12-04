@@ -12,19 +12,20 @@ public class EmployeeListResponse {
     private List<Employee> employeeList;
 
     @Data
-    @AllArgsConstructor
     @NoArgsConstructor
+    @AllArgsConstructor
     public static class Employee {
-        private String nik;
+        private String username;
         private String name;
         private String jobTitle;
         private String location;
-        private Supervisor supervisor = null;
+        private Supervisor supervisor;
 
         @Data
+        @NoArgsConstructor
         @AllArgsConstructor
         public static class Supervisor {
-            private String nik;
+            private String username;
             private String name;
         }
     }
