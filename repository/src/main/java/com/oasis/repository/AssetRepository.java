@@ -23,27 +23,25 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     Page<AssetModel> findAllByStockGreaterThanOrderByNameDesc(long stockLimit, Pageable pageable);
 
-    int countAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(String sku, String name);
+    Page<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(long stockLimit, String sku, String name,
+                                                                                                            Pageable pageable);
 
-    Page<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(String sku, String name,
-                                                                                         Pageable pageable);
+    Page<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(long stockLimit, String sku, String name,
+                                                                                                             Pageable pageable);
 
-    Page<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(String sku, String name,
-                                                                                          Pageable pageable);
+    Page<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(long stockLimit, String sku, String name,
+                                                                                                             Pageable pageable);
 
-    Page<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String sku, String name,
-                                                                                          Pageable pageable);
+    Page<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(long stockLimit, String sku, String name,
+                                                                                                              Pageable pageable);
 
-    Page<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String sku, String name,
-                                                                                           Pageable pageable);
+    List<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(long stockLimit, String sku, String name);
 
-    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(String sku, String name);
+    List<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(long stockLimit, String sku, String name);
 
-    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(String sku, String name);
+    List<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(long stockLimit, String sku, String name);
 
-    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String sku, String name);
-
-    List<AssetModel> findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String sku, String name);
+    List<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(long stockLimit, String sku, String name);
 
     boolean existsAssetModelByNameAndBrandAndType(String name, String brand, String type);
 

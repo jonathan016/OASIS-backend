@@ -42,7 +42,7 @@ public class AssetsController {
     @GetMapping(value = APIMappingValue.API_LIST,
                 produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAvailableAssetsList(
-            @RequestParam(value = "query", required = false, defaultValue = "defaultQuery") final String query,
+            @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "page") final int page,
             @RequestParam(value = "sort") final String sort
     ) {
@@ -51,6 +51,7 @@ public class AssetsController {
         int totalRecords;
 
         try {
+            if (query != null && query.isEmpty()) query = "defaultQuery";
             availableAssets = new ArrayList<>(
                     assetsServiceImpl.getAvailableAssetsList(query, page, sort));
 

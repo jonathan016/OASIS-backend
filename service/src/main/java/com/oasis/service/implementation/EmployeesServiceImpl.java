@@ -55,11 +55,11 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             final String sort
     ) throws BadRequestException, DataNotFoundException {
 
-        if (query.isEmpty()) {
+        if (query != null && query.equals("defaultQuery")) {
             throw new BadRequestException(EMPTY_SEARCH_QUERY);
         }
 
-        if (query.equals("defaultQuery")){
+        if (query == null){
             int foundDataSize = employeeRepository.countAllByUsernameContains("");
 
             if (page < 1 || foundDataSize == 0) {
@@ -72,27 +72,45 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
             return new ArrayList<>(getSortedEmployeesList(page, sort));
         } else {
-            Set<EmployeeModel> employeesSet = new LinkedHashSet<>();
+             if (page < 1 || (int) Math.ceil((double) getEmployeesCount(query, sort)
+                                             / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
+                 throw new DataNotFoundException(USER_NOT_FOUND);
+             }
 
-            String[] queries = query.split(ServiceConstant.SPACE);
+             return new ArrayList<>(getSortedEmployeesListFromQuery(page, query, sort));
 
-            for (String word : queries) {
-                int foundDataSize = employeeRepository
-                        .countAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCase(
-                                word,
-                                word
-                        );
-
-                if (page < 1 || foundDataSize == 0 ||
-                    (int) Math.ceil((double) getEmployeesCount(word, sort)
-                                    / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
-                    throw new DataNotFoundException(USER_NOT_FOUND);
-                }
-
-                employeesSet.addAll(getSortedEmployeesListFromQuery(page, word, sort));
-            }
-
-            return new ArrayList<>(employeesSet);
+//            Set<EmployeeModel> employeesSet = new LinkedHashSet<>();
+//
+//            String[] queries = query.split(ServiceConstant.SPACE);
+//
+//            if (page < 1 || (int) Math.ceil((double) getEmployeesCount(query, sort)
+//                                / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
+//                throw new DataNotFoundException(USER_NOT_FOUND);
+//            }
+//
+//            for (String word : queries) {
+//                int foundDataSize = employeeRepository
+//                        .countAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCase(
+//                                word,
+//                                word
+//                        );
+//
+//                if (foundDataSize == 0) {
+//                    continue;
+//                }
+//
+//                employeesSet.addAll(getSortedEmployeesListFromQuery(page, word, sort));
+//            }
+//
+//            List<EmployeeModel> employeesList = new ArrayList<>(employeesSet);
+//
+//            if (sort.equals(ServiceConstant.ASCENDING)) {
+//                employeesList.sort(Comparator.comparing(EmployeeModel::getUsername));
+//            } else {
+//                employeesList.sort(Comparator.comparing(EmployeeModel::getUsername).reversed());
+//            }
+//
+//            return employeesList;
         }
     }
 
@@ -103,15 +121,13 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     ) {
 
         if (sort.equals(ServiceConstant.ASCENDING)) {
-            return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsOrderByNameAsc("",
-                                                                                                  PageRequest.of(page - 1
-                                                                                                          ,
-                                                                                                                 ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
+            return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsOrderByNameAsc(
+                    "",
+                    PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
         } else if (sort.equals(ServiceConstant.DESCENDING)) {
-            return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsOrderByNameDesc("",
-                                                                                                  PageRequest.of(page - 1
-                                                                                                          ,
-                                                                                                                 ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
+            return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsOrderByNameDesc(
+                    "",
+                    PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
         }
 
         return new LinkedHashSet<>();
@@ -126,19 +142,25 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         if (page == -1) {
             if (sort.equals(ServiceConstant.ASCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(query
-                        , query));
+                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                        query,
+                        query));
             } else if (sort.equals(ServiceConstant.DESCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(query,
-                                                                                                                                         query));
+                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                        query,
+                        query));
             }
         } else {
             if (sort.equals(ServiceConstant.ASCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(query
-                        , query, PageRequest.of(page,ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
+                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                        query,
+                        query,
+                        PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
             } else if (sort.equals(ServiceConstant.DESCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(query,
-                                                                                                                                         query, PageRequest.of(page,ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
+                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                        query,
+                        query,
+                        PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
             }
         }
 
@@ -146,18 +168,27 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
+    public List<String> getEmployeePhotos(
+            final List<EmployeeModel> employees
+    ) {
+
+        List<String> photos = new ArrayList<>();
+        for (EmployeeModel employee : employees) {
+            photos.add(getEmployeeDetailPhoto(employeeRepository.findByUsername(employee.getUsername()).getUsername(),
+                                              employeeRepository.findByUsername(employee.getUsername()).getPhoto()));
+        }
+        return photos;
+    }
+
+    @Override
     public int getEmployeesCount(
             final String query,
             final String sort
     ) {
-        if (query.equals("defaultQuery")){
+        if (query == null){
             return employeeRepository.countAllByUsernameContains("");
         } else {
-            Set<EmployeeModel> employees = new LinkedHashSet<>();
-            for (String word : query.split(ServiceConstant.SPACE)) {
-                employees.addAll(getSortedEmployeesListFromQuery(-1, word, sort));
-            }
-            return employees.size();
+            return getSortedEmployeesListFromQuery(-1, query, sort).size();
         }
     }
 

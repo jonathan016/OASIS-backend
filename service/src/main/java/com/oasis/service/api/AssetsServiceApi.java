@@ -32,7 +32,8 @@ public interface AssetsServiceApi {
     Set<AssetModel> getSortedAvailableAssetsFromQuery(
             final int page,
             final String query,
-            final String sort
+            final String sort,
+            final long stockLimit
     );
 
     int getAvailableAssetsCount(

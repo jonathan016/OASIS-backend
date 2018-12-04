@@ -53,6 +53,10 @@ public interface EmployeesServiceApi {
             final String extension
     );
 
+    List<String> getEmployeePhotos(
+            final List<EmployeeModel> employees
+    );
+
     EmployeeModel getEmployeeSupervisorData(
             final String username
     ) throws DataNotFoundException;

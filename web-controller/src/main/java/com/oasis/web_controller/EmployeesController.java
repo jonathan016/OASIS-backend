@@ -40,25 +40,28 @@ public class EmployeesController {
     @GetMapping(value = APIMappingValue.API_LIST,
                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesList(
-            @RequestParam(value = "query", required = false, defaultValue = "defaultQuery") final String query,
+            @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "page") final int page,
             @RequestParam(value = "sort") final String sort
     ) {
 
         List<EmployeeModel> employeesFound, supervisorsFound;
         int totalRecords;
+        List<String> employeePhotos;
 
         try {
+            if (query != null && query.isEmpty()) query = "defaultQuery";
             employeesFound = employeesServiceImpl.getEmployeesList(query, page, sort);
             supervisorsFound = employeesServiceImpl.getSupervisorsList(employeesFound);
             totalRecords = employeesServiceImpl.getEmployeesCount(query, sort);
+            employeePhotos = employeesServiceImpl.getEmployeePhotos(employeesFound);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, supervisorsFound, page, totalRecords), HttpStatus.OK);
+        return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, supervisorsFound, employeePhotos, page, totalRecords), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_DETAIL_EMPLOYEE,

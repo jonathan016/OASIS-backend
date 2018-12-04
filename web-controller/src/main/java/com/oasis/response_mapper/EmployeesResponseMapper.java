@@ -21,6 +21,7 @@ public class EmployeesResponseMapper {
     produceViewFoundEmployeesSuccessResult(final int httpStatusCode,
                                            final List<EmployeeModel> employees,
                                            final List<EmployeeModel> supervisors,
+                                           final List<String> photos,
                                            final int pageNumber,
                                            final int totalRecords) {
 
@@ -41,6 +42,7 @@ public class EmployeesResponseMapper {
                     employeeDataFactory.getMapperFacade(EmployeeModel.class,
                                                         EmployeeListResponse.Employee.class).map(employees.get(i))
             );
+            mappedEmployees.get(mappedEmployees.size() - 1).setPhoto(photos.get(i));
             if (supervisors.get(i) != null) {
                 mappedEmployees.get(mappedEmployees.size() - 1).setSupervisor(
                         employeeSupervisorDataFactory.getMapperFacade(EmployeeModel.class,

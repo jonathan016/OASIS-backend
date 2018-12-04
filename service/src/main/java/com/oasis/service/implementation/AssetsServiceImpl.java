@@ -59,12 +59,11 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             throws BadRequestException,
                    DataNotFoundException {
 
-        //TODO Fix not run as query always contain defaultQuery
-        if (query.isEmpty()) {
+        if (query != null && query.equals("defaultQuery")) {
             throw new BadRequestException(EMPTY_SEARCH_QUERY);
         }
 
-        if (query.equals("defaultQuery")){
+        if (query == null){
             int foundDataSize = assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
 
             if (page < 1 || foundDataSize == 0 ||
@@ -75,27 +74,42 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
             return new ArrayList<>(getSortedAvailableAssets(page, sort, ServiceConstant.ZERO));
         } else {
-            Set<AssetModel> availableAssets = new LinkedHashSet<>();
+//            Set<AssetModel> availableAssets = new LinkedHashSet<>();
 
-            String[] queries = query.split(ServiceConstant.SPACE);
-
-            for (String word : queries) {
-                int foundDataSize = assetRepository
-                        .countAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(
-                                word,
-                                word
-                        );
-
-                if (page < 1 || foundDataSize == 0 ||
-                    (int) Math.ceil((double) getAvailableAssetsCount(word, sort)
-                                    / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < page) {
-                    throw new DataNotFoundException(ASSET_NOT_FOUND);
-                }
-
-                availableAssets.addAll(getSortedAvailableAssetsFromQuery(page, word, sort));
+            if (page < 1 || (int) Math.ceil((double) getAvailableAssetsCount(query, sort)
+                                / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE) < page) {
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
             }
 
-            return new ArrayList<>(availableAssets);
+            return new ArrayList<>(getSortedAvailableAssetsFromQuery(page, query, sort, ServiceConstant.ZERO));
+
+//            String[] queries = query.split(ServiceConstant.SPACE);
+//
+//            for (String word : queries) {
+//                int foundDataSize = assetRepository
+//                        .countAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCase(
+//                                word,
+//                                word
+//                        );
+//
+//                if (foundDataSize == 0) {
+//                    continue;
+//                }
+//
+//                availableAssets.addAll(getSortedAvailableAssetsFromQuery(page, word, sort));
+//            }
+//
+//            List<AssetModel> assetsList = new ArrayList<>(availableAssets);
+//
+//            if (sort.startsWith(ServiceConstant.ASCENDING)) {
+//                assetsList.sort(Comparator.comparing(AssetModel::getSku));
+//            } else if (sort.startsWith(ServiceConstant.DESCENDING)){
+//                assetsList.sort(Comparator.comparing(AssetModel::getSku).reversed());
+//            } else {
+//                return new ArrayList<>();
+//            }
+//
+//            return assetsList;
         }
     }
 
@@ -133,7 +147,8 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     public Set<AssetModel> getSortedAvailableAssetsFromQuery(
             final int page,
             final String query,
-            final String sort
+            final String sort,
+            final long stockLimit
     ) {
 
         Set<AssetModel> sortedAvailableAssets = new LinkedHashSet<>();
@@ -142,25 +157,25 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             if (sort.substring(2).equals("SKU")) {
                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
-                                    query, query));
+                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
+                                    stockLimit, query, query));
                 } else if (sort.substring(0, 1).equals(ServiceConstant.DESCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
-                                    query, query));
+                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
+                                    stockLimit, query, query));
                 }
             } else if (sort.substring(2).equals("name")) {
                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                     sortedAvailableAssets.addAll(
                             assetRepository
-                                    .findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-                                            query, query));
+                                    .findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                                            stockLimit, query, query));
                 } else if (sort.substring(0, 1)
                                .equals(ServiceConstant.DESCENDING)) {
                     sortedAvailableAssets.addAll(
                             assetRepository
-                                    .findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
-                                            query,
+                                    .findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                                            stockLimit, query,
                                             query
                                     )
                     );
@@ -170,26 +185,26 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             if (sort.substring(2).equals("SKU")) {
                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
-                                    query, query, PageRequest.of(page - 1,
+                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
+                                    stockLimit, query, query, PageRequest.of(page - 1,
                                                                  ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
                 } else if (sort.substring(0, 1).equals(ServiceConstant.DESCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
-                                    query, query, PageRequest.of(page - 1,
+                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
+                                    stockLimit, query, query, PageRequest.of(page - 1,
                                                                  ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
                 }
             } else if (sort.substring(2).equals("name")) {
                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-                                    query, query, PageRequest.of(page - 1,
+                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                                    stockLimit, query, query, PageRequest.of(page - 1,
                                                                  ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
                 } else if (sort.substring(0, 1)
                                .equals(ServiceConstant.DESCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllBySkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
-                                    query, query, PageRequest.of(page - 1,
+                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                                    stockLimit, query, query, PageRequest.of(page - 1,
                                                                  ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
                 }
             }
@@ -203,14 +218,10 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             final String query,
             final String sort
     ) {
-        if (query.equals("defaultQuery")){
+        if (query == null){
             return assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
         } else {
-            Set<AssetModel> assets = new LinkedHashSet<>();
-            for (String word : query.split(ServiceConstant.SPACE)) {
-                assets.addAll(getSortedAvailableAssetsFromQuery(-1, word, sort));
-            }
-            return assets.size();
+            return getSortedAvailableAssetsFromQuery(-1, query, sort, ServiceConstant.ZERO).size();
         }
     }
 
