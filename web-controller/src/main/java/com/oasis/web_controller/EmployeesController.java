@@ -85,6 +85,12 @@ public class EmployeesController {
         return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(), employee, photo, supervisor), HttpStatus.OK);
     }
 
+    @GetMapping(value = APIMappingValue.API_USERNAMES,
+                produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity getEmployeesUsername() {
+        return new ResponseEntity<>(employeesServiceImpl.getEmployeesUsername(), HttpStatus.OK);
+    }
+
     @GetMapping(value = APIMappingValue.API_EMPLOYEE_PHOTO,
                 produces = {IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE},
                 consumes = APPLICATION_OCTET_STREAM_VALUE)

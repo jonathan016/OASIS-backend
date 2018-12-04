@@ -47,6 +47,8 @@ public interface EmployeesServiceApi {
             final String photoDirectory
     );
 
+    List<String> getEmployeesUsername();
+
     byte[] getEmployeePhoto(
             final String username,
             final String photoName,

@@ -215,6 +215,19 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
+    public List<String> getEmployeesUsername() {
+
+        List<EmployeeModel> employees = employeeRepository.findAll();
+
+        List<String> usernames = new ArrayList<>();
+        for (EmployeeModel employee : employees) {
+            usernames.add(employee.getUsername());
+        }
+
+        return usernames;
+    }
+
+    @Override
     public EmployeeModel getEmployeeDetailData(
             final String username
     )
