@@ -5,11 +5,7 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.web_model.request.employees.AddEmployeeRequest;
-import com.oasis.web_model.request.employees.DeleteEmployeeRequest;
-import com.oasis.web_model.request.employees.DeleteEmployeeSupervisorRequest;
-import com.oasis.web_model.request.employees.UpdateEmployeeRequest;
-import com.oasis.web_model.response.success.employees.EmployeeListResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Set;
@@ -42,31 +38,73 @@ public interface EmployeesServiceApi {
             final List<EmployeeModel> employees
     );
 
-    List<EmployeeListResponse.Employee> mapEmployeesList(Set<EmployeeModel> employeesFound);
+    EmployeeModel getEmployeeDetailData(
+            final String username
+    ) throws DataNotFoundException;
 
-    EmployeeModel getEmployeeDetailData(String username) throws DataNotFoundException;
+    String getEmployeeDetailPhoto(
+            final String username,
+            final String photoDirectory
+    );
 
-    EmployeeModel getEmployeeSupervisorData(String username) throws DataNotFoundException;
+    byte[] getEmployeePhoto(
+            final String username,
+            final String photoName,
+            final String extension
+    );
 
-    void addEmployee(AddEmployeeRequest.Employee request, String username) throws UnauthorizedOperationException,
-                                                                            DataNotFoundException, DuplicateDataException, BadRequestException;
+    EmployeeModel getEmployeeSupervisorData(
+            final String username
+    ) throws DataNotFoundException;
 
-    String generateEmployeeUsername(String name, String dob);
+    void saveEmployee(
+            final MultipartFile photo,
+            final String username,
+            final EmployeeModel employee,
+            final String supervisorUsername,
+            final boolean isAddOperation
+    ) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException, BadRequestException;
 
-    String generateEmployeeDefaultPassword(String dob);
+    String generateEmployeeUsername(
+            final String name,
+            final String dob
+    );
 
-    String getSupervisionId(String employeeUsername, String supervisorUsername, String adminUsername) throws DataNotFoundException;
+    String generateEmployeeDefaultPassword(
+            final String dob
+    );
 
-    void createSupervision(String employeeUsername, String supervisorUsername, String adminUsername);
+    String getSupervisionId(
+            final String employeeUsername,
+            final String supervisorUsername,
+            final String adminUsername
+    ) throws DataNotFoundException;
 
-    void updateEmployee(UpdateEmployeeRequest.Employee request, String adminUsername) throws DataNotFoundException,
-                                                                                  UnauthorizedOperationException, BadRequestException;
+    void createSupervision(
+            final String employeeUsername,
+            final String supervisorUsername,
+            final String adminUsername
+    );
 
-    boolean checkCyclicSupervisingExists(String employeeUsername, String supervisorUsername);
+    boolean checkCyclicSupervisingExists(
+            final String employeeUsername,
+            final String supervisorUsername
+    );
 
-    void deleteEmployee(DeleteEmployeeRequest request) throws UnauthorizedOperationException, DataNotFoundException,
-                                                        BadRequestException;
+    void savePhoto(
+            final MultipartFile employeePhoto,
+            final String sku
+    );
 
-    void changeSupervisorOnPreviousSupervisorDeletion(DeleteEmployeeSupervisorRequest request) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException;
+    void deleteEmployee(
+            final String adminUsername,
+            final String employeeUsername
+    ) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException;
+
+    void changeSupervisorOnPreviousSupervisorDeletion(
+            final String adminUsername,
+            final String oldSupervisorUsername,
+            final String newSupervisorUsername
+    ) throws UnauthorizedOperationException, DataNotFoundException, BadRequestException;
 
 }

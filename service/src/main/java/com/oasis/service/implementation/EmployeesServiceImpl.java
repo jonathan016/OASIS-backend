@@ -15,31 +15,26 @@ import com.oasis.repository.RequestRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
-import com.oasis.web_model.request.employees.AddEmployeeRequest;
-import com.oasis.web_model.request.employees.DeleteEmployeeRequest;
-import com.oasis.web_model.request.employees.DeleteEmployeeSupervisorRequest;
-import com.oasis.web_model.request.employees.UpdateEmployeeRequest;
-import com.oasis.web_model.response.success.employees.EmployeeListResponse;
-import ma.glasnost.orika.MapperFactory;
-import ma.glasnost.orika.impl.DefaultMapperFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.text.ParseException;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
+import static java.util.Objects.requireNonNull;
 
 @Service
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class EmployeesServiceImpl implements EmployeesServiceApi {
-
-    private static Logger logger = LoggerFactory.getLogger(EmployeesServiceImpl.class);
 
     @Autowired
     private RoleDeterminer roleDeterminer;
@@ -189,48 +184,6 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public List<EmployeeListResponse.Employee> mapEmployeesList(
-            final Set<EmployeeModel> employeesFound
-    ) {
-
-        List<EmployeeListResponse.Employee> mappedEmployees = new ArrayList<>();
-
-        for (EmployeeModel employeeFound : employeesFound) {
-            EmployeeListResponse.Employee employee;
-
-            MapperFactory employeeDataFactory = new DefaultMapperFactory.Builder().build();
-            employeeDataFactory.classMap(EmployeeModel.class, EmployeeListResponse.Employee.class);
-            employee = employeeDataFactory
-                            .getMapperFacade(
-                                    EmployeeModel.class,
-                                    EmployeeListResponse.Employee.class
-                            )
-                            .map(employeeFound);
-
-            SupervisionModel supervision = supervisionRepository.findByEmployeeUsername(employeeFound.getUsername());
-            if (supervision != null) {
-                EmployeeModel supervisor = employeeRepository.findByUsername(supervision.getSupervisorUsername());
-
-                MapperFactory employeeSupervisorDataFactory = new DefaultMapperFactory.Builder().build();
-                employeeSupervisorDataFactory.classMap(EmployeeModel.class, EmployeeListResponse.Employee.Supervisor.class);
-
-                employee.setSupervisor(
-                        employeeSupervisorDataFactory
-                                .getMapperFacade(
-                                        EmployeeModel.class,
-                                        EmployeeListResponse.Employee.Supervisor.class
-                                )
-                                .map(supervisor)
-                );
-            }
-
-            mappedEmployees.add(employee);
-        }
-
-        return mappedEmployees;
-    }
-
-    @Override
     public EmployeeModel getEmployeeDetailData(
             final String username
     )
@@ -242,6 +195,66 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             throw new DataNotFoundException(USER_NOT_FOUND);
 
         return employee;
+    }
+
+    @Override
+    public String getEmployeeDetailPhoto(
+            final String username,
+            final String photoDirectory
+    ) {
+
+        if (photoDirectory == null || photoDirectory.isEmpty()) {
+            return "http://localhost:8085/oasis/api/employees/" + username +
+                   "/image_not_found"
+                           .concat("?extension=jpeg");
+        } else {
+            File photo = new File(photoDirectory);
+            if(Files.exists(photo.toPath())) {
+                StringBuilder extensionBuilder = new StringBuilder();
+                extensionBuilder.append(photo.getName());
+                extensionBuilder.reverse();
+                extensionBuilder.replace(
+                        0,
+                        extensionBuilder.length(),
+                        extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf("."))
+                );
+                extensionBuilder.reverse();
+
+                return "http://localhost:8085/oasis/api/employees/" + username +
+                       "/" + username
+                               .concat("?extension=")
+                               .concat(String.valueOf(extensionBuilder));
+            } else {
+                return "http://localhost:8085/oasis/api/employees/" + username +
+                       "/image_not_found"
+                               .concat("?extension=jpeg");
+            }
+        }
+    }
+
+    @Override
+    public byte[] getEmployeePhoto(
+            final String username,
+            final String photoName,
+            final String extension
+    ) {
+
+        byte[] photo;
+
+        File file = new File(employeeRepository.findByUsername(username).getPhoto());
+
+        if (photoName.equals("image_not_found") || !file.getName().endsWith(extension)) {
+            file = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator).concat("image_not_found.jpeg"));
+        }
+
+        try {
+            photo = Files.readAllBytes(file.toPath());
+        } catch (IOException | NullPointerException exception) {
+            photo = new byte[0];
+        }
+
+        return photo;
+
     }
 
     @Override
@@ -262,65 +275,145 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         return employeeRepository.findByUsername(supervision.getSupervisorUsername());
     }
 
-    /*-------------Add Employee Methods-------------*/
+    /*-------------Save Employee Methods-------------*/
     @Override
-    public void addEmployee(
-            final AddEmployeeRequest.Employee request,
-            final String adminUsername
-    )
-            throws UnauthorizedOperationException,
-                   DataNotFoundException,
-                   DuplicateDataException,
-                   BadRequestException {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void saveEmployee(
+            final MultipartFile employeePhoto,
+            final String username,
+            final EmployeeModel employee,
+            final String supervisorUsername,
+            final boolean isAddOperation
+    ) throws UnauthorizedOperationException, DataNotFoundException, DuplicateDataException, BadRequestException {
 
-        if (!roleDeterminer.determineRole(adminUsername).equals(ServiceConstant.ROLE_ADMINISTRATOR))
-            throw new UnauthorizedOperationException(EMPLOYEE_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
-
-        boolean possibleEmployeeDuplicates;
-        try {
-            possibleEmployeeDuplicates = employeeRepository.existsByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
-                            request.getName(),
-                            new SimpleDateFormat("dd-MM-yyyy").parse(request.getDob()),
-                            request.getPhone(),
-                            request.getJobTitle(),
-                            request.getDivision(),
-                            request.getLocation()
-                    );
-        } catch (ParseException e) {
-            throw new BadRequestException(INCORRECT_DATE_FORMAT);
+        if (!roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+            throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
         }
 
-        if (!request.getName().matches("[A-Za-z]+")) {
-            //TODO throw real exception
-            throw new BadRequestException(USER_NOT_FOUND);
-        }
-
-        if (!possibleEmployeeDuplicates) {
-            throw new DuplicateDataException(DUPLICATE_EMPLOYEE_DATA_FOUND);
-        } else {
-            EmployeeModel employee = new EmployeeModel();
-
-            employee.setName(request.getName());
-            employee.setUsername(generateEmployeeUsername(request.getName().toLowerCase(),
-                                                          request.getDob()));
-            employee.setPassword(generateEmployeeDefaultPassword(request.getDob()));
-            try {
-                employee.setDob(new SimpleDateFormat("dd-MM-yyyy").parse(request.getDob()));
-            } catch (ParseException e) {
-                throw new BadRequestException(INCORRECT_DATE_FORMAT);
+        EmployeeModel savedEmployee;
+        if (isAddOperation) {
+            if (!employee.getName().matches("^([A-Za-z]+ ?)*[A-Za-z]+$")) {
+                //TODO throw real exception
+                throw new BadRequestException(USER_NOT_FOUND);
             }
-            employee.setPhone(request.getPhone());
-            employee.setJobTitle(request.getJobTitle());
-            employee.setDivision(request.getDivision());
-            employee.setLocation(request.getLocation());
-            employee.setSupervisionId(getSupervisionId(employee.getUsername(), request.getSupervisorUsername(), adminUsername));
-            employee.setCreatedDate(new Date());
-            employee.setUpdatedDate(new Date());
-            employee.setCreatedBy(adminUsername);
-            employee.setUpdatedBy(adminUsername);
 
-            employeeRepository.save(employee);
+            savedEmployee = employee;
+
+            if (employeeRepository.existsByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
+                    savedEmployee.getName(),
+                    savedEmployee.getDob(),
+                    savedEmployee.getPhone(),
+                    savedEmployee.getJobTitle(),
+                    savedEmployee.getDivision(),
+                    savedEmployee.getLocation()
+            )) {
+                throw new DuplicateDataException(DUPLICATE_ASSET_DATA_FOUND);
+            } else {
+                savedEmployee.setUsername(generateEmployeeUsername(
+                        savedEmployee.getName().toLowerCase(),
+                        new SimpleDateFormat("dd-MM-yyyy").format(savedEmployee.getDob())
+                ));
+                savedEmployee.setPassword(generateEmployeeDefaultPassword(
+                        new SimpleDateFormat("dd-MM-yyyy").format(savedEmployee.getDob()))
+                );
+                savedEmployee.setSupervisionId(getSupervisionId(
+                        employee.getUsername(),
+                        supervisorUsername,
+                        username)
+                );
+                savedEmployee.setCreatedBy(username);
+                savedEmployee.setCreatedDate(new Date());
+            }
+        } else {
+            savedEmployee = employeeRepository.findByUsername(employee.getUsername());
+
+            if (savedEmployee == null)
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
+
+            savedEmployee.setName(employee.getName());
+            savedEmployee.setDob(employee.getDob());
+            savedEmployee.setPhone(employee.getPhone());
+            savedEmployee.setJobTitle(employee.getJobTitle());
+            savedEmployee.setDivision(employee.getDivision());
+            savedEmployee.setLocation(employee.getLocation());
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            savedEmployee.setPassword(encoder.encode(employee.getPassword()));
+
+            EmployeeModel supervisor = employeeRepository.findByUsername(supervisorUsername);
+            if (supervisor == null) {
+                throw new DataNotFoundException(USER_NOT_FOUND);
+            } else if (!supervisorUsername.equals(supervisionRepository.findByEmployeeUsername(savedEmployee.getUsername()).getSupervisorUsername())) {
+                SupervisionModel supervision = supervisionRepository.findByEmployeeUsername(savedEmployee.getUsername());
+
+                EmployeeModel previousSupervisor = employeeRepository.findByUsername(supervision.getSupervisorUsername());
+                employeeRepository.save(previousSupervisor);
+
+                if (checkCyclicSupervisingExists(employee.getUsername(), supervisorUsername))
+                    throw new UnauthorizedOperationException(CYCLIC_SUPERVISING_OCCURRED);
+
+                supervision.setSupervisorUsername(supervisor.getUsername());
+                supervision.setUpdatedDate(new Date());
+                supervision.setUpdatedBy(username);
+                supervisionRepository.save(supervision);
+
+                if (supervisionRepository.existsSupervisionModelsBySupervisorUsername(employee.getUsername())) {
+                    AdminModel promotedAdmin = new AdminModel();
+
+                    promotedAdmin.setUsername(supervisor.getUsername());
+                    promotedAdmin.setPassword(supervisor.getPassword());
+                    promotedAdmin.setCreatedDate(new Date());
+                    promotedAdmin.setCreatedBy(username);
+                    promotedAdmin.setUpdatedDate(new Date());
+                    promotedAdmin.setUpdatedBy(username);
+
+                    adminRepository.save(promotedAdmin);
+                }
+            }
         }
+
+        if (employeePhoto == null){
+            throw new BadRequestException(MISSING_ASSET_IMAGE);
+        } else {
+            boolean rootDirectoryCreated;
+
+            if (!Files.exists(Paths.get(ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY))) {
+                rootDirectoryCreated = new File(ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY).mkdir();
+            } else {
+                rootDirectoryCreated = true;
+            }
+
+            if(rootDirectoryCreated){
+                Path photoDir = Paths.get(ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator).concat(savedEmployee.getUsername()));
+
+                if (!isAddOperation && Files.exists(photoDir)) {
+                    File photo = new File(savedEmployee.getPhoto());
+                    photo.delete();
+                }
+
+                StringBuilder extensionBuilder = new StringBuilder();
+                extensionBuilder.append(employeePhoto.getOriginalFilename());
+                extensionBuilder.reverse();
+                extensionBuilder.replace(
+                        0,
+                        extensionBuilder.length(),
+                        extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
+                );
+                extensionBuilder.reverse();
+
+                String photoDirectory = ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator)
+                                                                                .concat(savedEmployee.getUsername())
+                                                                                .concat(String.valueOf(extensionBuilder)
+                                                                                );
+                savedEmployee.setPhoto(photoDirectory);
+
+                savePhoto(employeePhoto, savedEmployee.getUsername());
+            }
+        }
+
+        savedEmployee.setUpdatedDate(new Date());
+        savedEmployee.setUpdatedBy(username);
+
+        employeeRepository.save(savedEmployee);
     }
 
     @Override
@@ -331,7 +424,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         StringBuilder username = new StringBuilder();
 
-        if (!name.contains(" ")) {
+        if (name.contains(" ")) {
             String givenName = name.substring(0, name.lastIndexOf(" "));
             String firstNames[] = givenName.split(" ");
             for (String firstName : firstNames) {
@@ -402,81 +495,33 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         return supervisionRepository.findByEmployeeUsername(employeeUsername).get_id();
     }
 
-    /*-------------Update Employee Methods-------------*/
     @Override
-    public void updateEmployee(
-            final UpdateEmployeeRequest.Employee request,
-            final String adminUsername
-    )
-            throws DataNotFoundException,
-                   UnauthorizedOperationException,
-                   BadRequestException {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void savePhoto(
+            final MultipartFile employeePhoto,
+            final String username
+    ) {
 
-        if (!roleDeterminer.determineRole(adminUsername).equals(ServiceConstant.ROLE_ADMINISTRATOR))
-            throw new UnauthorizedOperationException(EMPLOYEE_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
+        if (employeePhoto != null) {
+            try {
+                StringBuilder extensionBuilder = new StringBuilder();
+                extensionBuilder.append(employeePhoto.getOriginalFilename());
+                extensionBuilder.reverse();
+                extensionBuilder.replace(
+                        0,
+                        extensionBuilder.length(),
+                        extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf(".") + 1)
+                );
+                extensionBuilder.reverse();
+                File photo = new File(
+                        ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator).concat(username)
+                                                                .concat(String.valueOf(extensionBuilder)));
 
-        EmployeeModel employee = employeeRepository.findByUsername(request.getUsername());
-
-        if (employee == null)
-            throw new DataNotFoundException(USER_NOT_FOUND);
-
-        Date requestDob;
-        try {
-            requestDob = new SimpleDateFormat("dd-MM-yyyy").parse(request.getDob());
-        } catch (ParseException e) {
-            throw new BadRequestException(INCORRECT_DATE_FORMAT);
-        }
-
-        if (!employee.getName().equals(request.getName()) || employee.getDob().compareTo(
-                Objects.requireNonNull(requestDob)) != 0)
-            employee.setUsername(generateEmployeeUsername(request.getName().toLowerCase(),
-                                                          request.getDob()));
-
-        employee.setName(request.getName());
-        employee.setDob(requestDob);
-
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        employee.setPassword(encoder.encode(request.getPassword()));
-        employee.setPhone(request.getPhone());
-        employee.setJobTitle(request.getJobTitle());
-        employee.setDivision(request.getDivision());
-        employee.setLocation(request.getLocation());
-
-        EmployeeModel supervisor = employeeRepository.findByUsername(request.getSupervisorUsername());
-        if (supervisor == null) {
-            throw new DataNotFoundException(USER_NOT_FOUND);
-        } else if (!request.getSupervisorUsername().equals(supervisionRepository.findByEmployeeUsername(request.getUsername()).getSupervisorUsername())) {
-            SupervisionModel supervision = supervisionRepository.findByEmployeeUsername(request.getUsername());
-
-            EmployeeModel previousSupervisor = employeeRepository.findByUsername(supervision.getSupervisorUsername());
-            employeeRepository.save(previousSupervisor);
-
-            if (checkCyclicSupervisingExists(employee.getUsername(), request.getSupervisorUsername()))
-                throw new UnauthorizedOperationException(CYCLIC_SUPERVISING_OCCURRED);
-
-            supervision.setSupervisorUsername(supervisor.getUsername());
-            supervision.setUpdatedDate(new Date());
-            supervision.setUpdatedBy(adminUsername);
-            supervisionRepository.save(supervision);
-
-            if (supervisionRepository.existsSupervisionModelsBySupervisorUsername(employee.getUsername())) {
-                AdminModel promotedAdmin = new AdminModel();
-
-                promotedAdmin.setUsername(supervisor.getUsername());
-                promotedAdmin.setPassword(supervisor.getPassword());
-                promotedAdmin.setCreatedDate(new Date());
-                promotedAdmin.setCreatedBy(adminUsername);
-                promotedAdmin.setUpdatedDate(new Date());
-                promotedAdmin.setUpdatedBy(adminUsername);
-
-                adminRepository.save(promotedAdmin);
+                employeePhoto.transferTo(photo);
+            } catch (IOException ioException) {
+                //TODO throw real exception cause
             }
         }
-
-        employee.setUpdatedDate(new Date());
-        employee.setUpdatedBy(adminUsername);
-
-        employeeRepository.save(employee);
     }
 
     @Override
@@ -493,98 +538,100 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     /*-------------Delete Employee Methods-------------*/
     @Override
     public void deleteEmployee(
-            final DeleteEmployeeRequest request
+            final String adminUsername,
+            final String employeeUsername
     )
             throws UnauthorizedOperationException,
                    DataNotFoundException,
                    BadRequestException {
 
-        if (!roleDeterminer.determineRole(request.getAdminUsername()).equals(ServiceConstant.ROLE_ADMINISTRATOR))
+        if (!roleDeterminer.determineRole(adminUsername).equals(ServiceConstant.ROLE_ADMINISTRATOR))
             throw new UnauthorizedOperationException(EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR);
 
-        if (request.getEmployeeUsername().isEmpty())
+        if (employeeUsername.isEmpty())
             throw new BadRequestException(EMPTY_EMPLOYEE_NIK);
 
-        if (request.getEmployeeUsername().equals(request.getAdminUsername()))
+        if (employeeUsername.equals(adminUsername))
             throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT);
 
-        if (employeeRepository.findByUsername(request.getEmployeeUsername()) == null)
+        if (employeeRepository.findByUsername(employeeUsername) == null)
             throw new DataNotFoundException(USER_NOT_FOUND);
 
-        if (supervisionRepository.existsSupervisionModelsBySupervisorUsername(request.getEmployeeUsername()))
+        if (supervisionRepository.existsSupervisionModelsBySupervisorUsername(employeeUsername))
             throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT);
 
-        if (!requestRepository.findAllByUsernameAndStatus(request.getEmployeeUsername(), ServiceConstant.PENDING_RETURN).isEmpty())
+        if (!requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.PENDING_RETURN).isEmpty())
             throw new UnauthorizedOperationException(UNRETURNED_ASSETS_ON_DELETION_ATTEMPT);
 
-        if (!supervisionRepository.existsByEmployeeUsername(request.getEmployeeUsername()))
+        if (!supervisionRepository.existsByEmployeeUsername(employeeUsername))
             throw new DataNotFoundException(USER_NOT_FOUND);
 
         List<RequestModel> requests = new ArrayList<>();
-        requests.addAll(requestRepository.findAllByUsernameAndStatus(request.getEmployeeUsername(),
+        requests.addAll(requestRepository.findAllByUsernameAndStatus(employeeUsername,
                                                                 ServiceConstant.PENDING_HANDOVER));
-        requests.addAll(requestRepository.findAllByUsernameAndStatus(request.getEmployeeUsername(), ServiceConstant.REQUESTED));
+        requests.addAll(requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.REQUESTED));
         if (!requests.isEmpty()) {
             for (RequestModel employeeRequest : requests) {
                 employeeRequest.setStatus(ServiceConstant.CANCELLED);
                 employeeRequest.setUpdatedDate(new Date());
-                employeeRequest.setUpdatedBy(request.getAdminUsername());
+                employeeRequest.setUpdatedBy(adminUsername);
 
                 requestRepository.save(employeeRequest);
             }
         }
 
-        if (adminRepository.findByUsername(request.getEmployeeUsername()) != null)
-            adminRepository.deleteByUsername(request.getEmployeeUsername());
+        if (adminRepository.findByUsername(employeeUsername) != null)
+            adminRepository.deleteByUsername(employeeUsername);
 
-        employeeRepository.deleteByUsername(request.getEmployeeUsername());
+        employeeRepository.deleteByUsername(employeeUsername);
 
-        supervisionRepository.deleteByEmployeeUsername(request.getEmployeeUsername());
+        supervisionRepository.deleteByEmployeeUsername(employeeUsername);
     }
 
     @Override
     public void changeSupervisorOnPreviousSupervisorDeletion(
-            final DeleteEmployeeSupervisorRequest request
+            final String adminUsername,
+            final String oldSupervisorUsername,
+            final String newSupervisorUsername
     )
             throws UnauthorizedOperationException,
                    DataNotFoundException,
                    BadRequestException {
 
         boolean isNotAdmin =
-                !roleDeterminer.determineRole(request.getAdminUsername()).equals(ServiceConstant.ROLE_ADMINISTRATOR);
+                !roleDeterminer.determineRole(adminUsername).equals(ServiceConstant.ROLE_ADMINISTRATOR);
         if (isNotAdmin)
             throw new UnauthorizedOperationException(EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR);
 
-        boolean requestDataMissing =
-                request.getOldSupervisorUsername().isEmpty() || request.getNewSupervisorUsername().isEmpty();
+        boolean requestDataMissing = oldSupervisorUsername.isEmpty() || newSupervisorUsername.isEmpty();
         if (requestDataMissing)
             throw new BadRequestException(EMPTY_EMPLOYEE_NIK);
 
-        boolean isIdenticalNik =
-                request.getOldSupervisorUsername().equals(request.getAdminUsername());
+        boolean isIdenticalNik = oldSupervisorUsername.equals(adminUsername);
         if (isIdenticalNik)
             throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT);
 
         boolean userDoesNotExist =
-                employeeRepository.findByUsername(request.getOldSupervisorUsername()) == null || employeeRepository.findByUsername(request.getNewSupervisorUsername()) == null;
+                employeeRepository.findByUsername(oldSupervisorUsername) == null ||
+                employeeRepository.findByUsername(newSupervisorUsername) == null;
         if (userDoesNotExist)
             throw new DataNotFoundException(USER_NOT_FOUND);
 
         boolean doesNotSupervise =
-                supervisionRepository.findAllBySupervisorUsername(request.getOldSupervisorUsername()).isEmpty();
+                supervisionRepository.findAllBySupervisorUsername(oldSupervisorUsername).isEmpty();
         if (doesNotSupervise)
             throw new DataNotFoundException(SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE);
 
         List<SupervisionModel> supervisions =
-                supervisionRepository.findAllBySupervisorUsername(request.getOldSupervisorUsername());
+                supervisionRepository.findAllBySupervisorUsername(oldSupervisorUsername);
 
         for (SupervisionModel supervision : supervisions) {
             EmployeeModel previousSupervisor = employeeRepository.findByUsername(supervision.getSupervisorUsername());
             employeeRepository.save(previousSupervisor);
 
-            supervision.setSupervisorUsername(request.getNewSupervisorUsername());
+            supervision.setSupervisorUsername(newSupervisorUsername);
             supervision.setUpdatedDate(new Date());
-            supervision.setUpdatedBy(request.getAdminUsername());
+            supervision.setUpdatedBy(adminUsername);
 
             supervisionRepository.save(supervision);
         }

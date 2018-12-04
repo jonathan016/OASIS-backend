@@ -6,20 +6,20 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class EmployeeDetailResponse {
-    private String employeeNik;
-    private String employeeUsername;
-    private String employeeFullname;
-    private String employeeDob;
-    private String employeePhone;
-    private String employeeJobTitle;
-    private String employeeDivision;
-    private String employeeLocation;
+    private String username;
+    private String name;
+    private String dob;
+    private String photo;
+    private String phone;
+    private String jobTitle;
+    private String division;
+    private String location;
     private Supervisor supervisor;
 
     @Data
     @AllArgsConstructor
     public static class Supervisor {
-        private String supervisorId;
-        private String supervisorName;
+        private String username;
+        private String name;
     }
 }

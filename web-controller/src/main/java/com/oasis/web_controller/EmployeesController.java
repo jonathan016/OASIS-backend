@@ -1,5 +1,6 @@
 package com.oasis.web_controller;
 
+import com.oasis.request_mapper.EmployeesRequestMapper;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
@@ -9,21 +10,17 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.response_mapper.EmployeesResponseMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.service.implementation.EmployeesServiceImpl;
-import com.oasis.web_model.request.employees.AddEmployeeRequest;
 import com.oasis.web_model.request.employees.DeleteEmployeeRequest;
 import com.oasis.web_model.request.employees.DeleteEmployeeSupervisorRequest;
-import com.oasis.web_model.request.employees.UpdateEmployeeRequest;
-import com.oasis.web_model.response.BaseResponse;
-import com.oasis.web_model.response.success.employees.EmployeeListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
+import static org.springframework.http.MediaType.*;
 
 @RestController
 @CrossOrigin(origins = "http://localhost")
@@ -37,10 +34,12 @@ public class EmployeesController {
     private EmployeesResponseMapper employeesResponseMapper;
     @Autowired
     private FailedResponseMapper failedResponseMapper;
+    @Autowired
+    private EmployeesRequestMapper employeesRequestMapper;
 
     @GetMapping(value = APIMappingValue.API_LIST,
                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity callFindEmployeeService(
+    public ResponseEntity getEmployeesList(
             @RequestParam(value = "query", required = false, defaultValue = "defaultQuery") final String query,
             @RequestParam(value = "page") final int page,
             @RequestParam(value = "sort") final String sort
@@ -64,7 +63,9 @@ public class EmployeesController {
 
     @GetMapping(value = APIMappingValue.API_DETAIL_EMPLOYEE,
                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity callViewEmployeeDetailService(@PathVariable final String username) {
+    public ResponseEntity getEmployeeDetailData(
+            @PathVariable final String username
+    ) {
 
         EmployeeModel employee;
         EmployeeModel supervisor;
@@ -76,15 +77,49 @@ public class EmployeesController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(), employee, supervisor), HttpStatus.OK);
+        String photo = employeesServiceImpl.getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto());
+
+        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(), employee, photo, supervisor), HttpStatus.OK);
+    }
+
+    @GetMapping(value = APIMappingValue.API_EMPLOYEE_PHOTO,
+                produces = {IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE},
+                consumes = APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity getEmployeePhoto(
+            @PathVariable(value = "username") final String username,
+            @PathVariable(value = "image") final String image,
+            @RequestParam(value = "extension") final String extension
+    ) {
+
+        byte[] photo;
+
+        photo = employeesServiceImpl.getEmployeePhoto(
+                username,
+                image,
+                extension
+        );
+
+        return new ResponseEntity<>(photo, HttpStatus.OK);
     }
 
     @PostMapping(value = APIMappingValue.API_SAVE_EMPLOYEE,
-                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity callInsertToDatabaseService(@RequestBody final AddEmployeeRequest request) {
+                 produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity saveEmployee(
+            @RequestParam("photo") MultipartFile photo,
+            @RequestParam("data") final String rawEmployeeData
+    ) {
 
         try {
-            employeesServiceImpl.addEmployee(request.getEmployee(), request.getUsername());
+            String username = employeesRequestMapper.getAdminUsernameFromRawData(rawEmployeeData);
+            boolean isAddOperation = employeesRequestMapper.checkAddOperationFromRawData(rawEmployeeData);
+
+            employeesServiceImpl.saveEmployee(
+                    photo,
+                    username,
+                    employeesRequestMapper.getEmployeeModelFromRawData(rawEmployeeData, isAddOperation),
+                    employeesRequestMapper.getSupervisorUsernameFromRawData(rawEmployeeData),
+                    isAddOperation
+            );
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
@@ -99,30 +134,14 @@ public class EmployeesController {
         return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.CREATED.value()), HttpStatus.CREATED);
     }
 
-    @PutMapping(value = APIMappingValue.API_SAVE_EMPLOYEE,
-                produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity callUpdateEmployeeService(@RequestBody final UpdateEmployeeRequest request) {
-
-        try {
-            employeesServiceImpl.updateEmployee(request.getEmployee(), request.getUsername());
-        } catch (UnauthorizedOperationException unauthorizedOperationException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
-        } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(), dataNotFoundException.getErrorMessage()), HttpStatus.NOT_FOUND);
-        } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                             badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
-        }
-
-        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
-    }
-
     @DeleteMapping(value = APIMappingValue.API_DELETE_EMPLOYEE,
                    produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity callDeleteEmployeeService(@RequestBody final DeleteEmployeeRequest request) {
+    public ResponseEntity deleteEmployee(
+            @RequestBody final DeleteEmployeeRequest request
+    ) {
 
         try {
-            employeesServiceImpl.deleteEmployee(request);
+            employeesServiceImpl.deleteEmployee(request.getAdminUsername(), request.getEmployeeUsername());
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
@@ -136,10 +155,16 @@ public class EmployeesController {
 
     @PostMapping(value = APIMappingValue.API_CHANGE_SUPERVISOR_ON_DELETE,
                  produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity callChangeSupervisorOnPreviousSupervisorDeletion(@RequestBody final DeleteEmployeeSupervisorRequest request) {
+    public ResponseEntity changeSupervisorOnPreviousSupervisorDeletion(
+            @RequestBody final DeleteEmployeeSupervisorRequest request
+    ) {
 
         try {
-            employeesServiceImpl.changeSupervisorOnPreviousSupervisorDeletion(request);
+            employeesServiceImpl.changeSupervisorOnPreviousSupervisorDeletion(
+                    request.getAdminUsername(),
+                    request.getOldSupervisorUsername(),
+                    request.getNewSupervisorUsername()
+            );
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(), unauthorizedOperationException.getErrorMessage()), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {

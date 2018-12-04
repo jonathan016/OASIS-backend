@@ -1,15 +1,18 @@
 package com.oasis.web_model.request.employees;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-public class UpdateEmployeeRequest {
+public class SaveEmployeeRequest {
 
     private String username;
-    private Employee employee;
+    private SaveEmployeeRequest.Employee employee;
 
     @Data
+    @AllArgsConstructor
     public static class Employee {
+
         private String username;
         private String name;
         private String dob;
@@ -19,6 +22,7 @@ public class UpdateEmployeeRequest {
         private String division;
         private String location;
         private String supervisorUsername;
+
     }
 
 }

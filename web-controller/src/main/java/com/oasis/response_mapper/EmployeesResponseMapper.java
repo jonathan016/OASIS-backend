@@ -72,7 +72,7 @@ public class EmployeesResponseMapper {
 
     public NoPagingResponse<EmployeeDetailResponse>
     produceEmployeeDetailSuccessResponse(final int httpStatusCode, final EmployeeModel employee,
-                                         final EmployeeModel supervisor) {
+                                         final String photo, final EmployeeModel supervisor) {
 
         NoPagingResponse<EmployeeDetailResponse> successResponse = new NoPagingResponse<>();
 
@@ -83,9 +83,9 @@ public class EmployeesResponseMapper {
             successResponse.setValue(
                     new EmployeeDetailResponse(
                             employee.getUsername(),
-                            employee.getUsername(),
                             employee.getName(),
                             new SimpleDateFormat("dd-MM-yyyy").format(employee.getDob()),
+                            photo,
                             employee.getPhone(),
                             employee.getJobTitle(),
                             employee.getDivision(),
@@ -100,9 +100,9 @@ public class EmployeesResponseMapper {
             successResponse.setValue(
                     new EmployeeDetailResponse(
                             employee.getUsername(),
-                            employee.getUsername(),
                             employee.getName(),
                             new SimpleDateFormat("dd-MM-yyyy").format(employee.getDob()),
+                            photo,
                             employee.getPhone(),
                             employee.getJobTitle(),
                             employee.getDivision(),
