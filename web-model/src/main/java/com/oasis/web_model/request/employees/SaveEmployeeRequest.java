@@ -16,7 +16,6 @@ public class SaveEmployeeRequest {
         private String username;
         private String name;
         private String dob;
-        private String password;
         private String phone;
         private String jobTitle;
         private String division;

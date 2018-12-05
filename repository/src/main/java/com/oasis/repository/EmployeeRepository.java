@@ -12,29 +12,37 @@ import java.util.List;
 @Repository
 public interface EmployeeRepository extends MongoRepository<EmployeeModel, String> {
 
-    int countAllByUsernameContains(String username);
+    int countAllByUsernameIsNot(String username);
 
     List<EmployeeModel> findAllByUsernameIsNotNullOrderByUsernameAsc();
 
-    Page<EmployeeModel> findAllByUsernameContainsOrderByNameAsc(String username, Pageable pageable);
+    Page<EmployeeModel> findAllByUsernameIsNotOrderByNameAsc(String username, Pageable pageable);
 
-    Page<EmployeeModel> findAllByUsernameContainsOrderByNameDesc(String username, Pageable pageable);
+    Page<EmployeeModel> findAllByUsernameIsNotOrderByNameDesc(String username, Pageable pageable);
 
     EmployeeModel findByUsername(String username);
 
-    Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String username,
-                                                                                                  String name,
-                                                                                                  Pageable pageable);
+    Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+            String username,
+            String name,
+            Pageable pageable
+    );
 
-    Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String username,
-                                                                                                   String name,
-                                                                                                   Pageable pageable);
+    Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+            String username,
+            String name,
+            Pageable pageable
+    );
 
-    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(String username,
-                                                                                                String name);
+    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+            String username,
+            String name
+    );
 
-    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(String username,
-                                                                                                String name);
+    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+            String username,
+            String name
+    );
 
     boolean existsByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String name, Date dob, String phone,
                                                                         String jobTitle, String division,

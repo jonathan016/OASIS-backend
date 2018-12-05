@@ -40,6 +40,7 @@ public class EmployeesController {
     @GetMapping(value = APIMappingValue.API_LIST,
                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesList(
+            @RequestParam(value = "username") final String username,
             @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "page") final int page,
             @RequestParam(value = "sort") final String sort
@@ -51,9 +52,9 @@ public class EmployeesController {
 
         try {
             if (query != null && query.isEmpty()) query = "defaultQuery";
-            employeesFound = employeesServiceImpl.getEmployeesList(query, page, sort);
+            employeesFound = employeesServiceImpl.getEmployeesList(username, query, page, sort);
             supervisorsFound = employeesServiceImpl.getSupervisorsList(employeesFound);
-            totalRecords = employeesServiceImpl.getEmployeesCount(query, sort);
+            totalRecords = employeesServiceImpl.getEmployeesCount(username, query, sort);
             employeePhotos = employeesServiceImpl.getEmployeePhotos(employeesFound);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
@@ -118,13 +119,17 @@ public class EmployeesController {
             @RequestParam("data") final String rawEmployeeData
     ) {
 
-        try {
-            String username = employeesRequestMapper.getAdminUsernameFromRawData(rawEmployeeData);
-            boolean isAddOperation = employeesRequestMapper.checkAddOperationFromRawData(rawEmployeeData);
+        String adminUsername;
+        boolean isAddOperation;
+        String username;
 
-            employeesServiceImpl.saveEmployee(
+        try {
+            adminUsername = employeesRequestMapper.getAdminUsernameFromRawData(rawEmployeeData);
+            isAddOperation = employeesRequestMapper.checkAddOperationFromRawData(rawEmployeeData);
+
+            username = employeesServiceImpl.saveEmployee(
                     photo,
-                    username,
+                    adminUsername,
                     employeesRequestMapper.getEmployeeModelFromRawData(rawEmployeeData, isAddOperation),
                     employeesRequestMapper.getSupervisorUsernameFromRawData(rawEmployeeData),
                     isAddOperation
@@ -140,7 +145,11 @@ public class EmployeesController {
                                                                                              badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.CREATED.value()), HttpStatus.CREATED);
+        if (isAddOperation) {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveAddSuccessResult(HttpStatus.CREATED.value(), username), HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveUpdateSuccessResult(HttpStatus.CREATED.value()), HttpStatus.CREATED);
+        }
     }
 
     @DeleteMapping(value = APIMappingValue.API_DELETE_EMPLOYEE,
@@ -159,7 +168,7 @@ public class EmployeesController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
+        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveUpdateSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
     }
 
     @PostMapping(value = APIMappingValue.API_CHANGE_SUPERVISOR_ON_DELETE,
@@ -182,7 +191,7 @@ public class EmployeesController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(), badRequestException.getErrorMessage()), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
+        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeSaveUpdateSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
     }
 
     @RequestMapping(value = APIMappingValue.API_MISDIRECT,

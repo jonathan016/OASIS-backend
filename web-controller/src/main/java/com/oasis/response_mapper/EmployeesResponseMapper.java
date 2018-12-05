@@ -6,6 +6,7 @@ import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.*;
 import com.oasis.web_model.response.success.employees.EmployeeDetailResponse;
 import com.oasis.web_model.response.success.employees.EmployeeListResponse;
+import com.oasis.web_model.response.success.employees.EmployeeSaveAddResponse;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
 import org.springframework.stereotype.Component;
@@ -118,12 +119,29 @@ public class EmployeesResponseMapper {
     }
 
     public BaseResponse
-    produceEmployeeSaveSuccessResult(final int httpStatusCode){
+    produceEmployeeSaveUpdateSuccessResult(final int httpStatusCode){
 
         BaseResponse successResponse = new BaseResponse();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
+
+        return successResponse;
+    }
+
+    public NoPagingResponse
+    produceEmployeeSaveAddSuccessResult(final int httpStatusCode, final String username){
+
+        NoPagingResponse<EmployeeSaveAddResponse> successResponse = new NoPagingResponse<>();
+
+        successResponse.setCode(httpStatusCode);
+        successResponse.setSuccess(ResponseStatus.SUCCESS);
+
+        successResponse.setValue(
+                new EmployeeSaveAddResponse(
+                        username
+                )
+        );
 
         return successResponse;
     }

@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.web_model.request.employees.SaveEmployeeRequest;
-import ma.glasnost.orika.MapperFactory;
-import ma.glasnost.orika.impl.DefaultMapperFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -58,7 +56,6 @@ public class EmployeesRequestMapper {
                         null,
                         employee.path("name").asText(),
                         employee.path("dob").asText(),
-                        employee.path("password").asText(),
                         employee.path("phone").asText(),
                         employee.path("jobTitle").asText(),
                         employee.path("division").asText(),
@@ -70,7 +67,6 @@ public class EmployeesRequestMapper {
                         employee.path("username").asText(),
                         employee.path("name").asText(),
                         employee.path("dob").asText(),
-                        employee.path("password").asText(),
                         employee.path("phone").asText(),
                         employee.path("jobTitle").asText(),
                         employee.path("division").asText(),
@@ -88,11 +84,10 @@ public class EmployeesRequestMapper {
         employee.setUsername(request.getUsername());
         employee.setName(request.getName());
         try {
-            employee.setDob(new SimpleDateFormat("dd-MM-yyyy").parse(request.getDob()));
+            employee.setDob(new SimpleDateFormat("dd/MM/yyyy").parse(request.getDob()));
         } catch (ParseException e) {
             //TODO log exception
         }
-        employee.setPassword(request.getPassword());
         employee.setPhone(request.getPhone());
         employee.setJobTitle(request.getJobTitle());
         employee.setDivision(request.getDivision());

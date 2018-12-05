@@ -13,23 +13,27 @@ import java.util.Set;
 public interface EmployeesServiceApi {
 
     List<EmployeeModel> getEmployeesList(
+            final String username,
             final String query,
             final int page,
             final String sort
     ) throws BadRequestException, DataNotFoundException;
 
     Set<EmployeeModel> getSortedEmployeesList(
+            final String username,
             final int page,
             final String sort
     );
 
     Set<EmployeeModel> getSortedEmployeesListFromQuery(
+            final String username,
             final int page,
             final String query,
             final String sort
     );
 
     int getEmployeesCount(
+            final String username,
             final String query,
             final String sort
     );
@@ -63,7 +67,7 @@ public interface EmployeesServiceApi {
             final String username
     ) throws DataNotFoundException;
 
-    void saveEmployee(
+    String saveEmployee(
             final MultipartFile photo,
             final String username,
             final EmployeeModel employee,

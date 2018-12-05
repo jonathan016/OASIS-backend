@@ -50,6 +50,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     /*-------------Employees List Methods-------------*/
     @Override
     public List<EmployeeModel> getEmployeesList(
+            final String username,
             final String query,
             final int page,
             final String sort
@@ -60,7 +61,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         }
 
         if (query == null){
-            int foundDataSize = employeeRepository.countAllByUsernameContains("");
+            int foundDataSize = getEmployeesCount(username, query, sort);
 
             if (page < 1 || foundDataSize == 0) {
                 throw new DataNotFoundException(ASSET_NOT_FOUND);
@@ -70,14 +71,14 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                 throw new DataNotFoundException(USER_NOT_FOUND);
             }
 
-            return new ArrayList<>(getSortedEmployeesList(page, sort));
+            return new ArrayList<>(getSortedEmployeesList(username, page, sort));
         } else {
-             if (page < 1 || (int) Math.ceil((double) getEmployeesCount(query, sort)
+             if (page < 1 || (int) Math.ceil((double) getEmployeesCount(username, query, sort)
                                              / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
                  throw new DataNotFoundException(USER_NOT_FOUND);
              }
 
-             return new ArrayList<>(getSortedEmployeesListFromQuery(page, query, sort));
+             return new ArrayList<>(getSortedEmployeesListFromQuery(username, page, query, sort));
 
 //            Set<EmployeeModel> employeesSet = new LinkedHashSet<>();
 //
@@ -116,17 +117,18 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     @Override
     public Set<EmployeeModel> getSortedEmployeesList(
+            final String username,
             final int page,
             final String sort
     ) {
 
         if (sort.equals(ServiceConstant.ASCENDING)) {
-            return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsOrderByNameAsc(
-                    "",
+            return new LinkedHashSet<>(employeeRepository.findAllByUsernameIsNotOrderByNameAsc(
+                    username,
                     PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
         } else if (sort.equals(ServiceConstant.DESCENDING)) {
-            return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsOrderByNameDesc(
-                    "",
+            return new LinkedHashSet<>(employeeRepository.findAllByUsernameIsNotOrderByNameDesc(
+                    username,
                     PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
         }
 
@@ -135,6 +137,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     @Override
     public Set<EmployeeModel> getSortedEmployeesListFromQuery(
+            final String username,
             final int page,
             final String query,
             final String sort
@@ -142,18 +145,21 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         if (page == -1) {
             if (sort.equals(ServiceConstant.ASCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-                        query,
-                        query));
+                return new LinkedHashSet<>(
+                        employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                                query,
+                                query));
             } else if (sort.equals(ServiceConstant.DESCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
-                        query,
-                        query));
+                return new LinkedHashSet<>(
+                        employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                                query,
+                                query));
             }
         } else {
             if (sort.equals(ServiceConstant.ASCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-                        query,
+                return new LinkedHashSet<>(
+                        employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                                query,
                         query,
                         PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
             } else if (sort.equals(ServiceConstant.DESCENDING)) {
@@ -182,13 +188,14 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     @Override
     public int getEmployeesCount(
+            final String username,
             final String query,
             final String sort
     ) {
         if (query == null){
-            return employeeRepository.countAllByUsernameContains("");
+            return employeeRepository.countAllByUsernameIsNot(username);
         } else {
-            return getSortedEmployeesListFromQuery(-1, query, sort).size();
+            return getSortedEmployeesListFromQuery(username,-1, query, sort).size();
         }
     }
 
@@ -322,7 +329,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     /*-------------Save Employee Methods-------------*/
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void saveEmployee(
+    public String saveEmployee(
             final MultipartFile employeePhoto,
             final String username,
             final EmployeeModel employee,
@@ -380,8 +387,6 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             savedEmployee.setJobTitle(employee.getJobTitle());
             savedEmployee.setDivision(employee.getDivision());
             savedEmployee.setLocation(employee.getLocation());
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-            savedEmployee.setPassword(encoder.encode(employee.getPassword()));
 
             EmployeeModel supervisor = employeeRepository.findByUsername(supervisorUsername);
             if (supervisor == null) {
@@ -458,6 +463,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         savedEmployee.setUpdatedBy(username);
 
         employeeRepository.save(savedEmployee);
+
+        return savedEmployee.getUsername();
     }
 
     @Override
