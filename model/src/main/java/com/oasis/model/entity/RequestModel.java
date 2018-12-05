@@ -19,7 +19,7 @@ public class RequestModel extends BaseEntity {
     private String sku;
 
     @Field(RequestFieldName.QUANTITY)
-    private int assetQuantity;
+    private int quantity;
 
     @Field(RequestFieldName.STATUS)
     private String status;

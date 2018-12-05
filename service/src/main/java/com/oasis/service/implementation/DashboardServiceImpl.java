@@ -260,7 +260,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
                     new DashboardRequestUpdateResponse.RequestUpdateModel.Asset(
                             requestUpdate.getSku(),
                             getAssetData(requestUpdate.getSku()).getName(),
-                            requestUpdate.getAssetQuantity()
+                            requestUpdate.getQuantity()
                     );
 
             mappedRequests.add(

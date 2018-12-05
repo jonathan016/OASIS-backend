@@ -8,6 +8,7 @@ public class APIMappingValue {
     public static final String API_ASSET = "/api/assets";
     public static final String API_DASHBOARD = "/api/dashboard";
     public static final String API_EMPLOYEE = "/api/employees";
+    public static final String API_REQUEST = "/api/requests";
 
     public static final String API_LIST = "/list";
     public static final String API_SAVE = "/save";
