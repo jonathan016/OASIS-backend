@@ -490,7 +490,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         }
 
         if (employeeRepository.findByUsername(String.valueOf(username)) != null) {
-            int suffix = employeeRepository.findAllByUsernameContains(String.valueOf(username)).size();
+            int suffix = employeeRepository.findAllByNameEquals(name).size();
             username.append(suffix);
         }
 

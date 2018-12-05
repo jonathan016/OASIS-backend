@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuppressWarnings("Lombok")
-public class EmployeeSaveAddResponse extends NoPagingResponse {
+public class EmployeeSaveAddResponse {
 
     private String username;
 

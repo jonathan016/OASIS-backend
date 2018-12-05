@@ -48,7 +48,7 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
                                                                         String jobTitle, String division,
                                                                         String location);
 
-    List<EmployeeModel> findAllByUsernameContains(String username);
+    List<EmployeeModel> findAllByNameEquals(String name);
 
     void deleteByUsername(String username);
 
