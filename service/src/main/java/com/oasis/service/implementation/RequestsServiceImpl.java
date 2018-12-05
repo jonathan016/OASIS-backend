@@ -33,6 +33,7 @@ public class RequestsServiceImpl implements RequestsServiceApi {
     @Autowired
     private AssetRepository assetRepository;
 
+    /*-------------Requests List Methods-------------*/
     @Override
     public List<RequestModel> getRequestsList(
             final String username,
@@ -225,5 +226,9 @@ public class RequestsServiceImpl implements RequestsServiceApi {
             }
         }
     }
+
+    /*-------------Create Request Methods-------------*/
+
+    /*-------------Update Request Methods-------------*/
 
 }

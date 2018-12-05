@@ -14,7 +14,7 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     int countAllByUsernameContains(String username);
 
-    int countAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCase(String username, String name);
+    List<EmployeeModel> findAllByUsernameIsNotNullOrderByUsernameAsc();
 
     Page<EmployeeModel> findAllByUsernameContainsOrderByNameAsc(String username, Pageable pageable);
 
