@@ -455,6 +455,10 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         if (isAddOperation) {
             savedAsset = asset;
 
+            if (photos.isEmpty()){
+                throw new BadRequestException(MISSING_ASSET_IMAGE);
+            }
+
             if (assetRepository.existsAssetModelByNameAndBrandAndType(
                     savedAsset.getName(), savedAsset.getBrand(), savedAsset.getType()
             )) {
@@ -484,10 +488,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             savedAsset.setLocation(asset.getLocation());
         }
 
-        //TODO throw real exception
-        if (photos.size() == 0){
-            throw new BadRequestException(MISSING_ASSET_IMAGE);
-        } else {
+        if (!photos.isEmpty()){
             boolean rootDirectoryCreated;
 
             if (!Files.exists(Paths.get(ServiceConstant.ASSET_IMAGE_DIRECTORY))) {

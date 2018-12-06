@@ -115,8 +115,8 @@ public class EmployeesController {
     @PostMapping(value = APIMappingValue.API_SAVE_EMPLOYEE,
                  produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity saveEmployee(
-            @RequestParam("photo") MultipartFile photo,
-            @RequestParam("data") final String rawEmployeeData
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
+            @RequestParam(value = "data") final String rawEmployeeData
     ) {
 
         String adminUsername;

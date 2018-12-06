@@ -348,6 +348,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                 throw new BadRequestException(USER_NOT_FOUND);
             }
 
+            if (employeePhoto == null){
+                throw new BadRequestException(MISSING_ASSET_IMAGE);
+            }
+
             savedEmployee = employee;
 
             if (employeeRepository.existsByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
@@ -420,9 +424,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             }
         }
 
-        if (employeePhoto == null){
-            throw new BadRequestException(MISSING_ASSET_IMAGE);
-        } else {
+        if (employeePhoto != null){
             boolean rootDirectoryCreated;
 
             if (!Files.exists(Paths.get(ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY))) {
