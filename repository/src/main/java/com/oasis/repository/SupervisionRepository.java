@@ -19,4 +19,7 @@ public interface SupervisionRepository extends MongoRepository<SupervisionModel,
 
     boolean existsSupervisionModelsBySupervisorUsername(String supervisorUsername);
 
+    boolean existsSupervisionModelBySupervisorUsernameAndEmployeeUsername(String supervisorUsername,
+                                                                          String employeeUsername);
+
 }

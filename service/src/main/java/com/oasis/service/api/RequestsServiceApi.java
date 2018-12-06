@@ -2,6 +2,7 @@ package com.oasis.service.api;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
@@ -34,5 +35,10 @@ public interface RequestsServiceApi {
             final String username,
             final String photoDirectory
     );
+
+    void saveRequests(
+            final String username,
+            final List<RequestModel> requests
+    ) throws DataNotFoundException, BadRequestException;
 
 }

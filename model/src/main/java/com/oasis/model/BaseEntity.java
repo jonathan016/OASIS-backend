@@ -11,7 +11,6 @@ import java.util.Date;
 public class BaseEntity {
 
     @Id
-    @Setter(AccessLevel.PRIVATE)
     private String _id;
 
     private Date createdDate;

@@ -52,4 +52,6 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     void deleteByUsername(String username);
 
+    boolean existsEmployeeModelByUsername(String username);
+
 }

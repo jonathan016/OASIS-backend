@@ -611,7 +611,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (supervisionRepository.existsSupervisionModelsBySupervisorUsername(employeeUsername))
             throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT);
 
-        if (!requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.PENDING_RETURN).isEmpty())
+        if (!requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.DELIVERED).isEmpty())
             throw new UnauthorizedOperationException(UNRETURNED_ASSETS_ON_DELETION_ATTEMPT);
 
         if (!supervisionRepository.existsByEmployeeUsername(employeeUsername))
@@ -619,7 +619,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         List<RequestModel> requests = new ArrayList<>();
         requests.addAll(requestRepository.findAllByUsernameAndStatus(employeeUsername,
-                                                                ServiceConstant.PENDING_HANDOVER));
+                                                                ServiceConstant.ACCEPTED
+        ));
         requests.addAll(requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.REQUESTED));
         if (!requests.isEmpty()) {
             for (RequestModel employeeRequest : requests) {

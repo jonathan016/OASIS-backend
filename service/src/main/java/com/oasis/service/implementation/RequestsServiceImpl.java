@@ -2,12 +2,12 @@ package com.oasis.service.implementation;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.exception.helper.BaseError;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
-import com.oasis.repository.AssetRepository;
-import com.oasis.repository.EmployeeRepository;
-import com.oasis.repository.RequestRepository;
+import com.oasis.repository.*;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.RequestsServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +17,10 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.ASSET_NOT_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.EMPTY_SEARCH_QUERY;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
 @Service
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
@@ -32,6 +32,10 @@ public class RequestsServiceImpl implements RequestsServiceApi {
     private EmployeeRepository employeeRepository;
     @Autowired
     private AssetRepository assetRepository;
+    @Autowired
+    private SupervisionRepository supervisionRepository;
+    @Autowired
+    private AdminRepository adminRepository;
 
     /*-------------Requests List Methods-------------*/
     @Override
@@ -227,8 +231,241 @@ public class RequestsServiceImpl implements RequestsServiceApi {
         }
     }
 
-    /*-------------Create Request Methods-------------*/
+    /*-------------Save Request Methods-------------*/
+    @Override
+    public void saveRequests(
+            final String username,
+            final List<RequestModel> requests
+    ) throws DataNotFoundException, BadRequestException {
 
-    /*-------------Update Request Methods-------------*/
+        if (!employeeRepository.existsEmployeeModelByUsername(username)) {
+            throw new DataNotFoundException(USER_NOT_FOUND);
+        }
+
+        if (requests.isEmpty()) {
+            throw new BadRequestException(NO_ASSET_SELECTED);
+        }
+
+        for (RequestModel request : requests) {
+            if (!assetRepository.existsAssetModelBySku(request.getSku())) {
+                throw new DataNotFoundException(ASSET_NOT_FOUND);
+            }
+
+            if (assetRepository.findBySku(request.getSku()).getStock() - request.getQuantity() < 0) {
+                throw new BadRequestException(ASSET_NOT_FOUND);
+            }
+        }
+
+        if (requests.size() > 1 && requests.stream().anyMatch(requestModel -> requestModel.get_id() != null)) {
+            throw new BadRequestException(ASSET_NOT_FOUND);
+        }
+
+        for (RequestModel request : requests) {
+            RequestModel savedRequest;
+            if (request.get_id() == null) {
+                savedRequest = request;
+
+                savedRequest.setStatus(ServiceConstant.REQUESTED);
+                savedRequest.setTransactionNote(null);
+                savedRequest.setCreatedBy(username);
+                savedRequest.setCreatedDate(new Date());
+            } else {
+                savedRequest = requestRepository.findBy_id(request.get_id());
+
+                if (savedRequest == null || request.getStatus() == null) {
+                    throw new DataNotFoundException(new BaseError(
+                            "1","1"
+                    ));
+                } else {
+                    if (!employeeRepository.existsEmployeeModelByUsername(request.getUsername())) {
+                        throw new DataNotFoundException(USER_NOT_FOUND);
+                    }
+
+                    boolean usernameIsAdmin = adminRepository.existsAdminModelByUsername(username);
+                    boolean supervisorIsValid = supervisionRepository.existsSupervisionModelBySupervisorUsernameAndEmployeeUsername(
+                            username,
+                            savedRequest.getUsername()
+                    );
+                    boolean usernameIsAdminOrSupervisor = usernameIsAdmin || supervisorIsValid;
+
+                    boolean requestStatusIsRequested = savedRequest.getStatus().equals(ServiceConstant.REQUESTED);
+                    boolean requestStatusIsAccepted = savedRequest.getStatus().equals(ServiceConstant.ACCEPTED);
+                    boolean requestStatusIsDelivered = savedRequest.getStatus().equals(ServiceConstant.DELIVERED);
+
+                    boolean newRequestStatusIsCancelled = request.getStatus().equals(ServiceConstant.CANCELLED);
+                    boolean newRequestStatusIsAccepted = request.getStatus().equals(ServiceConstant.ACCEPTED);
+                    boolean newRequestStatusIsRejected = request.getStatus().equals(ServiceConstant.REJECTED);
+                    boolean newRequestStatusIsDelivered = request.getStatus().equals(ServiceConstant.DELIVERED);
+                    boolean newRequestStatusIsReturned = request.getStatus().equals(ServiceConstant.RETURNED);
+
+                    boolean expendableAsset = assetRepository.findBySku(savedRequest.getSku()).isExpendable();
+
+                    boolean usernameIsRequester = request.getUsername().equals(savedRequest.getUsername());
+
+                    boolean requestedToCancelled = requestStatusIsRequested && newRequestStatusIsCancelled;
+                    boolean requestedToAccepted = requestStatusIsRequested && newRequestStatusIsAccepted;
+                    boolean requestedToRejected = requestStatusIsRequested && newRequestStatusIsRejected;
+                    boolean acceptedToDelivered = requestStatusIsAccepted && newRequestStatusIsDelivered;
+                    boolean deliveredToReturned = requestStatusIsDelivered && newRequestStatusIsReturned;
+
+                    /*
+                    Cancel hanya diri sendiri
+                        Request username dan username ga sama		DONE
+                        Banyak yang dilempar buat cancel    		DONE
+                        Status bukan cancel				            DONE
+                    Accept/reject hanya supervisor/admin
+                        Supervisor bukan supervisor dari username	DONE
+                        Non supervisor/admin accept/reject		    DONE
+                        Status bukan accept/reject			        DONE
+                        Banyak yang dilempar buat accept/reject		DONE
+                        Self accept/reject				            DONE
+                    Deliver hanya admin
+                        Non admin deliver				            DONE
+                        Status bukan deliver				        DONE
+                        Banyak yang dilempar buat deliver		    DONE
+                        Self deliver					            DONE
+                    Return hanya admin
+                        Non admin return				            DONE
+                        Status bukan return				            DONE
+                        Banyak yang dilempar buat return		    DONE
+                        Self return					                DONE
+                     */
+
+                    if (!usernameIsAdminOrSupervisor && !usernameIsRequester) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "2", "2"
+                                )
+                        );
+                    }
+
+                    if (usernameIsRequester && !usernameIsAdminOrSupervisor && !requestedToCancelled) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "3", "3"
+                                )
+                        );
+                    }
+
+                    if (usernameIsRequester && usernameIsAdmin && !requestedToCancelled) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "4", "4"
+                                )
+                        );
+                    }
+
+                    if (requestedToCancelled && !usernameIsRequester) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "5", "5"
+                                )
+                        );
+                    }
+
+                    if (!usernameIsAdmin && acceptedToDelivered) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "6", "6"
+                                )
+                        );
+                    }
+
+                    if (!usernameIsAdminOrSupervisor && (requestedToAccepted || requestedToRejected)) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "7", "7"
+                                )
+                        );
+                    }
+
+                    if (usernameIsRequester && !requestedToCancelled) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "8", "8"
+                                )
+                        );
+                    }
+
+                    if (!usernameIsAdminOrSupervisor && (newRequestStatusIsDelivered || newRequestStatusIsReturned)) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "9", "9"
+                                )
+                        );
+                    }
+
+                    if (!requestedToCancelled && !requestedToAccepted && !requestedToRejected && !acceptedToDelivered && !deliveredToReturned) {
+                        throw new BadRequestException(
+                                new BaseError(
+                                        "10", "10"
+                                )
+                        );
+                    }
+
+                    boolean allowedToCancelRequest = usernameIsRequester && requestedToCancelled;
+
+                    boolean allowedToAcceptOrRejectRequest = usernameIsAdminOrSupervisor && requestStatusIsRequested &&
+                                                             (newRequestStatusIsAccepted || newRequestStatusIsRejected);
+
+                    boolean allowedToDeliverAsset = usernameIsAdmin && acceptedToDelivered;
+
+                    boolean assetReturned = (expendableAsset && allowedToDeliverAsset) ||
+                                            (usernameIsAdmin && deliveredToReturned);
+
+                    if (allowedToCancelRequest) {
+                        savedRequest.setStatus(ServiceConstant.CANCELLED);
+                    }
+
+                    if (allowedToAcceptOrRejectRequest) {
+                        savedRequest.setStatus(request.getStatus());
+
+                        if (requestedToAccepted) {
+                            if (assetRepository.findBySku(savedRequest.getSku()).getStock() - savedRequest.getQuantity() < 0) {
+                                throw new BadRequestException(ASSET_NOT_FOUND);
+                            }
+
+                            // TODO Handle concurrency!
+                            AssetModel asset = assetRepository.findBySku(savedRequest.getSku());
+                            asset.setStock(
+                                    assetRepository.findBySku(savedRequest.getSku()).getStock()
+                                    -
+                                    savedRequest.getQuantity()
+                            );
+
+                            assetRepository.save(asset);
+                        }
+
+                        if (requestedToRejected) {
+                            savedRequest.setTransactionNote(request.getTransactionNote());
+                        }
+                    }
+
+                    if (allowedToDeliverAsset) {
+                        savedRequest.setStatus(ServiceConstant.DELIVERED);
+                    }
+
+                    if (assetReturned) {
+                        // TODO Handle concurrency!
+                        AssetModel asset = assetRepository.findBySku(savedRequest.getSku());
+                        asset.setStock(
+                                assetRepository.findBySku(savedRequest.getSku()).getStock()
+                                +
+                                savedRequest.getQuantity()
+                        );
+
+                        assetRepository.save(asset);
+
+                        savedRequest.setStatus(ServiceConstant.RETURNED);
+                    }
+                }
+            }
+            savedRequest.setUpdatedBy(username);
+            savedRequest.setUpdatedDate(new Date());
+
+            requestRepository.save(savedRequest);
+        }
+
+    }
 
 }

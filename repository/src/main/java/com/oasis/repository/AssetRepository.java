@@ -45,4 +45,6 @@ public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
     boolean existsAssetModelByNameAndBrandAndType(String name, String brand, String type);
 
+    boolean existsAssetModelBySku(String sku);
+
 }

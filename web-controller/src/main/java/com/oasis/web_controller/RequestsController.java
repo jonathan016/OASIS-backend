@@ -2,13 +2,16 @@ package com.oasis.web_controller;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
+import com.oasis.request_mapper.RequestsRequestMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.response_mapper.RequestsResponseMapper;
 import com.oasis.service.implementation.RequestsServiceImpl;
 import com.oasis.web_model.constant.APIMappingValue;
+import com.oasis.web_model.request.requests.SaveRequestRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,6 +32,8 @@ public class RequestsController {
     private RequestsResponseMapper requestsResponseMapper;
     @Autowired
     private FailedResponseMapper failedResponseMapper;
+    @Autowired
+    private RequestsRequestMapper requestsRequestMapper;
 
     @GetMapping(value = APIMappingValue.API_LIST, produces = MediaType.APPLICATION_JSON_VALUE,
                 consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -77,6 +82,42 @@ public class RequestsController {
                 ),
                 HttpStatus.OK
         );
+
+    }
+
+    @PostMapping(value = APIMappingValue.API_SAVE, produces = MediaType.APPLICATION_JSON_VALUE,
+                 consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity saveRequest(
+            @RequestBody final SaveRequestRequest request
+    ) {
+
+        List<RequestModel> requests = requestsRequestMapper.getRequestsListFromRequest(request);
+
+        try {
+            requestsServiceImpl.saveRequests(request.getUsername(), requests);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(
+                    failedResponseMapper.produceFailedResult(
+                            HttpStatus.NOT_FOUND.value(),
+                            dataNotFoundException.getErrorCode(),
+                            dataNotFoundException.getErrorMessage()
+                    ),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(
+                    failedResponseMapper.produceFailedResult(
+                            HttpStatus.BAD_REQUEST.value(),
+                            badRequestException.getErrorCode(),
+                            badRequestException.getErrorMessage()
+                    ),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        return new ResponseEntity<>(requestsResponseMapper.produceRequestSaveSuccessResult(
+                HttpStatus.CREATED.value()
+        ), HttpStatus.CREATED);
 
     }
 

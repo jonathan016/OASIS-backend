@@ -43,7 +43,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     @Override
     public List<RequestModel> getMyPendingHandoverRequests(final String username) {
 
-        return requestRepository.findAllByUsernameAndStatus(username, ServiceConstant.PENDING_HANDOVER);
+        return requestRepository.findAllByUsernameAndStatus(username, ServiceConstant.ACCEPTED);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
 
         List<String> supervisedEmployeeUsernameList = getSupervisedEmployeeUsernameList(username);
 
-        return getRequestsList(ServiceConstant.PENDING_HANDOVER, supervisedEmployeeUsernameList);
+        return getRequestsList(ServiceConstant.ACCEPTED, supervisedEmployeeUsernameList);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
             boolean isAdminOrSuperior = supervisionRepository.existsSupervisionModelsBySupervisorUsername(supervisedEmployeeUsername);
 
             if (isAdminOrSuperior) {
-                if (requestStatus.equals(ServiceConstant.PENDING_HANDOVER)) {
+                if (requestStatus.equals(ServiceConstant.ACCEPTED)) {
                     assignedRequests.addAll(
                             getOthersPendingHandoverRequests(supervisedEmployeeUsername));
                 } else if (requestStatus.equals(ServiceConstant.REQUESTED)) {

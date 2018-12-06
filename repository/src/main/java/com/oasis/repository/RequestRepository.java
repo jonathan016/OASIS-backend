@@ -51,4 +51,6 @@ public interface RequestRepository extends MongoRepository<RequestModel, String>
             Pageable pageable
     );
 
+    RequestModel findBy_id(String _id);
+
 }

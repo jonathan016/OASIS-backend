@@ -5,6 +5,7 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.service.ServiceConstant;
 import com.oasis.web_model.constant.ResponseStatus;
+import com.oasis.web_model.response.BaseResponse;
 import com.oasis.web_model.response.Paging;
 import com.oasis.web_model.response.PagingResponse;
 import com.oasis.web_model.response.success.requests.RequestListResponse;
@@ -72,6 +73,17 @@ public class RequestsResponseMapper {
                         totalRecords
                 )
         );
+
+        return successResponse;
+    }
+
+    public BaseResponse
+    produceRequestSaveSuccessResult(final int httpStatusCode) {
+
+        BaseResponse successResponse = new BaseResponse();
+
+        successResponse.setCode(httpStatusCode);
+        successResponse.setSuccess(ResponseStatus.SUCCESS);
 
         return successResponse;
     }
