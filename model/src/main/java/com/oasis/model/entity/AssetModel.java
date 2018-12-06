@@ -39,4 +39,7 @@ public class AssetModel extends BaseEntity {
     @Field(AssetFieldName.IMAGE_DIRECTORY)
     private String imageDirectory;
 
+    @Field(AssetFieldName.DELETED)
+    private boolean deleted;
+
 }

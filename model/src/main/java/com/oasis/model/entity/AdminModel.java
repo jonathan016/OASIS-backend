@@ -17,5 +17,8 @@ public class AdminModel extends BaseEntity {
 
     @Field(AdminFieldName.PASSWORD)
     private String password;
+
+    @Field(AdminFieldName.DELETED)
+    private boolean deleted;
     
 }

@@ -11,5 +11,6 @@ public class AssetFieldName {
     public static final String TYPE = "type";
     public static final String EXPENDABLE = "expendable";
     public static final String IMAGE_DIRECTORY = "imageDirectory";
+    public static final String DELETED = "deleted";
 
 }

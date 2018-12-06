@@ -9,11 +9,11 @@ import java.util.List;
 @Repository
 public interface SupervisionRepository extends MongoRepository<SupervisionModel, String> {
 
+    SupervisionModel findBy_id(String _id);
+
     List<SupervisionModel> findAllBySupervisorUsername(String supervisorUsername);
 
     SupervisionModel findByEmployeeUsername(String employeeUsername);
-
-    void deleteByEmployeeUsername(String employeeUsername);
 
     boolean existsByEmployeeUsername(String employeeUsername);
 

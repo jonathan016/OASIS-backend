@@ -22,6 +22,8 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     EmployeeModel findByUsername(String username);
 
+    long countAllByUsernameStartsWith(String username);
+
     Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
             String username,
             String name,
@@ -49,8 +51,6 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
                                                                         String location);
 
     List<EmployeeModel> findAllByNameEquals(String name);
-
-    void deleteByUsername(String username);
 
     boolean existsEmployeeModelByUsername(String username);
 

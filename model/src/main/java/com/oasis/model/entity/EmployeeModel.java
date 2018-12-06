@@ -3,9 +3,10 @@ package com.oasis.model.entity;
 import com.oasis.model.BaseEntity;
 import com.oasis.model.CollectionName;
 import com.oasis.model.fieldname.EmployeeFieldName;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -46,5 +47,8 @@ public class EmployeeModel extends BaseEntity {
 
     @Field(EmployeeFieldName.SUPERVISION_ID)
     private String supervisionId;
+
+    @Field(EmployeeFieldName.DELETED)
+    private boolean deleted;
 
 }

@@ -470,6 +470,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                                 asset.getBrand(),
                                 asset.getType()
                         ));
+                savedAsset.setDeleted(false);
                 savedAsset.setCreatedBy(username);
                 savedAsset.setCreatedDate(new Date());
             }
@@ -659,17 +660,10 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         for (AssetModel selectedAsset : selectedAssets) {
-
-            //TODO fix bug not deleting folder
-            File folder =
-                    new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(selectedAsset.getSku()));
-            for (File image : requireNonNull(folder.listFiles())){
-                image.delete();
-            }
-            folder.delete();
-
-            assetRepository.delete(selectedAsset);
+            selectedAsset.setDeleted(true);
         }
+
+        assetRepository.saveAll(selectedAssets);
     }
 
 }

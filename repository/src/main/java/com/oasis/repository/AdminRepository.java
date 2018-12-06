@@ -9,8 +9,6 @@ public interface AdminRepository extends MongoRepository<AdminModel, String> {
 
     AdminModel findByUsername(String username);
 
-    void deleteByUsername(String username);
-
     boolean existsAdminModelByUsername(String username);
 
 }

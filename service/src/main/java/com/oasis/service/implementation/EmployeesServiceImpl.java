@@ -376,6 +376,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                         supervisorUsername,
                         username)
                 );
+                savedEmployee.setDeleted(false);
                 savedEmployee.setCreatedBy(username);
                 savedEmployee.setCreatedDate(new Date());
             }
@@ -414,6 +415,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
                     promotedAdmin.setUsername(supervisor.getUsername());
                     promotedAdmin.setPassword(supervisor.getPassword());
+                    promotedAdmin.setDeleted(false);
                     promotedAdmin.setCreatedDate(new Date());
                     promotedAdmin.setCreatedBy(username);
                     promotedAdmin.setUpdatedDate(new Date());
@@ -434,11 +436,11 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             }
 
             if(rootDirectoryCreated){
-                Path photoDir = Paths.get(ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator).concat(savedEmployee.getUsername()));
-
-                if (!isAddOperation && Files.exists(photoDir)) {
-                    File photo = new File(savedEmployee.getPhoto());
-                    photo.delete();
+                if (!isAddOperation) {
+                    if (Files.exists(Paths.get(savedEmployee.getPhoto()))) {
+                        File photo = new File(savedEmployee.getPhoto());
+                        photo.delete();
+                    }
                 }
 
                 StringBuilder extensionBuilder = new StringBuilder();
@@ -491,8 +493,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             username.append(name);
         }
 
-        if (employeeRepository.findByUsername(String.valueOf(username)) != null) {
-            int suffix = employeeRepository.findAllByNameEquals(name).size();
+        if (employeeRepository.countAllByUsernameStartsWith(String.valueOf(username)) != 0) {
+            long suffix = employeeRepository.countAllByUsernameStartsWith(String.valueOf(username));
             username.append(suffix);
         }
 
@@ -634,12 +636,22 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             }
         }
 
-        if (adminRepository.findByUsername(employeeUsername) != null)
-            adminRepository.deleteByUsername(employeeUsername);
+        if (adminRepository.findByUsername(employeeUsername) != null) {
+            AdminModel admin = adminRepository.findByUsername(employeeUsername);
+            admin.setDeleted(true);
 
-        employeeRepository.deleteByUsername(employeeUsername);
+            adminRepository.save(admin);
+        }
 
-        supervisionRepository.deleteByEmployeeUsername(employeeUsername);
+        EmployeeModel employee = employeeRepository.findByUsername(employeeUsername);
+        employee.setDeleted(true);
+
+        employeeRepository.save(employee);
+
+        SupervisionModel supervision = supervisionRepository.findByEmployeeUsername(employeeUsername);
+        supervision.setDeleted(true);
+
+        supervisionRepository.save(supervision);
     }
 
     @Override

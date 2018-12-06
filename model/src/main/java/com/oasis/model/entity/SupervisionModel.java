@@ -18,4 +18,7 @@ public class SupervisionModel extends BaseEntity {
     @Field(SupervisionFieldName.EMPLOYEE_USERNAME)
     private String employeeUsername;
 
+    @Field(SupervisionFieldName.DELETED)
+    private boolean deleted;
+
 }

@@ -12,5 +12,6 @@ public class EmployeeFieldName {
     public static final String DIVISION = "division";
     public static final String LOCATION = "location";
     public static final String SUPERVISION_ID = "supervisionId";
+    public static final String DELETED = "deleted";
 
 }
