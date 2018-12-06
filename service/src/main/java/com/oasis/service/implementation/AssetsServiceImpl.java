@@ -64,7 +64,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         }
 
         if (query == null){
-            int foundDataSize = assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
+            int foundDataSize = assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
 
             if (page < 1 || foundDataSize == 0 ||
                 (int) Math.ceil((double) getAvailableAssetsCount(query, sort)
@@ -124,19 +124,19 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
         if (sort.substring(2).equals("SKU")) {
             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
-                sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuAsc(stockLimit,
-                                                                                                    PageRequest.of(page - 1, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
+                sortedAvailableAssets.addAll(assetRepository.findAllByDeletedIsFalseAndStockGreaterThanOrderBySkuAsc(stockLimit,
+                                                                                                                     PageRequest.of(page - 1, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
             } else {
-                sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderBySkuDesc(stockLimit,
-                                                                                                    PageRequest.of(page - 1, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
+                sortedAvailableAssets.addAll(assetRepository.findAllByDeletedIsFalseAndStockGreaterThanOrderBySkuDesc(stockLimit,
+                                                                                                                      PageRequest.of(page - 1, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
             }
         } else if (sort.substring(2).equals("name")) {
             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
-                sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderByNameAsc(stockLimit,
-                                                                                                    PageRequest.of(page - 1, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
+                sortedAvailableAssets.addAll(assetRepository.findAllByDeletedIsFalseAndStockGreaterThanOrderByNameAsc(stockLimit,
+                                                                                                                      PageRequest.of(page - 1, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
             } else {
-                sortedAvailableAssets.addAll(assetRepository.findAllByStockGreaterThanOrderByNameDesc(stockLimit,
-                                                                                                    PageRequest.of(page - 1, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
+                sortedAvailableAssets.addAll(assetRepository.findAllByDeletedIsFalseAndStockGreaterThanOrderByNameDesc(stockLimit,
+                                                                                                                       PageRequest.of(page - 1, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
             }
         }
 
@@ -157,24 +157,24 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             if (sort.substring(2).equals("SKU")) {
                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
+                            assetRepository.findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
                                     stockLimit, query, query));
                 } else if (sort.substring(0, 1).equals(ServiceConstant.DESCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
+                            assetRepository.findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
                                     stockLimit, query, query));
                 }
             } else if (sort.substring(2).equals("name")) {
                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                     sortedAvailableAssets.addAll(
                             assetRepository
-                                    .findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                                    .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
                                             stockLimit, query, query));
                 } else if (sort.substring(0, 1)
                                .equals(ServiceConstant.DESCENDING)) {
                     sortedAvailableAssets.addAll(
                             assetRepository
-                                    .findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                                    .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
                                             stockLimit, query,
                                             query
                                     )
@@ -185,25 +185,25 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             if (sort.substring(2).equals("SKU")) {
                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
+                            assetRepository.findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
                                     stockLimit, query, query, PageRequest.of(page - 1,
                                                                  ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
                 } else if (sort.substring(0, 1).equals(ServiceConstant.DESCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
+                            assetRepository.findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
                                     stockLimit, query, query, PageRequest.of(page - 1,
                                                                  ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
                 }
             } else if (sort.substring(2).equals("name")) {
                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                            assetRepository.findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
                                     stockLimit, query, query, PageRequest.of(page - 1,
                                                                  ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
                 } else if (sort.substring(0, 1)
                                .equals(ServiceConstant.DESCENDING)) {
                     sortedAvailableAssets.addAll(
-                            assetRepository.findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                            assetRepository.findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
                                     stockLimit, query, query, PageRequest.of(page - 1,
                                                                  ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE)).getContent());
                 }
@@ -219,7 +219,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
             final String sort
     ) {
         if (query == null){
-            return assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
+            return assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
         } else {
             return getSortedAvailableAssetsFromQuery(-1, query, sort, ServiceConstant.ZERO).size();
         }
@@ -231,7 +231,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     )
             throws DataNotFoundException {
 
-        AssetModel assetDetailData = assetRepository.findBySku(sku);
+        AssetModel assetDetailData = assetRepository.findByDeletedIsFalseAndSkuEquals(sku);
 
         if (assetDetailData == null) {
             throw new DataNotFoundException(ASSET_NOT_FOUND);
@@ -282,7 +282,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
     )
             throws DataNotFoundException {
 
-        AssetModel asset = assetRepository.findBySku(sku);
+        AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(sku);
 
         //TODO remove throw, replace with return new byte[0]
         if (asset == null) {
@@ -418,7 +418,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
 
         //TODO add validation asset with SKU exists
         File file =
-                new File(assetRepository.findBySku(sku).getImageDirectory().concat(File.separator).concat(imageName).concat(".").concat(extension));
+                new File(assetRepository.findByDeletedIsFalseAndSkuEquals(sku).getImageDirectory().concat(File.separator).concat(imageName).concat(".").concat(extension));
 
         if (!file.exists()) {
             file = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator).concat("image_not_found.jpeg"));
@@ -459,7 +459,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 throw new BadRequestException(MISSING_ASSET_IMAGE);
             }
 
-            if (assetRepository.existsAssetModelByNameAndBrandAndType(
+            if (assetRepository.existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(
                     savedAsset.getName(), savedAsset.getBrand(), savedAsset.getType()
             )) {
                 throw new DuplicateDataException(DUPLICATE_ASSET_DATA_FOUND);
@@ -475,7 +475,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 savedAsset.setCreatedDate(new Date());
             }
         } else {
-            savedAsset = assetRepository.findBySku(asset.getSku());
+            savedAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(asset.getSku());
 
             if (savedAsset == null)
                 throw new DataNotFoundException(ASSET_NOT_FOUND);
@@ -648,7 +648,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
         List<AssetModel> selectedAssets = new ArrayList<>();
 
         for (String sku : skus) {
-            if (assetRepository.findBySku(sku) == null) {
+            if (assetRepository.findByDeletedIsFalseAndSkuEquals(sku) == null) {
                 throw new DataNotFoundException(ASSET_NOT_FOUND);
             }
 
@@ -656,7 +656,7 @@ public class AssetsServiceImpl implements AssetsServiceApi {
                 throw new BadRequestException(SELECTED_ASSET_STILL_REQUESTED);
             }
 
-            selectedAssets.add(assetRepository.findBySku(sku));
+            selectedAssets.add(assetRepository.findByDeletedIsFalseAndSkuEquals(sku));
         }
 
         for (AssetModel selectedAsset : selectedAssets) {

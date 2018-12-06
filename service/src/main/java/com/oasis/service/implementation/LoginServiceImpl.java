@@ -33,9 +33,9 @@ public class LoginServiceImpl implements LoginServiceApi {
         EmployeeModel result;
 
         if (username.contains("@")) {
-            result = employeeRepository.findByUsername(username.substring(0, username.indexOf('@')));
+            result = employeeRepository.findByDeletedIsFalseAndUsername(username.substring(0, username.indexOf('@')));
         } else {
-            result = employeeRepository.findByUsername(username);
+            result = employeeRepository.findByDeletedIsFalseAndUsername(username);
         }
 
         if (result == null) {

@@ -9,17 +9,15 @@ import java.util.List;
 @Repository
 public interface SupervisionRepository extends MongoRepository<SupervisionModel, String> {
 
-    SupervisionModel findBy_id(String _id);
+    List<SupervisionModel> findAllByDeletedIsFalseAndSupervisorUsername(String supervisorUsername);
 
-    List<SupervisionModel> findAllBySupervisorUsername(String supervisorUsername);
+    SupervisionModel findByDeletedIsFalseAndEmployeeUsername(String employeeUsername);
 
-    SupervisionModel findByEmployeeUsername(String employeeUsername);
+    boolean existsByDeletedIsFalseAndEmployeeUsername(String employeeUsername);
 
-    boolean existsByEmployeeUsername(String employeeUsername);
+    boolean existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(String supervisorUsername);
 
-    boolean existsSupervisionModelsBySupervisorUsername(String supervisorUsername);
-
-    boolean existsSupervisionModelBySupervisorUsernameAndEmployeeUsername(String supervisorUsername,
-                                                                          String employeeUsername);
+    boolean existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(String supervisorUsername,
+                                                                                           String employeeUsername);
 
 }

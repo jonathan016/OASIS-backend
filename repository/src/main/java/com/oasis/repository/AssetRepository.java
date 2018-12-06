@@ -11,40 +11,40 @@ import java.util.List;
 @Repository
 public interface AssetRepository extends MongoRepository<AssetModel, String> {
 
-    AssetModel findBySku(String sku);
+    AssetModel findByDeletedIsFalseAndSkuEquals(String sku);
 
-    int countAllByStockGreaterThan(long stockLimit);
+    int countAllByDeletedIsFalseAndStockGreaterThan(long stockLimit);
 
-    Page<AssetModel> findAllByStockGreaterThanOrderBySkuAsc(long stockLimit, Pageable pageable);
+    Page<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanOrderBySkuAsc(long stockLimit, Pageable pageable);
 
-    Page<AssetModel> findAllByStockGreaterThanOrderBySkuDesc(long stockLimit, Pageable pageable);
+    Page<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanOrderBySkuDesc(long stockLimit, Pageable pageable);
 
-    Page<AssetModel> findAllByStockGreaterThanOrderByNameAsc(long stockLimit, Pageable pageable);
+    Page<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanOrderByNameAsc(long stockLimit, Pageable pageable);
 
-    Page<AssetModel> findAllByStockGreaterThanOrderByNameDesc(long stockLimit, Pageable pageable);
+    Page<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanOrderByNameDesc(long stockLimit, Pageable pageable);
 
-    Page<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(long stockLimit, String sku, String name,
-                                                                                                            Pageable pageable);
+    Page<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(long stockLimit, String sku, String name,
+                                                                                                                             Pageable pageable);
 
-    Page<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(long stockLimit, String sku, String name,
-                                                                                                             Pageable pageable);
+    Page<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(long stockLimit, String sku, String name,
+                                                                                                                              Pageable pageable);
 
-    Page<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(long stockLimit, String sku, String name,
-                                                                                                             Pageable pageable);
+    Page<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(long stockLimit, String sku, String name,
+                                                                                                                              Pageable pageable);
 
-    Page<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(long stockLimit, String sku, String name,
-                                                                                                              Pageable pageable);
+    Page<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(long stockLimit, String sku, String name,
+                                                                                                                               Pageable pageable);
 
-    List<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(long stockLimit, String sku, String name);
+    List<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(long stockLimit, String sku, String name);
 
-    List<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(long stockLimit, String sku, String name);
+    List<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(long stockLimit, String sku, String name);
 
-    List<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(long stockLimit, String sku, String name);
+    List<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(long stockLimit, String sku, String name);
 
-    List<AssetModel> findAllByStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(long stockLimit, String sku, String name);
+    List<AssetModel> findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(long stockLimit, String sku, String name);
 
-    boolean existsAssetModelByNameAndBrandAndType(String name, String brand, String type);
+    boolean existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(String name, String brand, String type);
 
-    boolean existsAssetModelBySku(String sku);
+    boolean existsAssetModelByDeletedIsFalseAndSkuEquals(String sku);
 
 }

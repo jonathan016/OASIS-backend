@@ -78,7 +78,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
     public List<String> getSupervisedEmployeeUsernameList(final String username) {
 
         List<SupervisionModel> supervisions =
-                supervisionRepository.findAllBySupervisorUsername(username);
+                supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(username);
 
         List<String> supervisedEmployeeUsernameList = new ArrayList<>();
 
@@ -102,7 +102,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
                                                             requestStatus
                     ));
 
-            boolean isAdminOrSuperior = supervisionRepository.existsSupervisionModelsBySupervisorUsername(supervisedEmployeeUsername);
+            boolean isAdminOrSuperior = supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(supervisedEmployeeUsername);
 
             if (isAdminOrSuperior) {
                 if (requestStatus.equals(ServiceConstant.ACCEPTED)) {
@@ -126,7 +126,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
             throw new BadRequestException(EMPTY_EMPLOYEE_NIK);
         }
 
-        int availableAssetCount = assetRepository.countAllByStockGreaterThan(ServiceConstant.ZERO);
+        int availableAssetCount = assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
 
         List<RequestModel> requestedRequests = new ArrayList<>();
         List<RequestModel> pendingHandoverRequests = new ArrayList<>();
@@ -159,7 +159,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
             final String sku
     ) {
 
-        return assetRepository.findBySku(sku);
+        return assetRepository.findByDeletedIsFalseAndSkuEquals(sku);
     }
 
     @Override
@@ -167,7 +167,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
             final String username
     ) {
 
-        return employeeRepository.findByUsername(username);
+        return employeeRepository.findByDeletedIsFalseAndUsername(username);
     }
 
     @Override
@@ -175,7 +175,7 @@ public class DashboardServiceImpl implements DashboardServiceApi {
             final String username
     ) {
 
-        return supervisionRepository.findByEmployeeUsername(username);
+        return supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(username);
     }
 
     @Override

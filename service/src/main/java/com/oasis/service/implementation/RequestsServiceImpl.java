@@ -2,7 +2,6 @@ package com.oasis.service.implementation;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.exception.helper.BaseError;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
@@ -150,7 +149,7 @@ public class RequestsServiceImpl implements RequestsServiceApi {
 
         List<EmployeeModel> employees = new ArrayList<>();
         for (RequestModel request : requests) {
-            employees.add(employeeRepository.findByUsername(request.getUsername()));
+            employees.add(employeeRepository.findByDeletedIsFalseAndUsername(request.getUsername()));
             employees.get(employees.size() - 1).setPhoto(
                     getEmployeeDetailPhoto(
                             employees.get(employees.size() - 1).getUsername(),
@@ -169,7 +168,7 @@ public class RequestsServiceImpl implements RequestsServiceApi {
 
         List<AssetModel> assets = new ArrayList<>();
         for (RequestModel request : requests) {
-            assets.add(assetRepository.findBySku(request.getSku()));
+            assets.add(assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()));
             assets.get(assets.size() - 1).setStock(
                     request.getQuantity()
             );
@@ -238,7 +237,7 @@ public class RequestsServiceImpl implements RequestsServiceApi {
             final List<RequestModel> requests
     ) throws DataNotFoundException, BadRequestException {
 
-        if (!employeeRepository.existsEmployeeModelByUsername(username)) {
+        if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(username)) {
             throw new DataNotFoundException(USER_NOT_FOUND);
         }
 
@@ -247,11 +246,11 @@ public class RequestsServiceImpl implements RequestsServiceApi {
         }
 
         for (RequestModel request : requests) {
-            if (!assetRepository.existsAssetModelBySku(request.getSku())) {
+            if (!assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(request.getSku())) {
                 throw new DataNotFoundException(ASSET_NOT_FOUND);
             }
 
-            if (assetRepository.findBySku(request.getSku()).getStock() - request.getQuantity() < 0) {
+            if (assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()).getStock() - request.getQuantity() < 0) {
                 throw new BadRequestException(ASSET_NOT_FOUND);
             }
         }
@@ -277,12 +276,12 @@ public class RequestsServiceImpl implements RequestsServiceApi {
                             "1","1"
                     ));
                 } else {
-                    if (!employeeRepository.existsEmployeeModelByUsername(request.getUsername())) {
+                    if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(request.getUsername())) {
                         throw new DataNotFoundException(USER_NOT_FOUND);
                     }
 
-                    boolean usernameIsAdmin = adminRepository.existsAdminModelByUsername(username);
-                    boolean supervisorIsValid = supervisionRepository.existsSupervisionModelBySupervisorUsernameAndEmployeeUsername(
+                    boolean usernameIsAdmin = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
+                    boolean supervisorIsValid = supervisionRepository.existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(
                             username,
                             savedRequest.getUsername()
                     );
@@ -298,7 +297,7 @@ public class RequestsServiceImpl implements RequestsServiceApi {
                     boolean newRequestStatusIsDelivered = request.getStatus().equals(ServiceConstant.DELIVERED);
                     boolean newRequestStatusIsReturned = request.getStatus().equals(ServiceConstant.RETURNED);
 
-                    boolean expendableAsset = assetRepository.findBySku(savedRequest.getSku()).isExpendable();
+                    boolean expendableAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).isExpendable();
 
                     boolean usernameIsRequester = request.getUsername().equals(savedRequest.getUsername());
 
@@ -421,14 +420,14 @@ public class RequestsServiceImpl implements RequestsServiceApi {
                         savedRequest.setStatus(request.getStatus());
 
                         if (requestedToAccepted) {
-                            if (assetRepository.findBySku(savedRequest.getSku()).getStock() - savedRequest.getQuantity() < 0) {
+                            if (assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() - savedRequest.getQuantity() < 0) {
                                 throw new BadRequestException(ASSET_NOT_FOUND);
                             }
 
                             // TODO Handle concurrency!
-                            AssetModel asset = assetRepository.findBySku(savedRequest.getSku());
+                            AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku());
                             asset.setStock(
-                                    assetRepository.findBySku(savedRequest.getSku()).getStock()
+                                    assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock()
                                     -
                                     savedRequest.getQuantity()
                             );
@@ -447,9 +446,9 @@ public class RequestsServiceImpl implements RequestsServiceApi {
 
                     if (assetReturned) {
                         // TODO Handle concurrency!
-                        AssetModel asset = assetRepository.findBySku(savedRequest.getSku());
+                        AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku());
                         asset.setStock(
-                                assetRepository.findBySku(savedRequest.getSku()).getStock()
+                                assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock()
                                 +
                                 savedRequest.getQuantity()
                         );

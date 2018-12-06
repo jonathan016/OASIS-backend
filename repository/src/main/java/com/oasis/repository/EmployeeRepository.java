@@ -12,46 +12,44 @@ import java.util.List;
 @Repository
 public interface EmployeeRepository extends MongoRepository<EmployeeModel, String> {
 
-    int countAllByUsernameIsNot(String username);
+    int countAllByDeletedIsFalseAndUsernameIsNot(String username);
 
-    List<EmployeeModel> findAllByUsernameIsNotNullOrderByUsernameAsc();
+    List<EmployeeModel> findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
 
-    Page<EmployeeModel> findAllByUsernameIsNotOrderByNameAsc(String username, Pageable pageable);
+    Page<EmployeeModel> findAllByDeletedIsFalseAndUsernameIsNotOrderByNameAsc(String username, Pageable pageable);
 
-    Page<EmployeeModel> findAllByUsernameIsNotOrderByNameDesc(String username, Pageable pageable);
+    Page<EmployeeModel> findAllByDeletedIsFalseAndUsernameIsNotOrderByNameDesc(String username, Pageable pageable);
 
-    EmployeeModel findByUsername(String username);
+    EmployeeModel findByDeletedIsFalseAndUsername(String username);
 
     long countAllByUsernameStartsWith(String username);
 
-    Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+    Page<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
             String username,
             String name,
             Pageable pageable
     );
 
-    Page<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+    Page<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
             String username,
             String name,
             Pageable pageable
     );
 
-    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+    List<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
             String username,
             String name
     );
 
-    List<EmployeeModel> findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+    List<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
             String username,
             String name
     );
 
-    boolean existsByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String name, Date dob, String phone,
-                                                                        String jobTitle, String division,
-                                                                        String location);
+    boolean existsByDeletedIsFalseAndNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(String name, Date dob, String phone,
+                                                                                         String jobTitle, String division,
+                                                                                         String location);
 
-    List<EmployeeModel> findAllByNameEquals(String name);
-
-    boolean existsEmployeeModelByUsername(String username);
+    boolean existsEmployeeModelByDeletedIsFalseAndUsername(String username);
 
 }

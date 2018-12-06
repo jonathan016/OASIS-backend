@@ -24,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -123,11 +122,11 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     ) {
 
         if (sort.equals(ServiceConstant.ASCENDING)) {
-            return new LinkedHashSet<>(employeeRepository.findAllByUsernameIsNotOrderByNameAsc(
+            return new LinkedHashSet<>(employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotOrderByNameAsc(
                     username,
                     PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
         } else if (sort.equals(ServiceConstant.DESCENDING)) {
-            return new LinkedHashSet<>(employeeRepository.findAllByUsernameIsNotOrderByNameDesc(
+            return new LinkedHashSet<>(employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotOrderByNameDesc(
                     username,
                     PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
         }
@@ -146,24 +145,24 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (page == -1) {
             if (sort.equals(ServiceConstant.ASCENDING)) {
                 return new LinkedHashSet<>(
-                        employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
                                 query,
                                 query));
             } else if (sort.equals(ServiceConstant.DESCENDING)) {
                 return new LinkedHashSet<>(
-                        employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
                                 query,
                                 query));
             }
         } else {
             if (sort.equals(ServiceConstant.ASCENDING)) {
                 return new LinkedHashSet<>(
-                        employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
                                 query,
                         query,
                         PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
             } else if (sort.equals(ServiceConstant.DESCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                return new LinkedHashSet<>(employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
                         query,
                         query,
                         PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
@@ -180,8 +179,8 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         List<String> photos = new ArrayList<>();
         for (EmployeeModel employee : employees) {
-            photos.add(getEmployeeDetailPhoto(employeeRepository.findByUsername(employee.getUsername()).getUsername(),
-                                              employeeRepository.findByUsername(employee.getUsername()).getPhoto()));
+            photos.add(getEmployeeDetailPhoto(employeeRepository.findByDeletedIsFalseAndUsername(employee.getUsername()).getUsername(),
+                                              employeeRepository.findByDeletedIsFalseAndUsername(employee.getUsername()).getPhoto()));
         }
         return photos;
     }
@@ -193,7 +192,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             final String sort
     ) {
         if (query == null){
-            return employeeRepository.countAllByUsernameIsNot(username);
+            return employeeRepository.countAllByDeletedIsFalseAndUsernameIsNot(username);
         } else {
             return getSortedEmployeesListFromQuery(username,-1, query, sort).size();
         }
@@ -206,13 +205,13 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         List<EmployeeModel> supervisors = new ArrayList<>();
 
         for (EmployeeModel employee : employees) {
-            if (supervisionRepository.findByEmployeeUsername(employee.getUsername()) == null) {
+            if (supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(employee.getUsername()) == null) {
                 // For top administrator, who does not have any supervisor at all
                 supervisors.add(null);
             } else {
                 supervisors.add(
-                        employeeRepository.findByUsername(
-                                supervisionRepository.findByEmployeeUsername(employee.getUsername()).getSupervisorUsername()
+                        employeeRepository.findByDeletedIsFalseAndUsername(
+                                supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(employee.getUsername()).getSupervisorUsername()
                         )
                 );
             }
@@ -224,7 +223,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     @Override
     public List<String> getEmployeesUsername() {
 
-        List<EmployeeModel> employees = employeeRepository.findAllByUsernameIsNotNullOrderByUsernameAsc();
+        List<EmployeeModel> employees = employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
 
         List<String> usernames = new ArrayList<>();
         for (EmployeeModel employee : employees) {
@@ -240,7 +239,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     )
             throws DataNotFoundException {
 
-        EmployeeModel employee = employeeRepository.findByUsername(username);
+        EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
 
         if (employee == null)
             throw new DataNotFoundException(USER_NOT_FOUND);
@@ -292,7 +291,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
         byte[] photo;
 
-        File file = new File(employeeRepository.findByUsername(username).getPhoto());
+        File file = new File(employeeRepository.findByDeletedIsFalseAndUsername(username).getPhoto());
 
         if (photoName.equals("image_not_found") || !file.getName().endsWith(extension)) {
             file = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator).concat("image_not_found.jpeg"));
@@ -314,7 +313,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     )
             throws DataNotFoundException {
 
-        SupervisionModel supervision = supervisionRepository.findByEmployeeUsername(username);
+        SupervisionModel supervision = supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(username);
         boolean isAdmin = roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR);
 
         if (supervision == null && !isAdmin)
@@ -323,7 +322,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (isAdmin)
             return null;
 
-        return employeeRepository.findByUsername(supervision.getSupervisorUsername());
+        return employeeRepository.findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
     }
 
     /*-------------Save Employee Methods-------------*/
@@ -354,7 +353,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
             savedEmployee = employee;
 
-            if (employeeRepository.existsByNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
+            if (employeeRepository.existsByDeletedIsFalseAndNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
                     savedEmployee.getName(),
                     savedEmployee.getDob(),
                     savedEmployee.getPhone(),
@@ -381,7 +380,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                 savedEmployee.setCreatedDate(new Date());
             }
         } else {
-            savedEmployee = employeeRepository.findByUsername(employee.getUsername());
+            savedEmployee = employeeRepository.findByDeletedIsFalseAndUsername(employee.getUsername());
 
             if (savedEmployee == null)
                 throw new DataNotFoundException(ASSET_NOT_FOUND);
@@ -393,13 +392,13 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             savedEmployee.setDivision(employee.getDivision());
             savedEmployee.setLocation(employee.getLocation());
 
-            EmployeeModel supervisor = employeeRepository.findByUsername(supervisorUsername);
+            EmployeeModel supervisor = employeeRepository.findByDeletedIsFalseAndUsername(supervisorUsername);
             if (supervisor == null) {
                 throw new DataNotFoundException(USER_NOT_FOUND);
-            } else if (!supervisorUsername.equals(supervisionRepository.findByEmployeeUsername(savedEmployee.getUsername()).getSupervisorUsername())) {
-                SupervisionModel supervision = supervisionRepository.findByEmployeeUsername(savedEmployee.getUsername());
+            } else if (!supervisorUsername.equals(supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(savedEmployee.getUsername()).getSupervisorUsername())) {
+                SupervisionModel supervision = supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(savedEmployee.getUsername());
 
-                EmployeeModel previousSupervisor = employeeRepository.findByUsername(supervision.getSupervisorUsername());
+                EmployeeModel previousSupervisor = employeeRepository.findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
                 employeeRepository.save(previousSupervisor);
 
                 if (checkCyclicSupervisingExists(employee.getUsername(), supervisorUsername))
@@ -410,7 +409,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                 supervision.setUpdatedBy(username);
                 supervisionRepository.save(supervision);
 
-                if (supervisionRepository.existsSupervisionModelsBySupervisorUsername(employee.getUsername())) {
+                if (supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employee.getUsername())) {
                     AdminModel promotedAdmin = new AdminModel();
 
                     promotedAdmin.setUsername(supervisor.getUsername());
@@ -542,12 +541,12 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     )
             throws DataNotFoundException {
 
-        if (employeeRepository.findByUsername(supervisorUsername) == null)
+        if (employeeRepository.findByDeletedIsFalseAndUsername(supervisorUsername) == null)
             throw new DataNotFoundException(USER_NOT_FOUND);
 
         createSupervision(employeeUsername, supervisorUsername, adminUsername);
 
-        return supervisionRepository.findByEmployeeUsername(employeeUsername).get_id();
+        return supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(employeeUsername).get_id();
     }
 
     @Override
@@ -585,7 +584,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             String supervisorUsername
     ) {
 
-        String supervisorSupervisorNik = supervisionRepository.findByEmployeeUsername(supervisorUsername).getSupervisorUsername();
+        String supervisorSupervisorNik = supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(supervisorUsername).getSupervisorUsername();
 
         return supervisorSupervisorNik.equals(employeeUsername);
     }
@@ -609,16 +608,16 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (employeeUsername.equals(adminUsername))
             throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT);
 
-        if (employeeRepository.findByUsername(employeeUsername) == null)
+        if (employeeRepository.findByDeletedIsFalseAndUsername(employeeUsername) == null)
             throw new DataNotFoundException(USER_NOT_FOUND);
 
-        if (supervisionRepository.existsSupervisionModelsBySupervisorUsername(employeeUsername))
+        if (supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername))
             throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT);
 
         if (!requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.DELIVERED).isEmpty())
             throw new UnauthorizedOperationException(UNRETURNED_ASSETS_ON_DELETION_ATTEMPT);
 
-        if (!supervisionRepository.existsByEmployeeUsername(employeeUsername))
+        if (!supervisionRepository.existsByDeletedIsFalseAndEmployeeUsername(employeeUsername))
             throw new DataNotFoundException(USER_NOT_FOUND);
 
         List<RequestModel> requests = new ArrayList<>();
@@ -636,19 +635,19 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             }
         }
 
-        if (adminRepository.findByUsername(employeeUsername) != null) {
-            AdminModel admin = adminRepository.findByUsername(employeeUsername);
+        if (adminRepository.findByDeletedIsFalseAndUsernameEquals(employeeUsername) != null) {
+            AdminModel admin = adminRepository.findByDeletedIsFalseAndUsernameEquals(employeeUsername);
             admin.setDeleted(true);
 
             adminRepository.save(admin);
         }
 
-        EmployeeModel employee = employeeRepository.findByUsername(employeeUsername);
+        EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(employeeUsername);
         employee.setDeleted(true);
 
         employeeRepository.save(employee);
 
-        SupervisionModel supervision = supervisionRepository.findByEmployeeUsername(employeeUsername);
+        SupervisionModel supervision = supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
         supervision.setDeleted(true);
 
         supervisionRepository.save(supervision);
@@ -678,21 +677,21 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             throw new UnauthorizedOperationException(SELF_DELETION_ATTEMPT);
 
         boolean userDoesNotExist =
-                employeeRepository.findByUsername(oldSupervisorUsername) == null ||
-                employeeRepository.findByUsername(newSupervisorUsername) == null;
+                employeeRepository.findByDeletedIsFalseAndUsername(oldSupervisorUsername) == null ||
+                employeeRepository.findByDeletedIsFalseAndUsername(newSupervisorUsername) == null;
         if (userDoesNotExist)
             throw new DataNotFoundException(USER_NOT_FOUND);
 
         boolean doesNotSupervise =
-                supervisionRepository.findAllBySupervisorUsername(oldSupervisorUsername).isEmpty();
+                supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(oldSupervisorUsername).isEmpty();
         if (doesNotSupervise)
             throw new DataNotFoundException(SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE);
 
         List<SupervisionModel> supervisions =
-                supervisionRepository.findAllBySupervisorUsername(oldSupervisorUsername);
+                supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(oldSupervisorUsername);
 
         for (SupervisionModel supervision : supervisions) {
-            EmployeeModel previousSupervisor = employeeRepository.findByUsername(supervision.getSupervisorUsername());
+            EmployeeModel previousSupervisor = employeeRepository.findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
             employeeRepository.save(previousSupervisor);
 
             supervision.setSupervisorUsername(newSupervisorUsername);

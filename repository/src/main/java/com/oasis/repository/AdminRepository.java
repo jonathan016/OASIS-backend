@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AdminRepository extends MongoRepository<AdminModel, String> {
 
-    AdminModel findByUsername(String username);
+    AdminModel findByDeletedIsFalseAndUsernameEquals(String username);
 
-    boolean existsAdminModelByUsername(String username);
+    boolean existsAdminModelByDeletedIsFalseAndUsernameEquals(String username);
 
 }
