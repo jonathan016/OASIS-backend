@@ -38,21 +38,34 @@ public class RequestsServiceImpl implements RequestsServiceApi {
 
     /*-------------Requests List Methods-------------*/
     @Override
-    public List<RequestModel> getRequestsList(
+    public List<RequestModel> getMyRequestsList(
             final String username,
             final String query,
+            final String status,
             final int page,
-            final String sort
+            String sort
     ) throws BadRequestException, DataNotFoundException {
 
-        if (query != null && query.equals("defaultQuery")) {
+        if ((query != null && query.isEmpty()) || (sort != null && sort.isEmpty())) {
             throw new BadRequestException(EMPTY_SEARCH_QUERY);
         }
 
-        long foundDataSize = requestRepository.countAllByUsername(username);
+        if (!status.isEmpty() && !status.equals(ServiceConstant.REQUESTED) && !status.equals(ServiceConstant.ACCEPTED) && !status.equals(ServiceConstant.REJECTED) && !status.equals(ServiceConstant.CANCELLED) && !status.equals(ServiceConstant.DELIVERED) && !status.equals(ServiceConstant.RETURNED)) {
+            throw new BadRequestException(EMPTY_SEARCH_QUERY);
+        }
+
+        if (sort != null && !sort.matches("^[AD]-(status|updatedDate)$")) {
+            throw new BadRequestException(EMPTY_SEARCH_QUERY);
+        }
+
+        if (sort == null) {
+            sort = "D-updatedDate";
+        }
+
+        long foundDataSize = requestRepository.countAllByUsernameAndStatus(username, status);
 
         if (page < 1 || foundDataSize == 0 ||
-            (int) Math.ceil((double) getRequestsCount(username, query)
+            (int) Math.ceil((double) getRequestsCount(username, status, query)
                             / ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE) < page) {
             throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
@@ -62,12 +75,14 @@ public class RequestsServiceImpl implements RequestsServiceApi {
             switch (sort.substring(0, 1)) {
                 case ServiceConstant.ASCENDING:
                     if (sort.substring(2).equals("status")) {
-                        return requestRepository.findAllByUsernameOrderByStatusAsc(username, PageRequest.of(
+                        return requestRepository.findAllByUsernameAndStatusContainsOrderByUpdatedDateAsc(username,
+                                                                                                         status, PageRequest.of(
                                 page - 1,
                                 ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
                         )).getContent();
                     } else if (sort.substring(2).equals("updatedDate")) {
-                        return requestRepository.findAllByUsernameOrderByUpdatedDateAsc(username, PageRequest.of(
+                        return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateAsc(username,
+                                                                                                 status, PageRequest.of(
                                 page - 1,
                                 ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
                         )).getContent();
@@ -76,12 +91,15 @@ public class RequestsServiceImpl implements RequestsServiceApi {
                     break;
                 case ServiceConstant.DESCENDING:
                     if (sort.substring(2).equals("status")) {
-                        return requestRepository.findAllByUsernameOrderByStatusDesc(username, PageRequest.of(
+                        return requestRepository.findAllByUsernameAndStatusContainsOrderByUpdatedDateDesc(username,
+                                                                                                          status, PageRequest.of(
                                 page - 1,
                                 ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
                         )).getContent();
                     } else if (sort.substring(2).equals("updatedDate")) {
-                        return requestRepository.findAllByUsernameOrderByUpdatedDateDesc(username, PageRequest.of(
+                        return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(username,
+                                                                                                  status,
+                                                                                                  PageRequest.of(
                                 page - 1,
                                 ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
                         )).getContent();
@@ -180,6 +198,7 @@ public class RequestsServiceImpl implements RequestsServiceApi {
     @Override
     public long getRequestsCount(
             final String username,
+            final String status,
             final String query
     ) throws BadRequestException {
 
@@ -188,9 +207,10 @@ public class RequestsServiceImpl implements RequestsServiceApi {
         }
 
         if (query == null) {
-            return requestRepository.countAllByUsername(username);
+            return requestRepository.countAllByUsernameAndStatus(username, status);
         } else {
-            return requestRepository.countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(query, query, query);
+            return requestRepository.countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(query, status,
+                                                                                                    query);
         }
 
     }

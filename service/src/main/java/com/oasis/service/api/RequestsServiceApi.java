@@ -11,11 +11,12 @@ import java.util.List;
 
 public interface RequestsServiceApi {
 
-    List<RequestModel> getRequestsList(
+    List<RequestModel> getMyRequestsList(
             final String username,
             final String query,
+            final String status,
             final int page,
-            final String sort
+            String sort
     ) throws BadRequestException, DataNotFoundException;
 
     List<EmployeeModel> getEmployeeDataFromRequest(
@@ -28,6 +29,7 @@ public interface RequestsServiceApi {
 
     long getRequestsCount(
             final String username,
+            final String status,
             final String query
     ) throws BadRequestException;
 

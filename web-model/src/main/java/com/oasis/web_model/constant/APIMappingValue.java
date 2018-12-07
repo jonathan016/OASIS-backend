@@ -28,4 +28,6 @@ public class APIMappingValue {
     public static final String API_EMPLOYEE_PHOTO = "/{username:.+}/{image:.+}";
     public static final String API_USERNAMES = "/usernames";
 
+    public static final String API_MY_REQUESTS = "/list/my";
+
 }

@@ -15,15 +15,19 @@ public interface RequestRepository extends MongoRepository<RequestModel, String>
 
     List<RequestModel> findAllBySku(String assetSku);
 
-    Page<RequestModel> findAllByUsernameOrderByStatusAsc(String username, Pageable pageable);
+    Page<RequestModel> findAllByUsernameAndStatusContainsOrderByUpdatedDateAsc(String username, String status,
+                                                                               Pageable pageable);
 
-    Page<RequestModel> findAllByUsernameOrderByStatusDesc(String username, Pageable pageable);
+    Page<RequestModel> findAllByUsernameAndStatusContainsOrderByUpdatedDateDesc(String username, String status,
+                                                                                Pageable pageable);
 
-    Page<RequestModel> findAllByUsernameOrderByUpdatedDateAsc(String username, Pageable pageable);
+    Page<RequestModel> findAllByUsernameAndStatusOrderByUpdatedDateAsc(String username, String status,
+                                                                       Pageable pageable);
 
-    Page<RequestModel> findAllByUsernameOrderByUpdatedDateDesc(String username, Pageable pageable);
+    Page<RequestModel> findAllByUsernameAndStatusOrderByUpdatedDateDesc(String username, String status,
+                                                                        Pageable pageable);
 
-    long countAllByUsername(String username);
+    long countAllByUsernameAndStatus(String username, String status);
 
     Page<RequestModel> findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(String username,
                                                                                                      String status,

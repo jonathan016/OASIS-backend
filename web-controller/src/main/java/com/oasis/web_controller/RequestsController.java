@@ -2,7 +2,6 @@ package com.oasis.web_controller;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
@@ -35,13 +34,14 @@ public class RequestsController {
     @Autowired
     private RequestsRequestMapper requestsRequestMapper;
 
-    @GetMapping(value = APIMappingValue.API_LIST, produces = MediaType.APPLICATION_JSON_VALUE,
+    @GetMapping(value = APIMappingValue.API_MY_REQUESTS, produces = MediaType.APPLICATION_JSON_VALUE,
                 consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity getRequestsList(
+    public ResponseEntity getMyRequestsList(
             @RequestParam(value = "username") final String username,
-            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(value = "query", required = false) final String query,
+            @RequestParam(value = "status") final String status,
             @RequestParam(value = "page") final int page,
-            @RequestParam(value = "sort") final String sort
+            @RequestParam(value = "sort", required = false) final String sort
     ) {
 
         List<RequestModel> requests;
@@ -49,13 +49,11 @@ public class RequestsController {
         List<AssetModel> assets;
         long totalRecords;
 
-        if (query != null && query.isEmpty()) query = "defaultQuery";
-
         try {
-            requests = requestsServiceImpl.getRequestsList(username, query, page, sort);
+            requests = requestsServiceImpl.getMyRequestsList(username, query, status, page, sort);
             employees = requestsServiceImpl.getEmployeeDataFromRequest(requests);
             assets = requestsServiceImpl.getAssetDataFromRequest(requests);
-            totalRecords = requestsServiceImpl.getRequestsCount(username, query);
+            totalRecords = requestsServiceImpl.getRequestsCount(username, status, query);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(
                     failedResponseMapper.produceFailedResult(
