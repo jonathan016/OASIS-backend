@@ -16,7 +16,7 @@ public interface EmployeesServiceApi {
             final String username,
             final String query,
             final int page,
-            final String sort
+            String sort
     ) throws BadRequestException, DataNotFoundException;
 
     Set<EmployeeModel> getSortedEmployeesList(
@@ -26,7 +26,6 @@ public interface EmployeesServiceApi {
     );
 
     Set<EmployeeModel> getSortedEmployeesListFromQuery(
-            final String username,
             final int page,
             final String query,
             final String sort

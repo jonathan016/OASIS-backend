@@ -52,11 +52,15 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
             final String username,
             final String query,
             final int page,
-            final String sort
+            String sort
     ) throws BadRequestException, DataNotFoundException {
 
-        if (query != null && query.equals("defaultQuery")) {
+        if ((query != null && query.isEmpty()) || (sort != null && sort.isEmpty())) {
             throw new BadRequestException(EMPTY_SEARCH_QUERY);
+        }
+
+        if (sort == null) {
+            sort = "A";
         }
 
         if (query == null){
@@ -64,6 +68,10 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
             if (page < 1 || foundDataSize == 0) {
                 throw new DataNotFoundException(ASSET_NOT_FOUND);
+            }
+
+            if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(username)) {
+                throw new DataNotFoundException(USER_NOT_FOUND);
             }
 
             if ((int) Math.ceil((float) foundDataSize / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
@@ -77,7 +85,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
                  throw new DataNotFoundException(USER_NOT_FOUND);
              }
 
-             return new ArrayList<>(getSortedEmployeesListFromQuery(username, page, query, sort));
+             return new ArrayList<>(getSortedEmployeesListFromQuery(page, query, sort));
 
 //            Set<EmployeeModel> employeesSet = new LinkedHashSet<>();
 //
@@ -136,7 +144,6 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
 
     @Override
     public Set<EmployeeModel> getSortedEmployeesListFromQuery(
-            final String username,
             final int page,
             final String query,
             final String sort
@@ -194,7 +201,7 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (query == null){
             return employeeRepository.countAllByDeletedIsFalseAndUsernameIsNot(username);
         } else {
-            return getSortedEmployeesListFromQuery(username,-1, query, sort).size();
+            return getSortedEmployeesListFromQuery(-1, query, sort).size();
         }
     }
 

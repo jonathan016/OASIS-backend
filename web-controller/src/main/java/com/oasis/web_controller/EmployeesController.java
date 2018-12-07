@@ -41,9 +41,9 @@ public class EmployeesController {
                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesList(
             @RequestParam(value = "username") final String username,
-            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(value = "query", required = false) final String query,
             @RequestParam(value = "page") final int page,
-            @RequestParam(value = "sort") final String sort
+            @RequestParam(value = "sort", required = false) final String sort
     ) {
 
         List<EmployeeModel> employeesFound, supervisorsFound;
@@ -51,7 +51,6 @@ public class EmployeesController {
         List<String> employeePhotos;
 
         try {
-            if (query != null && query.isEmpty()) query = "defaultQuery";
             employeesFound = employeesServiceImpl.getEmployeesList(username, query, page, sort);
             supervisorsFound = employeesServiceImpl.getSupervisorsList(employeesFound);
             totalRecords = employeesServiceImpl.getEmployeesCount(username, query, sort);
