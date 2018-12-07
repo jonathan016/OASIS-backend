@@ -24,24 +24,24 @@ public interface EmployeeRepository extends MongoRepository<EmployeeModel, Strin
 
     long countAllByUsernameStartsWith(String username);
 
-    Page<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+    Page<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
             String username,
             String name,
             Pageable pageable
     );
 
-    Page<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+    Page<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
             String username,
             String name,
             Pageable pageable
     );
 
-    List<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+    List<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
             String username,
             String name
     );
 
-    List<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+    List<EmployeeModel> findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
             String username,
             String name
     );

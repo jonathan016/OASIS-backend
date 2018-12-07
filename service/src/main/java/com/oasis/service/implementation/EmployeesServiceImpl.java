@@ -152,24 +152,24 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
         if (page == -1) {
             if (sort.equals(ServiceConstant.ASCENDING)) {
                 return new LinkedHashSet<>(
-                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
                                 query,
                                 query));
             } else if (sort.equals(ServiceConstant.DESCENDING)) {
                 return new LinkedHashSet<>(
-                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
                                 query,
                                 query));
             }
         } else {
             if (sort.equals(ServiceConstant.ASCENDING)) {
                 return new LinkedHashSet<>(
-                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
+                        employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
                                 query,
                         query,
                         PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());
             } else if (sort.equals(ServiceConstant.DESCENDING)) {
-                return new LinkedHashSet<>(employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
+                return new LinkedHashSet<>(employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
                         query,
                         query,
                         PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)).getContent());

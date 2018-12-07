@@ -64,7 +64,7 @@ public class EmployeesController {
         return new ResponseEntity<>(employeesResponseMapper.produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, supervisorsFound, employeePhotos, page, totalRecords), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_DETAIL_EMPLOYEE,
+    @GetMapping(value = APIMappingValue.API_DATA_EMPLOYEE,
                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeeDetailData(
             @PathVariable final String username
@@ -101,7 +101,7 @@ public class EmployeesController {
         }
     }
 
-    @GetMapping(value = APIMappingValue.API_EMPLOYEE_PHOTO,
+    @GetMapping(value = APIMappingValue.API_PHOTO_EMPLOYEE,
                 produces = {IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE},
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeePhoto(
@@ -121,7 +121,7 @@ public class EmployeesController {
         return new ResponseEntity<>(photo, HttpStatus.OK);
     }
 
-    @PostMapping(value = APIMappingValue.API_SAVE_EMPLOYEE,
+    @PostMapping(value = APIMappingValue.API_SAVE,
                  produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity saveEmployee(
             @RequestParam(value = "photo", required = false) MultipartFile photo,
@@ -161,7 +161,7 @@ public class EmployeesController {
         }
     }
 
-    @DeleteMapping(value = APIMappingValue.API_DELETE_EMPLOYEE,
+    @DeleteMapping(value = APIMappingValue.API_DELETE,
                    produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity deleteEmployee(
             @RequestBody final DeleteEmployeeRequest request
