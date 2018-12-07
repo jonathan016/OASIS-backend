@@ -50,7 +50,9 @@ public interface EmployeesServiceApi {
             final String photoDirectory
     );
 
-    List<String> getEmployeesUsername();
+    List<String> getEmployeesUsernames(
+            String username
+    ) throws BadRequestException;
 
     byte[] getEmployeePhoto(
             final String username,

@@ -87,8 +87,18 @@ public class EmployeesController {
 
     @GetMapping(value = APIMappingValue.API_USERNAMES,
                 produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity getEmployeesUsername() {
-        return new ResponseEntity<>(employeesServiceImpl.getEmployeesUsername(), HttpStatus.OK);
+    public ResponseEntity getEmployeesUsernames(
+            @RequestParam(value = "username") final String username
+    ) {
+        try {
+            return new ResponseEntity<>(employeesServiceImpl.getEmployeesUsernames(username), HttpStatus.OK);
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
+            ), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping(value = APIMappingValue.API_EMPLOYEE_PHOTO,

@@ -228,16 +228,67 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     }
 
     @Override
-    public List<String> getEmployeesUsername() {
+    public List<String> getEmployeesUsernames(
+            final String username
+    ) throws BadRequestException {
+
+        if (username.isEmpty()) {
+            throw new BadRequestException(USER_NOT_FOUND);
+        }
 
         List<EmployeeModel> employees = employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
 
-        List<String> usernames = new ArrayList<>();
-        for (EmployeeModel employee : employees) {
-            usernames.add(employee.getUsername());
+        Set<String> usernames = new LinkedHashSet<>();
+        if (!username.equals("-1")) {
+            List<SupervisionModel> supervisions =
+                    supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(username);
+
+            List<String> supervisedEmployeesUsernames = new ArrayList<>();
+            for (SupervisionModel supervision : supervisions) {
+                supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
+            }
+
+            for (EmployeeModel employee : employees) {
+                boolean safeFromCyclicSupervising = true;
+                for (String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
+                    if (employee.getUsername().equals(supervisedEmployeeUsername)) {
+                        safeFromCyclicSupervising = false;
+                        break;
+                    }
+                }
+
+                if (username.equals(employee.getUsername())) {
+                    continue;
+                }
+
+                if (safeFromCyclicSupervising) {
+                    usernames.add(employee.getUsername());
+                }
+            }
+
+//            List<SupervisionModel> supervisions;
+//            try {
+//                supervisions = supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(username);
+//            } catch (NullPointerException e) {
+//                supervisions = new ArrayList<>();
+//            }
+//
+//            for (EmployeeModel employee : employees) {
+//                for (SupervisionModel supervision : supervisions) {
+//                    if (employee.getUsername().equals(supervision.getEmployeeUsername())) {
+//                        continue;
+//                    }
+//
+//                    usernames.add(employee.getUsername());
+//                }
+//            }
+        } else {
+            for (EmployeeModel employee : employees) {
+                usernames.add(employee.getUsername());
+            }
         }
 
-        return usernames;
+        return new ArrayList<>(usernames);
     }
 
     @Override
