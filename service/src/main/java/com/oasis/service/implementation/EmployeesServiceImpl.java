@@ -196,11 +196,15 @@ public class EmployeesServiceImpl implements EmployeesServiceApi {
     public int getEmployeesCount(
             final String username,
             final String query,
-            final String sort
+            String sort
     ) {
         if (query == null){
             return employeeRepository.countAllByDeletedIsFalseAndUsernameIsNot(username);
         } else {
+            if (sort == null) {
+                sort = "A";
+            }
+
             return getSortedEmployeesListFromQuery(-1, query, sort).size();
         }
     }

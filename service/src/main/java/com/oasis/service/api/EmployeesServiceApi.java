@@ -34,7 +34,7 @@ public interface EmployeesServiceApi {
     int getEmployeesCount(
             final String username,
             final String query,
-            final String sort
+            String sort
     );
 
     List<EmployeeModel> getSupervisorsList(
