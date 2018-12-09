@@ -6,18 +6,18 @@ import com.oasis.exception.helper.BaseError;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
+import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.*;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.RequestsServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
@@ -38,7 +38,7 @@ public class RequestsServiceImpl implements RequestsServiceApi {
 
     /*-------------Requests List Methods-------------*/
     @Override
-    public List<RequestModel> getMyRequestsList(
+    public List<RequestModel> getUsernameRequestsList(
             final String username,
             final String query,
             final String status,
@@ -65,13 +65,12 @@ public class RequestsServiceImpl implements RequestsServiceApi {
         long foundDataSize = requestRepository.countAllByUsernameAndStatus(username, status);
 
         if (page < 1 || foundDataSize == 0 ||
-            (int) Math.ceil((double) getRequestsCount(username, status, query)
+            (int) Math.ceil((double) getRequestsCount("Username", username, query, status, page, sort)
                             / ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE) < page) {
             throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
         if (query == null) {
-
             switch (sort.substring(0, 1)) {
                 case ServiceConstant.ASCENDING:
                     if (sort.substring(2).equals("status")) {
@@ -128,7 +127,6 @@ public class RequestsServiceImpl implements RequestsServiceApi {
                                         page - 1,
                                         ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
                                 )).getContent();
-
                     }
                     break;
                 case ServiceConstant.DESCENDING:
@@ -151,13 +149,62 @@ public class RequestsServiceImpl implements RequestsServiceApi {
                                         page - 1,
                                         ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
                                 )).getContent();
-
                     }
                     break;
             }
         }
 
         return new ArrayList<>();
+    }
+
+    @Override
+    public List<RequestModel> getOthersRequestList(
+            final String username,
+            final String query,
+            final String status,
+            final int page,
+            String sort
+    ) throws BadRequestException, DataNotFoundException {
+
+        List<SupervisionModel> supervisions =
+                supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(username);
+
+        List<String> supervisedEmployeesUsernames = new ArrayList<>();
+        for (SupervisionModel supervision : supervisions) {
+            supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
+        }
+
+        Set<RequestModel> requests = new LinkedHashSet<>();
+        for (String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
+            boolean usernameIsAdmin = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals(supervisedEmployeeUsername);
+            boolean supervisorIsValid = supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(
+                    supervisedEmployeeUsername
+            );
+            boolean usernameIsAdminOrSupervisor = usernameIsAdmin || supervisorIsValid;
+
+            if (usernameIsAdminOrSupervisor) {
+                requests.addAll(getOthersRequestList(supervisedEmployeeUsername, query, status, page, sort));
+            }
+            requests.addAll(requestRepository.findAllByUsernameAndStatus(supervisedEmployeeUsername, status));
+        }
+
+        return new ArrayList<>(requests);
+    }
+
+    public List<RequestModel> getOthersRequestListPaged(
+            final String username,
+            final String query,
+            final String status,
+            final int page,
+            String sort
+    ) throws BadRequestException, DataNotFoundException {
+
+        PagedListHolder<RequestModel> pagedListHolder =
+                new PagedListHolder<>(new ArrayList<>(getOthersRequestList(username, query, status, page, sort)));
+        pagedListHolder.setPage(page - 1);
+        pagedListHolder.setPageSize(ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE);
+
+        return pagedListHolder.getPageList();
     }
 
     @Override
@@ -197,22 +244,35 @@ public class RequestsServiceImpl implements RequestsServiceApi {
 
     @Override
     public long getRequestsCount(
+            final String type,
             final String username,
+            final String query,
             final String status,
-            final String query
-    ) throws BadRequestException {
+            final int page,
+            String sort
+    ) throws BadRequestException, DataNotFoundException {
 
-        if (query != null && query.equals("defaultQuery")) {
+        if (query != null && query.isEmpty()) {
             throw new BadRequestException(EMPTY_SEARCH_QUERY);
         }
 
-        if (query == null) {
-            return requestRepository.countAllByUsernameAndStatus(username, status);
-        } else {
-            return requestRepository.countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(query, status,
-                                                                                                    query);
+        if (type.equals("Username")){
+            if (query == null) {
+                return requestRepository.countAllByUsernameAndStatus(username, status);
+            } else {
+                return requestRepository.countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(username,
+                                                                                                        status,
+                                                                                                        query
+                );
+            }
+        } else if (type.equals("Others")) {
+            if (query != null) {
+                return getOthersRequestList(username, query, status, page, sort).size();
+            }
+            return getOthersRequestList(username, "", status, page, sort).size();
         }
 
+        return -1;
     }
 
     @Override

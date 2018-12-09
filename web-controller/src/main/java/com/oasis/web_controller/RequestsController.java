@@ -36,8 +36,8 @@ public class RequestsController {
 
     @GetMapping(value = APIMappingValue.API_MY_REQUESTS, produces = MediaType.APPLICATION_JSON_VALUE,
                 consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity getMyRequestsList(
-            @RequestParam(value = "username") final String username,
+    public ResponseEntity getUsernameRequestsList(
+            @PathVariable(value = "username") final String username,
             @RequestParam(value = "query", required = false) final String query,
             @RequestParam(value = "status") final String status,
             @RequestParam(value = "page") final int page,
@@ -50,10 +50,10 @@ public class RequestsController {
         long totalRecords;
 
         try {
-            requests = requestsServiceImpl.getMyRequestsList(username, query, status, page, sort);
+            requests = requestsServiceImpl.getUsernameRequestsList(username, query, status, page, sort);
             employees = requestsServiceImpl.getEmployeeDataFromRequest(requests);
             assets = requestsServiceImpl.getAssetDataFromRequest(requests);
-            totalRecords = requestsServiceImpl.getRequestsCount(username, status, query);
+            totalRecords = requestsServiceImpl.getRequestsCount("Username", username, query, status, page, sort);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(
                     failedResponseMapper.produceFailedResult(
@@ -81,6 +81,54 @@ public class RequestsController {
                 HttpStatus.OK
         );
 
+    }
+
+    @GetMapping(value = APIMappingValue.API_OTHERS_REQUESTS, produces = MediaType.APPLICATION_JSON_VALUE,
+                consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity getOthersRequestList(
+            @PathVariable(value = "username") final String username,
+            @RequestParam(value = "query", required = false) final String query,
+            @RequestParam(value = "status") final String status,
+            @RequestParam(value = "page") final int page,
+            @RequestParam(value = "sort", required = false) final String sort
+    ){
+
+        List<RequestModel> requests;
+        List<EmployeeModel> employees;
+        List<AssetModel> assets;
+        long totalRecords;
+
+        try {
+            requests = requestsServiceImpl.getOthersRequestListPaged(username, query, status, page, sort);
+            employees = requestsServiceImpl.getEmployeeDataFromRequest(requests);
+            assets = requestsServiceImpl.getAssetDataFromRequest(requests);
+            totalRecords = requestsServiceImpl.getRequestsCount("Others", username, query, status, page, sort);
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(
+                    failedResponseMapper.produceFailedResult(
+                            HttpStatus.BAD_REQUEST.value(),
+                            badRequestException.getErrorCode(),
+                            badRequestException.getErrorMessage()
+                    ),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(
+                    failedResponseMapper.produceFailedResult(
+                            HttpStatus.NOT_FOUND.value(),
+                            dataNotFoundException.getErrorCode(),
+                            dataNotFoundException.getErrorMessage()
+                    ),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        return new ResponseEntity<>(
+                requestsResponseMapper.produceViewFoundAssetSuccessResult(
+                        HttpStatus.OK.value(), requests, employees, assets, null, page, totalRecords
+                ),
+                HttpStatus.OK
+        );
     }
 
     @PostMapping(value = APIMappingValue.API_SAVE, produces = MediaType.APPLICATION_JSON_VALUE,

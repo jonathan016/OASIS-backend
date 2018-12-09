@@ -11,6 +11,8 @@ import java.util.List;
 @Repository
 public interface RequestRepository extends MongoRepository<RequestModel, String> {
 
+    List<RequestModel> findAllByUsername(String username);
+
     List<RequestModel> findAllByUsernameAndStatus(String username, String status);
 
     List<RequestModel> findAllBySku(String assetSku);
