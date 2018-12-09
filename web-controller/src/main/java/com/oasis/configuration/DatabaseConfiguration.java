@@ -13,14 +13,16 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 public class DatabaseConfiguration {
 
     @Bean
-    public MongoDbFactory mongoDbFactory() {
-        MongoClient mongoClient = new MongoClient("localhost", 27017);
-        return new SimpleMongoDbFactory(mongoClient, "oasis");
+    public MongoTemplate mongoTemplate() {
+
+        return new MongoTemplate(mongoDbFactory());
     }
 
     @Bean
-    public MongoTemplate mongoTemplate() {
-        return new MongoTemplate(mongoDbFactory());
+    public MongoDbFactory mongoDbFactory() {
+
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        return new SimpleMongoDbFactory(mongoClient, "oasis");
     }
 
 }

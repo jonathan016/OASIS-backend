@@ -10,7 +10,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @SuppressWarnings("Lombok")
 @Document(collection = CollectionName.ADMIN_COLLECTION_NAME)
-public class AdminModel extends BaseEntity {
+public class AdminModel
+        extends BaseEntity {
 
     @Field(AdminFieldName.USERNAME)
     private String username;
@@ -20,5 +21,5 @@ public class AdminModel extends BaseEntity {
 
     @Field(AdminFieldName.DELETED)
     private boolean deleted;
-    
+
 }

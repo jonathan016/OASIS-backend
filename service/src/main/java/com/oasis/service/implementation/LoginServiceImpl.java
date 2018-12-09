@@ -15,7 +15,8 @@ import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
 
 @Service
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-public class LoginServiceImpl implements LoginServiceApi {
+public class LoginServiceImpl
+        implements LoginServiceApi {
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -23,10 +24,15 @@ public class LoginServiceImpl implements LoginServiceApi {
     private RoleDeterminer roleDeterminer;
 
     @Override
-    public EmployeeModel checkLoginCredentials(final String username, final String password)
-            throws DataNotFoundException, UserNotAuthenticatedException {
+    public EmployeeModel checkLoginCredentials(
+            final String username, final String password
+    )
+            throws
+            DataNotFoundException,
+            UserNotAuthenticatedException {
 
-        if (!username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+@gdn-commerce.com") && !username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+")) {
+        if (!username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+@gdn-commerce.com") &&
+            !username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+")) {
             throw new DataNotFoundException(USER_NOT_FOUND);
         }
 
@@ -52,7 +58,10 @@ public class LoginServiceImpl implements LoginServiceApi {
     }
 
     @Override
-    public String determineUserRole(final String username) throws DataNotFoundException {
+    public String determineUserRole(final String username)
+            throws
+            DataNotFoundException {
+
         return roleDeterminer.determineRole(username);
     }
 

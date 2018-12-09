@@ -9,12 +9,14 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class EmployeeListResponse {
-    private List<Employee> employees;
+
+    private List< Employee > employees;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Employee {
+
         private String username;
         private String name;
         private String photo;
@@ -26,8 +28,12 @@ public class EmployeeListResponse {
         @NoArgsConstructor
         @AllArgsConstructor
         public static class Supervisor {
+
             private String username;
             private String name;
+
         }
+
     }
+
 }

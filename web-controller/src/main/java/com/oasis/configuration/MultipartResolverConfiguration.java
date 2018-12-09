@@ -16,7 +16,8 @@ import javax.servlet.annotation.MultipartConfig;
 public class MultipartResolverConfiguration {
 
     @Bean(name = "multipartResolver")
-    public CommonsMultipartResolver multipartResolver(){
+    public CommonsMultipartResolver multipartResolver() {
+
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
         multipartResolver.setMaxUploadSize(20971520);
         multipartResolver.setMaxInMemorySize(1048576);

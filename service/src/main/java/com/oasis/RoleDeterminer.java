@@ -22,19 +22,23 @@ public class RoleDeterminer {
     @Autowired
     private SupervisionRepository supervisionRepository;
 
-    public String determineRole(String username) throws DataNotFoundException {
+    public String determineRole(String username)
+            throws
+            DataNotFoundException {
 
         if (adminRepository.findByDeletedIsFalseAndUsernameEquals(username) != null) {
             return ServiceConstant.ROLE_ADMINISTRATOR;
         } else {
             EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
 
-            if(employee == null){
+            if (employee == null) {
                 throw new DataNotFoundException(USER_NOT_FOUND);
-            } else if (supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(username)) {
-                return ServiceConstant.ROLE_SUPERIOR;
             } else {
-                return ServiceConstant.ROLE_EMPLOYEE;
+                if (supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(username)) {
+                    return ServiceConstant.ROLE_SUPERIOR;
+                } else {
+                    return ServiceConstant.ROLE_EMPLOYEE;
+                }
             }
         }
     }

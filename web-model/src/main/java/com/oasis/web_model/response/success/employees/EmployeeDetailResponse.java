@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class EmployeeDetailResponse {
+
     private String username;
     private String name;
     private String dob;
@@ -19,7 +20,10 @@ public class EmployeeDetailResponse {
     @Data
     @AllArgsConstructor
     public static class Supervisor {
+
         private String username;
         private String name;
+
     }
+
 }

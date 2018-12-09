@@ -10,7 +10,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @SuppressWarnings("Lombok")
 @Document(collection = CollectionName.LAST_UNIQUE_IDENTIFIER_COLLECTION_NAME)
-public class LastUniqueIdentifierModel extends BaseEntity {
+public class LastUniqueIdentifierModel
+        extends BaseEntity {
 
     @Field(LastUniqueIdentifierFieldName.SKU)
     private String sku;

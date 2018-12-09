@@ -21,7 +21,9 @@ public class AssetsRequestMapper {
         String adminUsername;
 
         try {
-            adminUsername = new ObjectMapper().readTree(rawAssetData).path("username").asText();
+            adminUsername = new ObjectMapper().readTree(rawAssetData)
+                                              .path("username")
+                                              .asText();
         } catch (IOException e) {
             return "";
         }
@@ -29,49 +31,59 @@ public class AssetsRequestMapper {
         return adminUsername;
     }
 
-    public boolean checkAddOperationFromRawData(final String rawAssetData) throws UnauthorizedOperationException {
+    public boolean checkAddOperationFromRawData(final String rawAssetData)
+            throws
+            UnauthorizedOperationException {
 
         JsonNode asset;
 
         try {
-            asset = new ObjectMapper().readTree(rawAssetData).path("asset");
+            asset = new ObjectMapper().readTree(rawAssetData)
+                                      .path("asset");
         } catch (IOException e) {
             //TODO throw real exception cause
             throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
         }
 
-        return asset.path("sku").isNull();
+        return asset.path("sku")
+                    .isNull();
     }
 
-    public AssetModel getAssetModelFromRawData(final String rawAssetData, final boolean isAddOperation) {
+    public AssetModel getAssetModelFromRawData(
+            final String rawAssetData, final boolean isAddOperation
+    ) {
 
         SaveAssetRequest.Asset request;
 
         try {
 
-            JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
+            JsonNode asset = new ObjectMapper().readTree(rawAssetData)
+                                               .path("asset");
 
-            if (isAddOperation){
-                request = new SaveAssetRequest.Asset(
-                        null,
-                        asset.path("name").asText(),
-                        asset.path("location").asText(),
-                        asset.path("brand").asText(),
-                        asset.path("type").asText(),
-                        asset.path("quantity").asLong(),
-                        asset.path("price").asDouble(),
-                        asset.path("expendable").asBoolean()
+            if (isAddOperation) {
+                request = new SaveAssetRequest.Asset(null, asset.path("name")
+                                                                .asText(), asset.path("location")
+                                                                                .asText(), asset.path("brand")
+                                                                                                .asText(),
+                                                     asset.path("type")
+                                                          .asText(), asset.path("quantity")
+                                                                          .asLong(), asset.path("price")
+                                                                                          .asDouble(),
+                                                     asset.path("expendable")
+                                                          .asBoolean()
                 );
             } else {
-                request = new SaveAssetRequest.Asset(
-                        asset.path("sku").asText(),
-                        asset.path("name").asText(),
-                        asset.path("location").asText(),
-                        asset.path("brand").asText(),
-                        asset.path("type").asText(),
-                        asset.path("quantity").asLong(),
-                        asset.path("price").asDouble(),
-                        asset.path("expendable").asBoolean()
+                request = new SaveAssetRequest.Asset(asset.path("sku")
+                                                          .asText(), asset.path("name")
+                                                                          .asText(), asset.path("location")
+                                                                                          .asText(), asset.path("brand")
+                                                                                                          .asText(),
+                                                     asset.path("type")
+                                                          .asText(), asset.path("quantity")
+                                                                          .asLong(), asset.path("price")
+                                                                                          .asDouble(),
+                                                     asset.path("expendable")
+                                                          .asBoolean()
                 );
             }
 
@@ -85,7 +97,8 @@ public class AssetsRequestMapper {
                         .byDefault()
                         .register();
 
-        return assetDataFactory.getMapperFacade(SaveAssetRequest.Asset.class, AssetModel.class).map(request);
+        return assetDataFactory.getMapperFacade(SaveAssetRequest.Asset.class, AssetModel.class)
+                               .map(request);
     }
 
 }

@@ -8,8 +8,9 @@ import java.util.Map;
 @Component
 public class ActiveComponentManager {
 
-    public Map<String, Boolean> getAssetsListActiveComponents(String role) {
-        Map<String, Boolean> activeComponents = new HashMap<>();
+    public Map< String, Boolean > getAssetsListActiveComponents(String role) {
+
+        Map< String, Boolean > activeComponents = new HashMap<>();
 
         activeComponents.put("btnAssetListAdd", true);
         activeComponents.put("btnAssetListDelete", true);
@@ -18,8 +19,9 @@ public class ActiveComponentManager {
         return activeComponents;
     }
 
-    public Map<String, Boolean> getAssetDetailActiveComponents(String role) {
-        Map<String, Boolean> activeComponents = new HashMap<>();
+    public Map< String, Boolean > getAssetDetailActiveComponents(String role) {
+
+        Map< String, Boolean > activeComponents = new HashMap<>();
 
         activeComponents.put("btn-asset-detail-edit", true);
         activeComponents.put("btn-asset-detail-delete", true);

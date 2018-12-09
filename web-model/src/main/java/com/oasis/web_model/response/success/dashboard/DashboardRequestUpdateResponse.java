@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DashboardRequestUpdateResponse {
 
-    private List<RequestUpdateModel> requests;
+    private List< RequestUpdateModel > requests;
 
     @Data
     @AllArgsConstructor
@@ -29,6 +29,7 @@ public class DashboardRequestUpdateResponse {
             private String id;
             private String status;
             private String requestNote;
+
         }
 
         @Data
@@ -37,6 +38,7 @@ public class DashboardRequestUpdateResponse {
 
             private String username;
             private String name;
+
         }
 
         @Data
@@ -45,6 +47,7 @@ public class DashboardRequestUpdateResponse {
 
             private String username;
             private String name;
+
         }
 
         @Data
@@ -54,6 +57,7 @@ public class DashboardRequestUpdateResponse {
             private String sku;
             private String name;
             private int quantity;
+
         }
 
     }

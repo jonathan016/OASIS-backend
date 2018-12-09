@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AssetListResponse {
 
-    private List<Asset> availableAssets;
+    private List< Asset > availableAssets;
 
     @Data
     @AllArgsConstructor

@@ -5,24 +5,20 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.oasis.service.ServiceConstant;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import static java.util.Objects.requireNonNull;
 
 @Component
-public class DocumentHeader extends PdfPageEventHelper {
+public class DocumentHeader
+        extends PdfPageEventHelper {
 
     private PdfPTable table;
     private float tableHeight;
 
-    public DocumentHeader(){
+    public DocumentHeader() {
 
         table = new PdfPTable(5);
         table.setTotalWidth(523);
@@ -30,9 +26,10 @@ public class DocumentHeader extends PdfPageEventHelper {
 
         Image blibliImage = null;
         try {
-            File blibliLogo =
-                    new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator).concat("pdf_header_images")
-                                                                     .concat(File.separator).concat("blibli.png"));
+            File blibliLogo = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator)
+                                                                               .concat("pdf_header_images")
+                                                                               .concat(File.separator)
+                                                                               .concat("blibli.png"));
             blibliImage = Image.getInstance(Files.readAllBytes(blibliLogo.toPath()));
         } catch (IOException | BadElementException e) {
             e.printStackTrace();
@@ -50,9 +47,10 @@ public class DocumentHeader extends PdfPageEventHelper {
 
         Image oasisImage = null;
         try {
-            File oasisLogo =
-                    new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator).concat("pdf_header_images")
-                                                                     .concat(File.separator).concat("oasis.png"));
+            File oasisLogo = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator)
+                                                                              .concat("pdf_header_images")
+                                                                              .concat(File.separator)
+                                                                              .concat("oasis.png"));
             oasisImage = Image.getInstance(Files.readAllBytes(oasisLogo.toPath()));
         } catch (IOException | BadElementException e) {
             e.printStackTrace();
@@ -67,16 +65,15 @@ public class DocumentHeader extends PdfPageEventHelper {
 
     @SuppressWarnings("unused")
     public float getTableHeight() {
+
         return tableHeight;
     }
 
     public void onEndPage(
-            PdfWriter writer,
-            Document document
+            PdfWriter writer, Document document
     ) {
 
-        table.writeSelectedRows(0, -1, document.left(),
-                                document.top() + ((document.topMargin() + tableHeight) / 2),
+        table.writeSelectedRows(0, -1, document.left(), document.top() + ((document.topMargin() + tableHeight) / 2),
                                 writer.getDirectContent()
         );
     }

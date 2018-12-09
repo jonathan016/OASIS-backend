@@ -10,11 +10,11 @@ import java.util.List;
 @Component
 public class RequestsRequestMapper {
 
-    public List<RequestModel> getRequestsListFromRequest(
+    public List< RequestModel > getRequestsListFromRequest(
             final SaveRequestRequest request
     ) {
 
-        List<RequestModel> requests = new ArrayList<>();
+        List< RequestModel > requests = new ArrayList<>();
 
         String username = request.getUsername();
 

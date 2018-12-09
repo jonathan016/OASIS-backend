@@ -7,9 +7,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface SupervisionRepository extends MongoRepository<SupervisionModel, String> {
+public interface SupervisionRepository
+        extends MongoRepository< SupervisionModel, String > {
 
-    List<SupervisionModel> findAllByDeletedIsFalseAndSupervisorUsername(String supervisorUsername);
+    List< SupervisionModel > findAllByDeletedIsFalseAndSupervisorUsername(String supervisorUsername);
 
     SupervisionModel findByDeletedIsFalseAndEmployeeUsername(String employeeUsername);
 
@@ -17,7 +18,8 @@ public interface SupervisionRepository extends MongoRepository<SupervisionModel,
 
     boolean existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(String supervisorUsername);
 
-    boolean existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(String supervisorUsername,
-                                                                                           String employeeUsername);
+    boolean existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(
+            String supervisorUsername, String employeeUsername
+    );
 
 }

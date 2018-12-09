@@ -9,6 +9,6 @@ public class BaseResponse {
 
     protected int code;
     protected String success;
-    protected Map<String, Boolean> components;
+    protected Map< String, Boolean > components;
 
 }

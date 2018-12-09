@@ -21,7 +21,9 @@ public class EmployeesRequestMapper {
         String adminUsername;
 
         try {
-            adminUsername = new ObjectMapper().readTree(rawEmployeeData).path("username").asText();
+            adminUsername = new ObjectMapper().readTree(rawEmployeeData)
+                                              .path("username")
+                                              .asText();
         } catch (IOException e) {
             return "";
         }
@@ -29,49 +31,59 @@ public class EmployeesRequestMapper {
         return adminUsername;
     }
 
-    public boolean checkAddOperationFromRawData(final String rawEmployeeData) throws UnauthorizedOperationException {
+    public boolean checkAddOperationFromRawData(final String rawEmployeeData)
+            throws
+            UnauthorizedOperationException {
 
         JsonNode employee;
 
         try {
-            employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
+            employee = new ObjectMapper().readTree(rawEmployeeData)
+                                         .path("employee");
         } catch (IOException e) {
             //TODO throw real exception cause
             throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
         }
 
-        return employee.path("username").isNull();
+        return employee.path("username")
+                       .isNull();
     }
 
-    public EmployeeModel getEmployeeModelFromRawData(final String rawEmployeeData, final boolean isAddOperation) {
+    public EmployeeModel getEmployeeModelFromRawData(
+            final String rawEmployeeData, final boolean isAddOperation
+    ) {
 
         SaveEmployeeRequest.Employee request;
 
         try {
 
-            JsonNode employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
+            JsonNode employee = new ObjectMapper().readTree(rawEmployeeData)
+                                                  .path("employee");
 
-            if (isAddOperation){
+            if (isAddOperation) {
                 request = new SaveEmployeeRequest.Employee(
-                        null,
-                        employee.path("name").asText(),
-                        employee.path("dob").asText(),
-                        employee.path("phone").asText(),
-                        employee.path("jobTitle").asText(),
-                        employee.path("division").asText(),
-                        employee.path("location").asText(),
-                        employee.path("supervisorUsername").asText()
+                        null, employee.path("name")
+                                      .asText(), employee.path("dob")
+                                                         .asText(), employee.path("phone")
+                                                                            .asText(), employee.path("jobTitle")
+                                                                                               .asText(),
+                        employee.path("division")
+                                .asText(), employee.path("location")
+                                                   .asText(), employee.path("supervisorUsername")
+                                                                      .asText()
                 );
             } else {
                 request = new SaveEmployeeRequest.Employee(
-                        employee.path("username").asText(),
-                        employee.path("name").asText(),
-                        employee.path("dob").asText(),
-                        employee.path("phone").asText(),
-                        employee.path("jobTitle").asText(),
-                        employee.path("division").asText(),
-                        employee.path("location").asText(),
-                        employee.path("supervisorUsername").asText()
+                        employee.path("username")
+                                .asText(), employee.path("name")
+                                                   .asText(), employee.path("dob")
+                                                                      .asText(), employee.path("phone")
+                                                                                         .asText(),
+                        employee.path("jobTitle")
+                                .asText(), employee.path("division")
+                                                   .asText(), employee.path("location")
+                                                                      .asText(), employee.path("supervisorUsername")
+                                                                                         .asText()
                 );
             }
 
@@ -95,12 +107,13 @@ public class EmployeesRequestMapper {
 
         return employee;
 
-//        MapperFactory employeeDataFactory = new DefaultMapperFactory.Builder().build();
-//        employeeDataFactory.classMap(SaveEmployeeRequest.Employee.class, EmployeeModel.class)
-//                        .exclude("supervisorUsername")
-//                        .register();
-//
-//        return employeeDataFactory.getMapperFacade(SaveEmployeeRequest.Employee.class, EmployeeModel.class).map(request);
+        //        MapperFactory employeeDataFactory = new DefaultMapperFactory.Builder().build();
+        //        employeeDataFactory.classMap(SaveEmployeeRequest.Employee.class, EmployeeModel.class)
+        //                        .exclude("supervisorUsername")
+        //                        .register();
+        //
+        //        return employeeDataFactory.getMapperFacade(SaveEmployeeRequest.Employee.class, EmployeeModel.class)
+        // .map(request);
     }
 
     public String getSupervisorUsernameFromRawData(final String rawEmployeeData) {
@@ -108,8 +121,10 @@ public class EmployeesRequestMapper {
         String supervisorUsername;
 
         try {
-            supervisorUsername =
-                    new ObjectMapper().readTree(rawEmployeeData).path("employee").path("supervisorUsername").asText();
+            supervisorUsername = new ObjectMapper().readTree(rawEmployeeData)
+                                                   .path("employee")
+                                                   .path("supervisorUsername")
+                                                   .asText();
         } catch (IOException e) {
             return "";
         }

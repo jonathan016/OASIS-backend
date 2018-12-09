@@ -26,16 +26,19 @@ public class ServiceConstant {
 
     public static final String NIK_PREFIX = "GDN";
     public static final String SKU_PREFIX = "SKU";
-
-    private static final String ROOT_IMAGE_DIRECTORY =
-            "C:".concat(File.separator).concat("oasis").concat(File.separator).concat("images");
-    public static final String RESOURCE_IMAGE_DIRECTORY = ROOT_IMAGE_DIRECTORY.concat(File.separator).concat("static");
-    public static final String ASSET_IMAGE_DIRECTORY = ROOT_IMAGE_DIRECTORY.concat(File.separator).concat("assets");
-    public static final String EMPLOYEE_IMAGE_DIRECTORY = ROOT_IMAGE_DIRECTORY.concat(File.separator).concat(
-            "employees");
-
     public static final String PDF_EXTENSION = ".pdf";
     public static final String SPACE = " ";
     public static final String ASCENDING = "A";
     public static final String DESCENDING = "D";
+    private static final String ROOT_IMAGE_DIRECTORY = "C:".concat(File.separator)
+                                                           .concat("oasis")
+                                                           .concat(File.separator)
+                                                           .concat("images");
+    public static final String RESOURCE_IMAGE_DIRECTORY = ROOT_IMAGE_DIRECTORY.concat(File.separator)
+                                                                              .concat("static");
+    public static final String ASSET_IMAGE_DIRECTORY = ROOT_IMAGE_DIRECTORY.concat(File.separator)
+                                                                           .concat("assets");
+    public static final String EMPLOYEE_IMAGE_DIRECTORY = ROOT_IMAGE_DIRECTORY.concat(File.separator)
+                                                                              .concat("employees");
+
 }

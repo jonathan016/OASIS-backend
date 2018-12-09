@@ -13,19 +13,19 @@ import java.util.Map;
 
 public interface DashboardServiceApi {
 
-    List<RequestModel> getMyPendingHandoverRequests(
+    List< RequestModel > getMyPendingHandoverRequests(
             final String username
     );
 
-    List<RequestModel> getMyRequestedRequests(
+    List< RequestModel > getMyRequestedRequests(
             final String username
     );
 
-    List<RequestModel> getOthersRequestedRequests(
+    List< RequestModel > getOthersRequestedRequests(
             final String username
     );
 
-    List<RequestModel> getOthersPendingHandoverRequests(
+    List< RequestModel > getOthersPendingHandoverRequests(
             final String username
     );
 
@@ -43,35 +43,41 @@ public interface DashboardServiceApi {
 
     String determineUserRole(
             final String username
-    ) throws DataNotFoundException;
+    )
+            throws
+            DataNotFoundException;
 
-    List<String> getSupervisedEmployeeUsernameList(
+    List< String > getSupervisedEmployeeUsernameList(
             final String username
     );
 
-    List<RequestModel> getRequestsList(
-            final String requestStatus, final List<String> supervisedEmployeeUsernameList
+    List< RequestModel > getRequestsList(
+            final String requestStatus, final List< String > supervisedEmployeeUsernameList
     );
 
-    List<RequestModel> fillData(
+    List< RequestModel > fillData(
             final String username, final String tab, final String role
     );
 
     void sortData(
-            List<RequestModel> requestUpdates, final String sort
+            List< RequestModel > requestUpdates, final String sort
     );
 
-    List<DashboardRequestUpdateResponse.RequestUpdateModel> mapRequests(
-            final List<RequestModel> requestUpdates
+    List< DashboardRequestUpdateResponse.RequestUpdateModel > mapRequests(
+            final List< RequestModel > requestUpdates
     );
 
-    Map<String, Integer> getStatusSectionData(
+    Map< String, Integer > getStatusSectionData(
             final String username
-    ) throws DataNotFoundException, BadRequestException;
+    )
+            throws
+            DataNotFoundException,
+            BadRequestException;
 
-    List<DashboardRequestUpdateResponse.RequestUpdateModel> getRequestUpdateSectionData(
+    List< DashboardRequestUpdateResponse.RequestUpdateModel > getRequestUpdateSectionData(
             final String username, final String tab, final int page, final String sort
     )
-            throws DataNotFoundException;
+            throws
+            DataNotFoundException;
 
 }

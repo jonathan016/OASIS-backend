@@ -19,6 +19,6 @@ public class AssetDetailResponse {
     private String type;
     private double price;
     private String expendable;
-    private List<String> images;
+    private List< String > images;
 
 }

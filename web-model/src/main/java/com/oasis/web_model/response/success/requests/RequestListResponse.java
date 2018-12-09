@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RequestListResponse {
 
-    private List<RequestListObject> requests;
+    private List< RequestListObject > requests;
 
     @Data
     @NoArgsConstructor
@@ -53,5 +53,7 @@ public class RequestListResponse {
             private long quantity;
 
         }
+
     }
+
 }

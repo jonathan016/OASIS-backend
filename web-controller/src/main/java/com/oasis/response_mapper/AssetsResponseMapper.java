@@ -3,7 +3,10 @@ package com.oasis.response_mapper;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.service.ServiceConstant;
 import com.oasis.web_model.constant.ResponseStatus;
-import com.oasis.web_model.response.*;
+import com.oasis.web_model.response.BaseResponse;
+import com.oasis.web_model.response.NoPagingResponse;
+import com.oasis.web_model.response.Paging;
+import com.oasis.web_model.response.PagingResponse;
 import com.oasis.web_model.response.success.assets.AssetDetailResponse;
 import com.oasis.web_model.response.success.assets.AssetListResponse;
 import ma.glasnost.orika.MapperFactory;
@@ -17,12 +20,12 @@ import java.util.Map;
 @Component
 public class AssetsResponseMapper {
 
-    public PagingResponse<AssetListResponse>
-    produceViewFoundAssetSuccessResult(final int httpStatusCode, final List<AssetModel> assets,
-                                       final Map<String, Boolean> components, final int pageNumber,
-                                       final int totalRecords) {
+    public PagingResponse< AssetListResponse > produceViewFoundAssetSuccessResult(
+            final int httpStatusCode, final List< AssetModel > assets, final Map< String, Boolean > components,
+            final int pageNumber, final int totalRecords
+    ) {
 
-        PagingResponse<AssetListResponse> successResponse = new PagingResponse<>();
+        PagingResponse< AssetListResponse > successResponse = new PagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
@@ -35,30 +38,20 @@ public class AssetsResponseMapper {
                         .exclude("expendable")
                         .byDefault()
                         .register();
-        List<AssetListResponse.Asset> mappedAssets = new ArrayList<>();
-        for(AssetModel asset : assets){
-            mappedAssets.add(assetDataFactory.getMapperFacade(AssetModel.class, AssetListResponse.Asset.class).map(asset));
+        List< AssetListResponse.Asset > mappedAssets = new ArrayList<>();
+        for (AssetModel asset : assets) {
+            mappedAssets.add(assetDataFactory.getMapperFacade(AssetModel.class, AssetListResponse.Asset.class)
+                                             .map(asset));
         }
-        successResponse.setValue(
-                new AssetListResponse(
-                        mappedAssets
-                )
-        );
+        successResponse.setValue(new AssetListResponse(mappedAssets));
 
-        successResponse.setPaging(
-                new Paging(
-                        pageNumber,
-                        ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE,
-                        (int) Math.ceil((double) totalRecords / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE),
-                        totalRecords
-                )
-        );
+        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE, (int) Math.ceil(
+                (double) totalRecords / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }
 
-    public BaseResponse
-    produceAssetSaveSuccessResult(final int httpStatusCode) {
+    public BaseResponse produceAssetSaveSuccessResult(final int httpStatusCode) {
 
         BaseResponse successResponse = new BaseResponse();
 
@@ -68,20 +61,24 @@ public class AssetsResponseMapper {
         return successResponse;
     }
 
-    public NoPagingResponse<AssetDetailResponse>
-    produceViewAssetDetailSuccessResult(final int httpStatusCode, final Map<String, Boolean> components,
-                                        final AssetModel asset, final List<String> images){
+    public NoPagingResponse< AssetDetailResponse > produceViewAssetDetailSuccessResult(
+            final int httpStatusCode, final Map< String, Boolean > components, final AssetModel asset,
+            final List< String > images
+    ) {
 
-        NoPagingResponse<AssetDetailResponse> successResponse = new NoPagingResponse<>();
+        NoPagingResponse< AssetDetailResponse > successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
         successResponse.setComponents(components);
 
         MapperFactory assetDataFactory = new DefaultMapperFactory.Builder().build();
-        assetDataFactory.classMap(AssetModel.class, AssetDetailResponse.class).byDefault().exclude("expendable").register();
-        AssetDetailResponse mappedAsset = assetDataFactory.getMapperFacade(AssetModel.class,
-                                                                            AssetDetailResponse.class).map(asset);
+        assetDataFactory.classMap(AssetModel.class, AssetDetailResponse.class)
+                        .byDefault()
+                        .exclude("expendable")
+                        .register();
+        AssetDetailResponse mappedAsset = assetDataFactory.getMapperFacade(AssetModel.class, AssetDetailResponse.class)
+                                                          .map(asset);
         mappedAsset.setExpendable((asset.isExpendable()) ? "Yes" : "No");
         mappedAsset.setImages(images);
 

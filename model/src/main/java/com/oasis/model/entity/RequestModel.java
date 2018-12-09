@@ -10,7 +10,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @SuppressWarnings("Lombok")
 @Document(collection = CollectionName.REQUEST_COLLECTION_NAME)
-public class RequestModel extends BaseEntity {
+public class RequestModel
+        extends BaseEntity {
 
     @Field(RequestFieldName.USERNAME)
     private String username;

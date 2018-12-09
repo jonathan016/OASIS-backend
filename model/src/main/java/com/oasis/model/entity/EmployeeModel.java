@@ -3,10 +3,8 @@ package com.oasis.model.entity;
 import com.oasis.model.BaseEntity;
 import com.oasis.model.CollectionName;
 import com.oasis.model.fieldname.EmployeeFieldName;
-import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -16,7 +14,8 @@ import java.util.Date;
 @NoArgsConstructor
 @SuppressWarnings("Lombok")
 @Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
-public class EmployeeModel extends BaseEntity {
+public class EmployeeModel
+        extends BaseEntity {
 
     @Field(EmployeeFieldName.NAME)
     private String name;

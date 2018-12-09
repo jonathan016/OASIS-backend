@@ -37,16 +37,21 @@ public class RequestsController {
     @GetMapping(value = APIMappingValue.API_MY_REQUESTS, produces = MediaType.APPLICATION_JSON_VALUE,
                 consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getUsernameRequestsList(
-            @PathVariable(value = "username") final String username,
-            @RequestParam(value = "query", required = false) final String query,
-            @RequestParam(value = "status") final String status,
-            @RequestParam(value = "page") final int page,
-            @RequestParam(value = "sort", required = false) final String sort
+            @PathVariable(value = "username")
+            final String username,
+            @RequestParam(value = "query", required = false)
+            final String query,
+            @RequestParam(value = "status")
+            final String status,
+            @RequestParam(value = "page")
+            final int page,
+            @RequestParam(value = "sort", required = false)
+            final String sort
     ) {
 
-        List<RequestModel> requests;
-        List<EmployeeModel> employees;
-        List<AssetModel> assets;
+        List< RequestModel > requests;
+        List< EmployeeModel > employees;
+        List< AssetModel > assets;
         long totalRecords;
 
         try {
@@ -55,47 +60,42 @@ public class RequestsController {
             assets = requestsServiceImpl.getAssetDataFromRequest(requests);
             totalRecords = requestsServiceImpl.getRequestsCount("Username", username, query, status, page, sort);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(
-                    failedResponseMapper.produceFailedResult(
-                            HttpStatus.BAD_REQUEST.value(),
-                            badRequestException.getErrorCode(),
-                            badRequestException.getErrorMessage()
-                    ),
-                    HttpStatus.BAD_REQUEST
-            );
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
+                                                                                 badRequestException.getErrorCode(),
+                                                                                 badRequestException.getErrorMessage()
+            ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(
-                    failedResponseMapper.produceFailedResult(
-                            HttpStatus.NOT_FOUND.value(),
-                            dataNotFoundException.getErrorCode(),
-                            dataNotFoundException.getErrorMessage()
-                    ),
-                    HttpStatus.NOT_FOUND
-            );
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
+                                                                                 dataNotFoundException.getErrorCode(),
+                                                                                 dataNotFoundException.getErrorMessage()
+            ), HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<>(
-                requestsResponseMapper.produceViewFoundAssetSuccessResult(
-                        HttpStatus.OK.value(), requests, employees, assets, null, page, totalRecords
-                ),
-                HttpStatus.OK
-        );
+                requestsResponseMapper.produceViewFoundAssetSuccessResult(HttpStatus.OK.value(), requests, employees,
+                                                                          assets, null, page, totalRecords
+                ), HttpStatus.OK);
 
     }
 
     @GetMapping(value = APIMappingValue.API_OTHERS_REQUESTS, produces = MediaType.APPLICATION_JSON_VALUE,
                 consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getOthersRequestList(
-            @PathVariable(value = "username") final String username,
-            @RequestParam(value = "query", required = false) final String query,
-            @RequestParam(value = "status") final String status,
-            @RequestParam(value = "page") final int page,
-            @RequestParam(value = "sort", required = false) final String sort
-    ){
+            @PathVariable(value = "username")
+            final String username,
+            @RequestParam(value = "query", required = false)
+            final String query,
+            @RequestParam(value = "status")
+            final String status,
+            @RequestParam(value = "page")
+            final int page,
+            @RequestParam(value = "sort", required = false)
+            final String sort
+    ) {
 
-        List<RequestModel> requests;
-        List<EmployeeModel> employees;
-        List<AssetModel> assets;
+        List< RequestModel > requests;
+        List< EmployeeModel > employees;
+        List< AssetModel > assets;
         long totalRecords;
 
         try {
@@ -104,66 +104,49 @@ public class RequestsController {
             assets = requestsServiceImpl.getAssetDataFromRequest(requests);
             totalRecords = requestsServiceImpl.getRequestsCount("Others", username, query, status, page, sort);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(
-                    failedResponseMapper.produceFailedResult(
-                            HttpStatus.BAD_REQUEST.value(),
-                            badRequestException.getErrorCode(),
-                            badRequestException.getErrorMessage()
-                    ),
-                    HttpStatus.BAD_REQUEST
-            );
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
+                                                                                 badRequestException.getErrorCode(),
+                                                                                 badRequestException.getErrorMessage()
+            ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(
-                    failedResponseMapper.produceFailedResult(
-                            HttpStatus.NOT_FOUND.value(),
-                            dataNotFoundException.getErrorCode(),
-                            dataNotFoundException.getErrorMessage()
-                    ),
-                    HttpStatus.NOT_FOUND
-            );
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
+                                                                                 dataNotFoundException.getErrorCode(),
+                                                                                 dataNotFoundException.getErrorMessage()
+            ), HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<>(
-                requestsResponseMapper.produceViewFoundAssetSuccessResult(
-                        HttpStatus.OK.value(), requests, employees, assets, null, page, totalRecords
-                ),
-                HttpStatus.OK
-        );
+                requestsResponseMapper.produceViewFoundAssetSuccessResult(HttpStatus.OK.value(), requests, employees,
+                                                                          assets, null, page, totalRecords
+                ), HttpStatus.OK);
     }
 
     @PostMapping(value = APIMappingValue.API_SAVE, produces = MediaType.APPLICATION_JSON_VALUE,
                  consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity saveRequest(
-            @RequestBody final SaveRequestRequest request
+            @RequestBody
+            final SaveRequestRequest request
     ) {
 
-        List<RequestModel> requests = requestsRequestMapper.getRequestsListFromRequest(request);
+        List< RequestModel > requests = requestsRequestMapper.getRequestsListFromRequest(request);
 
         try {
             requestsServiceImpl.saveRequests(request.getUsername(), requests);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(
-                    failedResponseMapper.produceFailedResult(
-                            HttpStatus.NOT_FOUND.value(),
-                            dataNotFoundException.getErrorCode(),
-                            dataNotFoundException.getErrorMessage()
-                    ),
-                    HttpStatus.NOT_FOUND
-            );
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
+                                                                                 dataNotFoundException.getErrorCode(),
+                                                                                 dataNotFoundException.getErrorMessage()
+            ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(
-                    failedResponseMapper.produceFailedResult(
-                            HttpStatus.BAD_REQUEST.value(),
-                            badRequestException.getErrorCode(),
-                            badRequestException.getErrorMessage()
-                    ),
-                    HttpStatus.BAD_REQUEST
-            );
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
+                                                                                 badRequestException.getErrorCode(),
+                                                                                 badRequestException.getErrorMessage()
+            ), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(requestsResponseMapper.produceRequestSaveSuccessResult(
-                HttpStatus.CREATED.value()
-        ), HttpStatus.CREATED);
+        return new ResponseEntity<>(requestsResponseMapper.produceRequestSaveSuccessResult(HttpStatus.CREATED.value()),
+                                    HttpStatus.CREATED
+        );
 
     }
 
