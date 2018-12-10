@@ -1,11 +1,11 @@
 package com.oasis.web_controller;
 
+import com.oasis.RoleDeterminer;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UserNotAuthenticatedException;
-import com.oasis.model.entity.EmployeeModel;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.response_mapper.LoginResponseMapper;
-import com.oasis.service.implementation.LoginServiceImpl;
+import com.oasis.service.api.LoginServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.login.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@CrossOrigin(origins = "http://localhost")
+@CrossOrigin(origins = APIMappingValue.CROSS_ORIGIN_LINK)
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class LoginController {
 
     @Autowired
-    private LoginServiceImpl loginServiceImpl;
+    private RoleDeterminer roleDeterminer;
+    @Autowired
+    private LoginServiceApi loginServiceApi;
     @Autowired
     private LoginResponseMapper loginResponseMapper;
     @Autowired
@@ -32,18 +34,18 @@ public class LoginController {
 
     @PostMapping(value = APIMappingValue.API_LOGIN, produces = APPLICATION_JSON_VALUE,
                  consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity callLoginService(
+    public ResponseEntity checkLoginCredentials(
             @RequestBody
             final LoginRequest request
     ) {
 
-        EmployeeModel result;
-        String role;
+        final String username;
+        final String role;
 
         try {
-            result = loginServiceImpl.checkLoginCredentials(request.getUsername()
-                                                                   .toLowerCase(), request.getPassword());
-            role = loginServiceImpl.determineUserRole(result.getUsername());
+            username = loginServiceApi
+                    .checkLoginCredentials(request.getUsername().toLowerCase(), request.getPassword());
+            role = roleDeterminer.determineRole(username);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
                                                                                  dataNotFoundException.getErrorCode(),
@@ -51,15 +53,15 @@ public class LoginController {
             ), HttpStatus.NOT_FOUND);
         } catch (UserNotAuthenticatedException userNotAuthenticatedException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 userNotAuthenticatedException.getErrorCode(),
-                                                                                 userNotAuthenticatedException.getErrorMessage()
+                                                                                 userNotAuthenticatedException
+                                                                                         .getErrorCode(),
+                                                                                 userNotAuthenticatedException
+                                                                                         .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         }
 
         return new ResponseEntity<>(
-                loginResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), result.getUsername(), role),
-                HttpStatus.OK
-        );
+                loginResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), username, role), HttpStatus.OK);
     }
 
 }

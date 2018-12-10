@@ -1,6 +1,5 @@
 package com.oasis.service.implementation;
 
-import com.oasis.RoleDeterminer;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
@@ -9,60 +8,55 @@ import com.oasis.service.api.LoginServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.PASSWORD_DOES_NOT_MATCH;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.INVALID_PASSWORD;
 
 @Service
+@Transactional
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class LoginServiceImpl
         implements LoginServiceApi {
 
     @Autowired
     private EmployeeRepository employeeRepository;
-    @Autowired
-    private RoleDeterminer roleDeterminer;
 
     @Override
-    public EmployeeModel checkLoginCredentials(
+    public String checkLoginCredentials(
             final String username, final String password
     )
             throws
             DataNotFoundException,
             UserNotAuthenticatedException {
 
-        if (!username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+@gdn-commerce.com") &&
-            !username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+")) {
-            throw new DataNotFoundException(USER_NOT_FOUND);
+        final boolean validUsernameWithSuffix = username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+@gdn-commerce.com");
+        final boolean validUsernameWithoutSuffix = username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+");
+
+        if (!validUsernameWithSuffix && !validUsernameWithoutSuffix) {
+            throw new DataNotFoundException(DATA_NOT_FOUND);
         }
 
-        EmployeeModel result;
+        final EmployeeModel employee;
 
-        if (username.contains("@")) {
-            result = employeeRepository.findByDeletedIsFalseAndUsername(username.substring(0, username.indexOf('@')));
+        if (validUsernameWithSuffix) {
+            employee = employeeRepository.findByDeletedIsFalseAndUsername(username.substring(0, username.indexOf('@')));
         } else {
-            result = employeeRepository.findByDeletedIsFalseAndUsername(username);
+            employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
         }
 
-        if (result == null) {
-            throw new DataNotFoundException(USER_NOT_FOUND);
+        if (employee == null) {
+            throw new DataNotFoundException(DATA_NOT_FOUND);
         } else {
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-            if (!encoder.matches(password, result.getPassword())) {
-                throw new UserNotAuthenticatedException(PASSWORD_DOES_NOT_MATCH);
+            final boolean passwordMatch = encoder.matches(password, employee.getPassword());
+            if (!passwordMatch) {
+                throw new UserNotAuthenticatedException(INVALID_PASSWORD);
             }
         }
 
-        return result;
-    }
-
-    @Override
-    public String determineUserRole(final String username)
-            throws
-            DataNotFoundException {
-
-        return roleDeterminer.determineRole(username);
+        return employee.getUsername();
     }
 
 }

@@ -2,13 +2,20 @@ package com.oasis.exception.helper;
 
 public class ErrorCodeAndMessage {
 
-    public static final BaseError USER_NOT_FOUND = new BaseError("USER_NOT_FOUND",
-                                                                 "User with specified username/NIK does not exist!"
+//    Fixed
+    public static final BaseError DATA_NOT_FOUND = new BaseError(
+            "DATA_NOT_FOUND",
+            "No data in database matches given information"
     );
 
-    public static final BaseError PASSWORD_DOES_NOT_MATCH = new BaseError("PASSWORD_DOES_NOT_MATCH",
-                                                                          "Typed password does not match user's " +
-                                                                          "password!"
+    public static final BaseError INVALID_PASSWORD = new BaseError(
+            "INVALID_PASSWORD",
+            "Invalid password given"
+    );
+
+//    Old Ones
+    public static final BaseError USER_NOT_FOUND = new BaseError("USER_NOT_FOUND",
+                                                                 "User with specified username/NIK does not exist!"
     );
 
     public static final BaseError REQUESTS_NOT_FOUND = new BaseError("REQUESTS_NOT_FOUND",
@@ -23,14 +30,6 @@ public class ErrorCodeAndMessage {
     public static final BaseError EMPTY_SEARCH_QUERY = new BaseError("EMPTY_SEARCH_QUERY",
                                                                      "System cannot perform searching process as no " +
                                                                      "search query is given!"
-    );
-
-    public static final BaseError EMPLOYEE_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR = new BaseError(
-            "EMPLOYEE_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR", "Non-administrator attempted to save employee data!");
-
-    public static final BaseError DUPLICATE_EMPLOYEE_DATA_FOUND = new BaseError("DUPLICATE_EMPLOYEE_DATA_FOUND",
-                                                                                "Duplicate employee data found in " +
-                                                                                "database!"
     );
 
     public static final BaseError CYCLIC_SUPERVISING_OCCURRED = new BaseError("CYCLIC_SUPERVISING_OCCURRED",
@@ -94,10 +93,6 @@ public class ErrorCodeAndMessage {
 
     public static final BaseError MISSING_ASSET_IMAGE = new BaseError("MISSING_ASSET_IMAGE",
                                                                       "No image(s) can be found for specified asset!"
-    );
-
-    public static final BaseError INCORRECT_DATE_FORMAT = new BaseError("INCORRECT_DATE_FORMAT",
-                                                                        "Incorrect date format given, please use format dd-MM-yyyy!"
     );
 
 }
