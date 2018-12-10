@@ -50,10 +50,10 @@ public class RequestsServiceImpl
             throw new BadRequestException(EMPTY_SEARCH_QUERY);
         }
 
-        if (!status.isEmpty() && !status.equals(ServiceConstant.REQUESTED) &&
-            !status.equals(ServiceConstant.ACCEPTED) && !status.equals(ServiceConstant.REJECTED) &&
-            !status.equals(ServiceConstant.CANCELLED) && !status.equals(ServiceConstant.DELIVERED) &&
-            !status.equals(ServiceConstant.RETURNED)) {
+        if (!status.isEmpty() && !status.equals(ServiceConstant.STATUS_REQUESTED) &&
+            !status.equals(ServiceConstant.STATUS_ACCEPTED) && !status.equals(ServiceConstant.STATUS_REJECTED) &&
+            !status.equals(ServiceConstant.STATUS_CANCELLED) && !status.equals(ServiceConstant.STATUS_DELIVERED) &&
+            !status.equals(ServiceConstant.STATUS_RETURNED)) {
             throw new BadRequestException(EMPTY_SEARCH_QUERY);
         }
 
@@ -69,7 +69,7 @@ public class RequestsServiceImpl
 
         if (page < 1 || foundDataSize == 0 || (int) Math.ceil(
                 (double) getRequestsCount("Username", username, query, status, page, sort) /
-                ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE) < page) {
+                ServiceConstant.REQUESTS_LIST_PAGE_SIZE) < page) {
             throw new DataNotFoundException(ASSET_NOT_FOUND);
         }
 
@@ -83,7 +83,7 @@ public class RequestsServiceImpl
                                                                                                          PageRequest.of(
                                                                                                                  page -
                                                                                                                  1,
-                                                                                                                 ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
+                                                                                                                 ServiceConstant.REQUESTS_LIST_PAGE_SIZE
                                                                                                          )
                         )
                                                 .getContent();
@@ -93,7 +93,7 @@ public class RequestsServiceImpl
                             return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateAsc(username, status,
                                                                                                      PageRequest.of(
                                                                                                              page - 1,
-                                                                                                             ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
+                                                                                                             ServiceConstant.REQUESTS_LIST_PAGE_SIZE
                                                                                                      )
                             )
                                                     .getContent();
@@ -109,7 +109,7 @@ public class RequestsServiceImpl
                                                                                                           PageRequest.of(
                                                                                                                   page -
                                                                                                                   1,
-                                                                                                                  ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
+                                                                                                                  ServiceConstant.REQUESTS_LIST_PAGE_SIZE
                                                                                                           )
                         )
                                                 .getContent();
@@ -119,7 +119,7 @@ public class RequestsServiceImpl
                             return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status,
                                                                                                       PageRequest.of(
                                                                                                               page - 1,
-                                                                                                              ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE
+                                                                                                              ServiceConstant.REQUESTS_LIST_PAGE_SIZE
                                                                                                       )
                             )
                                                     .getContent();
@@ -135,7 +135,7 @@ public class RequestsServiceImpl
                             .equals("status")) {
                         return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(
                                 username, query, query,
-                                PageRequest.of(page - 1, ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE)
+                                PageRequest.of(page - 1, ServiceConstant.REQUESTS_LIST_PAGE_SIZE)
                         )
                                                 .getContent();
                     } else {
@@ -143,7 +143,7 @@ public class RequestsServiceImpl
                                 .equals("updatedDate")) {
                             return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
                                     username, query, query,
-                                    PageRequest.of(page - 1, ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE)
+                                    PageRequest.of(page - 1, ServiceConstant.REQUESTS_LIST_PAGE_SIZE)
                             )
                                                     .getContent();
                         }
@@ -154,7 +154,7 @@ public class RequestsServiceImpl
                             .equals("status")) {
                         return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusDesc(
                                 username, query, query,
-                                PageRequest.of(page - 1, ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE)
+                                PageRequest.of(page - 1, ServiceConstant.REQUESTS_LIST_PAGE_SIZE)
                         )
                                                 .getContent();
                     } else {
@@ -162,7 +162,7 @@ public class RequestsServiceImpl
                                 .equals("updatedDate")) {
                             return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
                                     username, query, username, query,
-                                    PageRequest.of(page - 1, ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE)
+                                    PageRequest.of(page - 1, ServiceConstant.REQUESTS_LIST_PAGE_SIZE)
                             )
                                                     .getContent();
                         }
@@ -307,7 +307,7 @@ public class RequestsServiceImpl
             if (request.get_id() == null) {
                 savedRequest = request;
 
-                savedRequest.setStatus(ServiceConstant.REQUESTED);
+                savedRequest.setStatus(ServiceConstant.STATUS_REQUESTED);
                 savedRequest.setTransactionNote(null);
                 savedRequest.setCreatedBy(username);
                 savedRequest.setCreatedDate(new Date());
@@ -329,22 +329,22 @@ public class RequestsServiceImpl
                     boolean usernameIsAdminOrSupervisor = usernameIsAdmin || supervisorIsValid;
 
                     boolean requestStatusIsRequested = savedRequest.getStatus()
-                                                                   .equals(ServiceConstant.REQUESTED);
+                                                                   .equals(ServiceConstant.STATUS_REQUESTED);
                     boolean requestStatusIsAccepted = savedRequest.getStatus()
-                                                                  .equals(ServiceConstant.ACCEPTED);
+                                                                  .equals(ServiceConstant.STATUS_ACCEPTED);
                     boolean requestStatusIsDelivered = savedRequest.getStatus()
-                                                                   .equals(ServiceConstant.DELIVERED);
+                                                                   .equals(ServiceConstant.STATUS_DELIVERED);
 
                     boolean newRequestStatusIsCancelled = request.getStatus()
-                                                                 .equals(ServiceConstant.CANCELLED);
+                                                                 .equals(ServiceConstant.STATUS_CANCELLED);
                     boolean newRequestStatusIsAccepted = request.getStatus()
-                                                                .equals(ServiceConstant.ACCEPTED);
+                                                                .equals(ServiceConstant.STATUS_ACCEPTED);
                     boolean newRequestStatusIsRejected = request.getStatus()
-                                                                .equals(ServiceConstant.REJECTED);
+                                                                .equals(ServiceConstant.STATUS_REJECTED);
                     boolean newRequestStatusIsDelivered = request.getStatus()
-                                                                 .equals(ServiceConstant.DELIVERED);
+                                                                 .equals(ServiceConstant.STATUS_DELIVERED);
                     boolean newRequestStatusIsReturned = request.getStatus()
-                                                                .equals(ServiceConstant.RETURNED);
+                                                                .equals(ServiceConstant.STATUS_RETURNED);
 
                     boolean expendableAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
                                                              .isExpendable();
@@ -429,7 +429,7 @@ public class RequestsServiceImpl
                             (expendableAsset && allowedToDeliverAsset) || (usernameIsAdmin && deliveredToReturned);
 
                     if (allowedToCancelRequest) {
-                        savedRequest.setStatus(ServiceConstant.CANCELLED);
+                        savedRequest.setStatus(ServiceConstant.STATUS_CANCELLED);
                     }
 
                     if (allowedToAcceptOrRejectRequest) {
@@ -455,7 +455,7 @@ public class RequestsServiceImpl
                     }
 
                     if (allowedToDeliverAsset) {
-                        savedRequest.setStatus(ServiceConstant.DELIVERED);
+                        savedRequest.setStatus(ServiceConstant.STATUS_DELIVERED);
                     }
 
                     if (assetReturned) {
@@ -466,7 +466,7 @@ public class RequestsServiceImpl
 
                         assetRepository.save(asset);
 
-                        savedRequest.setStatus(ServiceConstant.RETURNED);
+                        savedRequest.setStatus(ServiceConstant.STATUS_RETURNED);
                     }
                 }
             }
@@ -522,7 +522,7 @@ public class RequestsServiceImpl
         PagedListHolder< RequestModel > pagedListHolder = new PagedListHolder<>(
                 new ArrayList<>(getOthersRequestList(username, query, status, page, sort)));
         pagedListHolder.setPage(page - 1);
-        pagedListHolder.setPageSize(ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE);
+        pagedListHolder.setPageSize(ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
 
         return pagedListHolder.getPageList();
     }

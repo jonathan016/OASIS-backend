@@ -34,6 +34,11 @@
         <commonsfileupload.version>1.3.3</commonsfileupload.version>
         <itextpdf.version>5.5.13</itextpdf.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <slf4j-api.version>1.7.25</slf4j-api.version>
+        <log4j.version>1.2.17</log4j.version>
+        <springdataredis.version>2.0.3.RELEASE</springdataredis.version>
+        <jedis.version>2.9.0</jedis.version>
+        <springsessionredis.version>2.1.2.RELEASE</springsessionredis.version>
     </properties>
 
     <repositories>
@@ -104,6 +109,32 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-redis</artifactId>
+                <version>${springdataredis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
+                <type>jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.session</groupId>
+                <artifactId>spring-session-data-redis</artifactId>
+                <version>${springsessionredis.version}</version>
             </dependency>
 
             <!--Module Dependency-->

@@ -42,13 +42,13 @@ public class DashboardServiceImpl
     @Override
     public List< RequestModel > getMyPendingHandoverRequests(final String username) {
 
-        return requestRepository.findAllByUsernameAndStatus(username, ServiceConstant.ACCEPTED);
+        return requestRepository.findAllByUsernameAndStatus(username, ServiceConstant.STATUS_ACCEPTED);
     }
 
     @Override
     public List< RequestModel > getMyRequestedRequests(final String username) {
 
-        return requestRepository.findAllByUsernameAndStatus(username, ServiceConstant.REQUESTED);
+        return requestRepository.findAllByUsernameAndStatus(username, ServiceConstant.STATUS_REQUESTED);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class DashboardServiceImpl
 
         List< String > supervisedEmployeeUsernameList = getSupervisedEmployeeUsernameList(username);
 
-        return getRequestsList(ServiceConstant.REQUESTED, supervisedEmployeeUsernameList);
+        return getRequestsList(ServiceConstant.STATUS_REQUESTED, supervisedEmployeeUsernameList);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class DashboardServiceImpl
 
         List< String > supervisedEmployeeUsernameList = getSupervisedEmployeeUsernameList(username);
 
-        return getRequestsList(ServiceConstant.ACCEPTED, supervisedEmployeeUsernameList);
+        return getRequestsList(ServiceConstant.STATUS_ACCEPTED, supervisedEmployeeUsernameList);
     }
 
     /*--------------Request Update Section--------------*/
@@ -131,10 +131,10 @@ public class DashboardServiceImpl
                     supervisedEmployeeUsername);
 
             if (isAdminOrSuperior) {
-                if (requestStatus.equals(ServiceConstant.ACCEPTED)) {
+                if (requestStatus.equals(ServiceConstant.STATUS_ACCEPTED)) {
                     assignedRequests.addAll(getOthersPendingHandoverRequests(supervisedEmployeeUsername));
                 } else {
-                    if (requestStatus.equals(ServiceConstant.REQUESTED)) {
+                    if (requestStatus.equals(ServiceConstant.STATUS_REQUESTED)) {
                         assignedRequests.addAll(getOthersRequestedRequests(supervisedEmployeeUsername));
                     }
                 }
@@ -248,7 +248,7 @@ public class DashboardServiceImpl
             throw new BadRequestException(EMPTY_EMPLOYEE_NIK);
         }
 
-        int availableAssetCount = assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
+        long availableAssetCount = assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
 
         List< RequestModel > requestedRequests = new ArrayList<>();
         List< RequestModel > pendingHandoverRequests = new ArrayList<>();
@@ -270,7 +270,7 @@ public class DashboardServiceImpl
         Map< String, Integer > statusData = new HashMap<>();
         statusData.put("requestedRequestsCount", requestedRequests.size());
         statusData.put("pendingHandoverRequestsCount", pendingHandoverRequests.size());
-        statusData.put("availableAssetsCount", availableAssetCount);
+        statusData.put("availableAssetsCount", (int)availableAssetCount);
 
         return statusData;
     }

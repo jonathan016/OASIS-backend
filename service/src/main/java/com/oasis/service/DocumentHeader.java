@@ -26,10 +26,10 @@ public class DocumentHeader
 
         Image blibliImage = null;
         try {
-            File blibliLogo = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator)
-                                                                               .concat("pdf_header_images")
-                                                                               .concat(File.separator)
-                                                                               .concat("blibli.png"));
+            File blibliLogo = new File(ServiceConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator)
+                                                                             .concat("pdf_header_images")
+                                                                             .concat(File.separator)
+                                                                             .concat("blibli.png"));
             blibliImage = Image.getInstance(Files.readAllBytes(blibliLogo.toPath()));
         } catch (IOException | BadElementException e) {
             e.printStackTrace();
@@ -47,10 +47,10 @@ public class DocumentHeader
 
         Image oasisImage = null;
         try {
-            File oasisLogo = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator)
-                                                                              .concat("pdf_header_images")
-                                                                              .concat(File.separator)
-                                                                              .concat("oasis.png"));
+            File oasisLogo = new File(ServiceConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator)
+                                                                            .concat("pdf_header_images")
+                                                                            .concat(File.separator)
+                                                                            .concat("oasis.png"));
             oasisImage = Image.getInstance(Files.readAllBytes(oasisLogo.toPath()));
         } catch (IOException | BadElementException e) {
             e.printStackTrace();

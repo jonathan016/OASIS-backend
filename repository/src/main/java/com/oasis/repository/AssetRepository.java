@@ -14,7 +14,10 @@ public interface AssetRepository
 
     AssetModel findByDeletedIsFalseAndSkuEquals(String sku);
 
-    int countAllByDeletedIsFalseAndStockGreaterThan(long stockLimit);
+    long countAllByDeletedIsFalseAndStockGreaterThan(long stockLimit);
+
+    long countAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCase(long stockLimit,
+            String sku, String name);
 
     Page< AssetModel > findAllByDeletedIsFalseAndStockGreaterThanOrderBySkuAsc(
             long stockLimit, Pageable pageable

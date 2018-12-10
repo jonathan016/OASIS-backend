@@ -67,6 +67,16 @@ public class ErrorCodeAndMessage {
                                                                   "Asset with given search query cannot be found!"
     );
 
+    public static final BaseError LOCKED_DATA_MODIFICATION_ATTEMPT = new BaseError(
+            "LOCKED_DATA_MODIFICATION_ATTEMPT",
+            "LOCKED_DATA_MODIFICATION_ATTEMPT"
+    );
+
+    public static final BaseError SAME_DATA_ON_UPDATE = new BaseError(
+            "SAME_DATA_ON_UPDATE",
+            "SAME_DATA_ON_UPDATE"
+    );
+
     public static final BaseError DUPLICATE_ASSET_DATA_FOUND = new BaseError("DUPLICATE_ASSET_DATA_FOUND",
                                                                              "Duplicate asset data found in database!"
     );

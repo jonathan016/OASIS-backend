@@ -9,57 +9,55 @@ import com.oasis.request_mapper.AssetsRequestMapper;
 import com.oasis.response_mapper.AssetsResponseMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.service.ActiveComponentManager;
-import com.oasis.service.implementation.AssetsServiceImpl;
+import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.assets.DeleteAssetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.springframework.http.MediaType.*;
+
 @RestController
-@CrossOrigin(origins = "http://localhost")
 @RequestMapping(value = APIMappingValue.API_ASSET)
+@CrossOrigin(origins = APIMappingValue.CROSS_ORIGIN_LINK)
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class AssetsController {
 
+    @Autowired
+    private AssetsServiceApi assetsServiceApi;
+    @Autowired
+    private AssetsRequestMapper assetsRequestMapper;
     @Autowired
     private AssetsResponseMapper assetsResponseMapper;
     @Autowired
     private FailedResponseMapper failedResponseMapper;
     @Autowired
-    private AssetsServiceImpl assetsServiceImpl;
-    @Autowired
     private ActiveComponentManager activeComponentManager;
-    @Autowired
-    private AssetsRequestMapper assetsRequestMapper;
 
-    @GetMapping(value = APIMappingValue.API_LIST, produces = MediaType.APPLICATION_JSON_VALUE,
-                consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = APIMappingValue.API_LIST, produces = APPLICATION_JSON_VALUE,
+                consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAvailableAssetsList(
             @RequestParam(value = "query", required = false)
-                    String query,
+            final String query,
             @RequestParam(value = "page")
             final int page,
-            @RequestParam(value = "sort")
+            @RequestParam(value = "sort", required = false)
             final String sort
     ) {
 
-        List< AssetModel > availableAssets;
-        int totalRecords;
+        final List< AssetModel > availableAssets;
+        final long totalRecords;
 
         try {
-            if (query != null && query.isEmpty()) {
-                query = "defaultQuery";
-            }
-            availableAssets = new ArrayList<>(assetsServiceImpl.getAvailableAssetsList(query, page, sort));
-
-            totalRecords = assetsServiceImpl.getAvailableAssetsCount(query, sort);
+            availableAssets = new ArrayList<>(assetsServiceApi.getAvailableAssetsList(query, page, sort));
+            totalRecords = assetsServiceApi.getAvailableAssetsCount(query, sort);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
@@ -73,24 +71,25 @@ public class AssetsController {
         }
 
         //TODO include parameter role
-        return new ResponseEntity<>(
-                assetsResponseMapper.produceViewFoundAssetSuccessResult(HttpStatus.OK.value(), availableAssets,
-                                                                        activeComponentManager.getAssetsListActiveComponents(
-                                                                                ""), page, totalRecords
-                ), HttpStatus.OK);
+        return new ResponseEntity<>(assetsResponseMapper
+                                            .produceViewFoundAssetSuccessResult(HttpStatus.OK.value(), availableAssets,
+                                                                                activeComponentManager
+                                                                                        .getAssetsListActiveComponents(
+                                                                                                ""), page, totalRecords
+                                            ), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_DATA_ASSET, produces = MediaType.APPLICATION_JSON_VALUE,
-                consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = APIMappingValue.API_DATA_ASSET, produces = APPLICATION_JSON_VALUE,
+                consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAssetDetailData(
             @PathVariable(value = "identifier")
             final String sku
     ) {
 
-        AssetModel asset;
+        final AssetModel asset;
 
         try {
-            asset = assetsServiceImpl.getAssetDetailData(sku);
+            asset = assetsServiceApi.getAssetDetailData(sku);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
                                                                                  dataNotFoundException.getErrorCode(),
@@ -98,18 +97,17 @@ public class AssetsController {
             ), HttpStatus.NOT_FOUND);
         }
 
-        List< String > images = assetsServiceImpl.getAssetDetailImages(asset.getSku(), asset.getImageDirectory());
+        final List< String > imageURLs = assetsServiceApi
+                .getAssetDetailImages(asset.getSku(), asset.getImageDirectory());
 
         //TODO include parameter role
-        return new ResponseEntity<>(assetsResponseMapper.produceViewAssetDetailSuccessResult(HttpStatus.OK.value(),
-                                                                                             activeComponentManager.getAssetDetailActiveComponents(
-                                                                                                     ""), asset, images
-        ), HttpStatus.OK);
+        return new ResponseEntity<>(
+                assetsResponseMapper.produceViewAssetDetailSuccessResult(HttpStatus.OK.value(), activeComponentManager
+                        .getAssetDetailActiveComponents(""), asset, imageURLs), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_IMAGE_ASSET,
-                produces = { MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE },
-                consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = APIMappingValue.API_IMAGE_ASSET, produces = { IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE },
+                consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAssetImage(
             @PathVariable(value = "identifier")
             final String sku,
@@ -119,36 +117,25 @@ public class AssetsController {
             final String extension
     ) {
 
-        byte[] photo;
-
-        photo = assetsServiceImpl.getAssetImage(sku, image, extension);
+        final byte[] photo = assetsServiceApi.getAssetImage(sku, image, extension);
 
         return new ResponseEntity<>(photo, HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_PDF_ASSET, produces = MediaType.APPLICATION_PDF_VALUE,
-                consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = APIMappingValue.API_PDF_ASSET, produces = APPLICATION_PDF_VALUE,
+                consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAssetDetailInPdf(
             @PathVariable(value = "identifier")
             final String sku
     ) {
 
-        byte[] document;
+        final byte[] pdfDocument = assetsServiceApi.getAssetDetailInPdf(sku);
 
-        try {
-            document = assetsServiceImpl.getAssetDetailInPdf(sku, AssetsController.class.getClassLoader());
-        } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
-            ), HttpStatus.NOT_FOUND);
-        }
-
-        return new ResponseEntity<>(document, HttpStatus.OK);
+        return new ResponseEntity<>(pdfDocument, HttpStatus.OK);
     }
 
-    @PostMapping(value = APIMappingValue.API_SAVE, produces = MediaType.APPLICATION_JSON_VALUE,
-                 consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = APIMappingValue.API_SAVE, produces = APPLICATION_JSON_VALUE,
+                 consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity saveAsset(
             @RequestParam(value = "photos")
             final List< MultipartFile > photos,
@@ -157,22 +144,23 @@ public class AssetsController {
     ) {
 
         try {
-            String username = assetsRequestMapper.getAdminUsernameFromRawData(rawAssetData);
-            boolean isAddOperation = assetsRequestMapper.checkAddOperationFromRawData(rawAssetData);
+            final String username = assetsRequestMapper.getAdminUsernameFromRawData(rawAssetData);
+            final boolean createOperation = assetsRequestMapper.isCreateOperationFromRawData(rawAssetData);
+            final AssetModel asset = assetsRequestMapper.getAssetModelFromRawData(rawAssetData, createOperation);
 
-            assetsServiceImpl.saveAsset(photos, username,
-                                        assetsRequestMapper.getAssetModelFromRawData(rawAssetData, isAddOperation),
-                                        isAddOperation
-            );
+            assetsServiceApi.saveAsset(photos, username, asset, createOperation);
         } catch (DuplicateDataException duplicateDataException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.CONFLICT.value(),
                                                                                  duplicateDataException.getErrorCode(),
-                                                                                 duplicateDataException.getErrorMessage()
+                                                                                 duplicateDataException
+                                                                                         .getErrorMessage()
             ), HttpStatus.CONFLICT);
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 unauthorizedOperationException.getErrorCode(),
-                                                                                 unauthorizedOperationException.getErrorMessage()
+                                                                                 unauthorizedOperationException
+                                                                                         .getErrorCode(),
+                                                                                 unauthorizedOperationException
+                                                                                         .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
@@ -191,8 +179,8 @@ public class AssetsController {
         );
     }
 
-    @DeleteMapping(value = APIMappingValue.API_DELETE, produces = MediaType.APPLICATION_JSON_VALUE,
-                   consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = APIMappingValue.API_DELETE, produces = APPLICATION_JSON_VALUE,
+                   consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity deleteAssets(
             @RequestBody
             final DeleteAssetRequest request
@@ -200,11 +188,13 @@ public class AssetsController {
         //TODO Handle concurrency
 
         try {
-            assetsServiceImpl.deleteAssets(request.getSkus(), request.getUsername());
+            assetsServiceApi.deleteAssets(request.getSkus(), request.getUsername());
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 unauthorizedOperationException.getErrorCode(),
-                                                                                 unauthorizedOperationException.getErrorMessage()
+                                                                                 unauthorizedOperationException
+                                                                                         .getErrorCode(),
+                                                                                 unauthorizedOperationException
+                                                                                         .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
@@ -223,6 +213,7 @@ public class AssetsController {
         );
     }
 
+    @ExceptionHandler(MissingServletRequestParameterException.class)
     @RequestMapping(value = APIMappingValue.API_MISDIRECT, method = {
             RequestMethod.GET,
             RequestMethod.POST,
@@ -233,12 +224,21 @@ public class AssetsController {
             RequestMethod.PATCH,
             RequestMethod.TRACE
     })
-    public ResponseEntity returnIncorrectMappingCalls() {
+    public ResponseEntity returnIncorrectMappingCalls(
+            final MissingServletRequestParameterException exception
+    ) {
 
-        return new ResponseEntity<>(
-                failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.name(),
-                                                         "Incorrect mapping/method"
-                ), HttpStatus.BAD_REQUEST);
+        String message;
+
+        if (exception.getParameterName() != null) {
+            message = exception.getMessage();
+        } else {
+            message = "Incorrect mapping/method!";
+        }
+
+        return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
+                                                                             HttpStatus.BAD_REQUEST.name(), message
+        ), HttpStatus.BAD_REQUEST);
     }
 
 }

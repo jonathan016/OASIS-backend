@@ -59,9 +59,9 @@ public class EmployeesResponseMapper {
 
         successResponse.setValue(new EmployeeListResponse(mappedEmployees));
 
-        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE,
+        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE,
                                              (int) Math.ceil((double) totalRecords /
-                                                             ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE),
+                                                             ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE),
                                              totalRecords
         ));
 

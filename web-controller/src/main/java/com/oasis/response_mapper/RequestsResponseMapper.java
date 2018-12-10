@@ -64,9 +64,9 @@ public class RequestsResponseMapper {
         }
         successResponse.setValue(new RequestListResponse(mappedRequests));
 
-        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE,
+        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.REQUESTS_LIST_PAGE_SIZE,
                                              (int) Math.ceil((double) totalRecords /
-                                                             ServiceConstant.REQUESTS_FIND_REQUEST_PAGE_SIZE),
+                                                             ServiceConstant.REQUESTS_LIST_PAGE_SIZE),
                                              totalRecords
         ));
 

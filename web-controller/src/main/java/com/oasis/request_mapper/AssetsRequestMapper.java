@@ -31,7 +31,7 @@ public class AssetsRequestMapper {
         return adminUsername;
     }
 
-    public boolean checkAddOperationFromRawData(final String rawAssetData)
+    public boolean isCreateOperationFromRawData(final String rawAssetData)
             throws
             UnauthorizedOperationException {
 

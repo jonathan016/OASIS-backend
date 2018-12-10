@@ -1,7 +1,6 @@
 package com.oasis;
 
 import com.oasis.exception.DataNotFoundException;
-import com.oasis.model.entity.EmployeeModel;
 import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
@@ -22,23 +21,33 @@ public class RoleDeterminer {
     @Autowired
     private SupervisionRepository supervisionRepository;
 
-    public String determineRole(String username)
+    public String determineRole(
+            final String username
+    )
             throws
             DataNotFoundException {
 
-        if (adminRepository.findByDeletedIsFalseAndUsernameEquals(username) != null) {
+        boolean administratorWithUsernameExists = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals(
+                username);
+
+        if (administratorWithUsernameExists) {
             return ServiceConstant.ROLE_ADMINISTRATOR;
         } else {
-            EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
+            boolean employeeWithUsernameExists = employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(
+                    username);
 
-            if (employee == null) {
-                throw new DataNotFoundException(USER_NOT_FOUND);
-            } else {
-                if (supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(username)) {
+            if (employeeWithUsernameExists) {
+                boolean supervisionWithUsernameAsSupervisorExists =
+                        supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(
+                        username);
+
+                if (supervisionWithUsernameAsSupervisorExists) {
                     return ServiceConstant.ROLE_SUPERIOR;
                 } else {
                     return ServiceConstant.ROLE_EMPLOYEE;
                 }
+            } else {
+                throw new DataNotFoundException(USER_NOT_FOUND);
             }
         }
     }

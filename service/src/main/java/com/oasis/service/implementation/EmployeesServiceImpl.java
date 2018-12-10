@@ -74,14 +74,14 @@ public class EmployeesServiceImpl
                 throw new DataNotFoundException(USER_NOT_FOUND);
             }
 
-            if ((int) Math.ceil((float) foundDataSize / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
+            if ((int) Math.ceil((float) foundDataSize / ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE) < page) {
                 throw new DataNotFoundException(USER_NOT_FOUND);
             }
 
             return new ArrayList<>(getSortedEmployeesList(username, page, sort));
         } else {
             if (page < 1 || (int) Math.ceil((double) getEmployeesCount(username, query, sort) /
-                                            ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
+                                            ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE) < page) {
                 throw new DataNotFoundException(USER_NOT_FOUND);
             }
 
@@ -92,7 +92,7 @@ public class EmployeesServiceImpl
             //            String[] queries = query.split(ServiceConstant.SPACE);
             //
             //            if (page < 1 || (int) Math.ceil((double) getEmployeesCount(query, sort)
-            //                                / ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE) < page) {
+            //                                / ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE) < page) {
             //                throw new DataNotFoundException(USER_NOT_FOUND);
             //            }
             //
@@ -131,7 +131,7 @@ public class EmployeesServiceImpl
             return new LinkedHashSet<>(
                     employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotOrderByNameAsc(username,
                                                                                              PageRequest.of(page - 1,
-                                                                                                            ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE
+                                                                                                            ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE
                                                                                              )
                     )
                                       .getContent());
@@ -141,7 +141,7 @@ public class EmployeesServiceImpl
                         employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotOrderByNameDesc(username,
                                                                                                   PageRequest.of(
                                                                                                           page - 1,
-                                                                                                          ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE
+                                                                                                          ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE
                                                                                                   )
                         )
                                           .getContent());
@@ -173,7 +173,7 @@ public class EmployeesServiceImpl
                 return new LinkedHashSet<>(
                         employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
                                 query, query,
-                                PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
+                                PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE)
                         )
                                           .getContent());
             } else {
@@ -181,7 +181,7 @@ public class EmployeesServiceImpl
                     return new LinkedHashSet<>(
                             employeeRepository.findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
                                     query, query,
-                                    PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_FIND_EMPLOYEE_PAGE_SIZE)
+                                    PageRequest.of(page - 1, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE)
                             )
                                               .getContent());
                 }
@@ -355,8 +355,8 @@ public class EmployeesServiceImpl
 
         if (photoName.equals("image_not_found") || !file.getName()
                                                         .endsWith(extension)) {
-            file = new File(ServiceConstant.RESOURCE_IMAGE_DIRECTORY.concat(File.separator)
-                                                                    .concat("image_not_found.jpeg"));
+            file = new File(ServiceConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator)
+                                                                  .concat("image_not_found.jpeg"));
         }
 
         try {
@@ -590,7 +590,7 @@ public class EmployeesServiceImpl
             final String dob
     ) {
 
-        StringBuilder password = new StringBuilder(ServiceConstant.NIK_PREFIX.toLowerCase());
+        StringBuilder password = new StringBuilder(ServiceConstant.PREFIX_DEFAULT_PASSWORD);
 
         password.append(dob.replace("-", ""));
 
@@ -704,7 +704,7 @@ public class EmployeesServiceImpl
             throw new UnauthorizedOperationException(EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT);
         }
 
-        if (!requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.DELIVERED)
+        if (!requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_DELIVERED)
                               .isEmpty()) {
             throw new UnauthorizedOperationException(UNRETURNED_ASSETS_ON_DELETION_ATTEMPT);
         }
@@ -714,11 +714,11 @@ public class EmployeesServiceImpl
         }
 
         List< RequestModel > requests = new ArrayList<>();
-        requests.addAll(requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.ACCEPTED));
-        requests.addAll(requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.REQUESTED));
+        requests.addAll(requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_ACCEPTED));
+        requests.addAll(requestRepository.findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_REQUESTED));
         if (!requests.isEmpty()) {
             for (RequestModel employeeRequest : requests) {
-                employeeRequest.setStatus(ServiceConstant.CANCELLED);
+                employeeRequest.setStatus(ServiceConstant.STATUS_CANCELLED);
                 employeeRequest.setUpdatedDate(new Date());
                 employeeRequest.setUpdatedBy(adminUsername);
 

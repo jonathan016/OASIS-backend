@@ -23,14 +23,14 @@ public interface AssetsServiceApi {
             DataNotFoundException;
 
     Set< AssetModel > getSortedAvailableAssets(
-            final int page, final String sort, final long stockLimit
+            final int page, final String sort
     );
 
     Set< AssetModel > getSortedAvailableAssetsFromQuery(
-            final int page, final String query, final String sort, final long stockLimit
+            final int page, final String query, final String sort
     );
 
-    int getAvailableAssetsCount(
+    long getAvailableAssetsCount(
             final String query, final String sort
     );
 
@@ -40,15 +40,21 @@ public interface AssetsServiceApi {
             throws
             DataNotFoundException;
 
+    String getExtensionFromFileName(
+            final String fileName
+    );
+
     List< String > getAssetDetailImages(
             final String sku, final String imageDirectory
     );
 
+    String getFormattedPrice(
+            final double price
+    );
+
     byte[] getAssetDetailInPdf(
-            final String sku, final ClassLoader classLoader
-    )
-            throws
-            DataNotFoundException;
+            final String sku
+    );
 
     void addHeaderCellToTable(
             PdfPTable table, final String value, final Font font

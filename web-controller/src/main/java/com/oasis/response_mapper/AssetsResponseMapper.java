@@ -22,7 +22,7 @@ public class AssetsResponseMapper {
 
     public PagingResponse< AssetListResponse > produceViewFoundAssetSuccessResult(
             final int httpStatusCode, final List< AssetModel > assets, final Map< String, Boolean > components,
-            final int pageNumber, final int totalRecords
+            final int pageNumber, final long totalRecords
     ) {
 
         PagingResponse< AssetListResponse > successResponse = new PagingResponse<>();
@@ -32,21 +32,17 @@ public class AssetsResponseMapper {
         successResponse.setComponents(components);
 
         MapperFactory assetDataFactory = new DefaultMapperFactory.Builder().build();
-        assetDataFactory.classMap(AssetModel.class, AssetListResponse.Asset.class)
-                        .field("location", "location")
-                        .field("stock", "quantity")
-                        .exclude("expendable")
-                        .byDefault()
-                        .register();
+        assetDataFactory.classMap(AssetModel.class, AssetListResponse.Asset.class).field("stock", "quantity")
+                        .exclude("expendable").byDefault().register();
         List< AssetListResponse.Asset > mappedAssets = new ArrayList<>();
         for (AssetModel asset : assets) {
-            mappedAssets.add(assetDataFactory.getMapperFacade(AssetModel.class, AssetListResponse.Asset.class)
-                                             .map(asset));
+            mappedAssets
+                    .add(assetDataFactory.getMapperFacade(AssetModel.class, AssetListResponse.Asset.class).map(asset));
         }
         successResponse.setValue(new AssetListResponse(mappedAssets));
 
-        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE, (int) Math.ceil(
-                (double) totalRecords / ServiceConstant.ASSETS_FIND_ASSET_PAGE_SIZE), totalRecords));
+        final int totalPage = (int) Math.ceil((double) totalRecords / ServiceConstant.ASSETS_LIST_PAGE_SIZE);
+        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.ASSETS_LIST_PAGE_SIZE, totalPage, totalRecords));
 
         return successResponse;
     }
@@ -63,7 +59,7 @@ public class AssetsResponseMapper {
 
     public NoPagingResponse< AssetDetailResponse > produceViewAssetDetailSuccessResult(
             final int httpStatusCode, final Map< String, Boolean > components, final AssetModel asset,
-            final List< String > images
+            final List< String > imageURLs
     ) {
 
         NoPagingResponse< AssetDetailResponse > successResponse = new NoPagingResponse<>();
@@ -73,14 +69,12 @@ public class AssetsResponseMapper {
         successResponse.setComponents(components);
 
         MapperFactory assetDataFactory = new DefaultMapperFactory.Builder().build();
-        assetDataFactory.classMap(AssetModel.class, AssetDetailResponse.class)
-                        .byDefault()
-                        .exclude("expendable")
+        assetDataFactory.classMap(AssetModel.class, AssetDetailResponse.class).byDefault().exclude("expendable")
                         .register();
         AssetDetailResponse mappedAsset = assetDataFactory.getMapperFacade(AssetModel.class, AssetDetailResponse.class)
                                                           .map(asset);
         mappedAsset.setExpendable((asset.isExpendable()) ? "Yes" : "No");
-        mappedAsset.setImages(images);
+        mappedAsset.setImages(imageURLs);
 
         successResponse.setValue(mappedAsset);
 
