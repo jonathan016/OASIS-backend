@@ -13,7 +13,11 @@ import java.util.List;
 public interface EmployeeRepository
         extends MongoRepository< EmployeeModel, String > {
 
-    int countAllByDeletedIsFalseAndUsernameIsNot(String username);
+    long countAllByDeletedIsFalseAndUsernameIsNot(String username);
+
+    long countAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCase(
+            String username, String name
+    );
 
     List< EmployeeModel > findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
 

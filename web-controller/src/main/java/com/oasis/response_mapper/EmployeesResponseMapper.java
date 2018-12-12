@@ -23,7 +23,7 @@ public class EmployeesResponseMapper {
 
     public PagingResponse< EmployeeListResponse > produceViewFoundEmployeesSuccessResult(
             final int httpStatusCode, final List< EmployeeModel > employees, final List< EmployeeModel > supervisors,
-            final List< String > photos, final int pageNumber, final int totalRecords
+            final List< String > photos, final int pageNumber, final long totalRecords
     ) {
 
         PagingResponse< EmployeeListResponse > successResponse = new PagingResponse<>();

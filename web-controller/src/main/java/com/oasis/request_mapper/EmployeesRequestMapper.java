@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.web_model.request.employees.SaveEmployeeRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,14 +18,14 @@ import static com.oasis.exception.helper.ErrorCodeAndMessage.NO_ASSET_SELECTED;
 @Component
 public class EmployeesRequestMapper {
 
+    private Logger logger = LoggerFactory.getLogger(EmployeesRequestMapper.class);
+
     public String getAdminUsernameFromRawData(final String rawEmployeeData) {
 
         String adminUsername;
 
         try {
-            adminUsername = new ObjectMapper().readTree(rawEmployeeData)
-                                              .path("username")
-                                              .asText();
+            adminUsername = new ObjectMapper().readTree(rawEmployeeData).path("username").asText();
         } catch (IOException e) {
             return "";
         }
@@ -31,22 +33,22 @@ public class EmployeesRequestMapper {
         return adminUsername;
     }
 
-    public boolean checkAddOperationFromRawData(final String rawEmployeeData)
+    public boolean isCreateEmployeeOperation(final String rawEmployeeData)
             throws
             UnauthorizedOperationException {
 
         JsonNode employee;
 
         try {
-            employee = new ObjectMapper().readTree(rawEmployeeData)
-                                         .path("employee");
-        } catch (IOException e) {
-            //TODO throw real exception cause
+            employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
+        } catch (IOException ioException) {
+            logger.error(
+                    "Failed to read attribute 'employee' from passed JSON data as IOException occurred with message: " +
+                    ioException.getMessage());
             throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
         }
 
-        return employee.path("username")
-                       .isNull();
+        return employee.path("username").isNull();
     }
 
     public EmployeeModel getEmployeeModelFromRawData(
@@ -57,33 +59,26 @@ public class EmployeesRequestMapper {
 
         try {
 
-            JsonNode employee = new ObjectMapper().readTree(rawEmployeeData)
-                                                  .path("employee");
+            JsonNode employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
 
             if (isAddOperation) {
-                request = new SaveEmployeeRequest.Employee(
-                        null, employee.path("name")
-                                      .asText(), employee.path("dob")
-                                                         .asText(), employee.path("phone")
-                                                                            .asText(), employee.path("jobTitle")
-                                                                                               .asText(),
-                        employee.path("division")
-                                .asText(), employee.path("location")
-                                                   .asText(), employee.path("supervisorUsername")
-                                                                      .asText()
+                request = new SaveEmployeeRequest.Employee(null, employee.path("name").asText(),
+                                                           employee.path("dob").asText(),
+                                                           employee.path("phone").asText(),
+                                                           employee.path("jobTitle").asText(),
+                                                           employee.path("division").asText(),
+                                                           employee.path("location").asText(),
+                                                           employee.path("supervisorUsername").asText()
                 );
             } else {
-                request = new SaveEmployeeRequest.Employee(
-                        employee.path("username")
-                                .asText(), employee.path("name")
-                                                   .asText(), employee.path("dob")
-                                                                      .asText(), employee.path("phone")
-                                                                                         .asText(),
-                        employee.path("jobTitle")
-                                .asText(), employee.path("division")
-                                                   .asText(), employee.path("location")
-                                                                      .asText(), employee.path("supervisorUsername")
-                                                                                         .asText()
+                request = new SaveEmployeeRequest.Employee(employee.path("username").asText(),
+                                                           employee.path("name").asText(),
+                                                           employee.path("dob").asText(),
+                                                           employee.path("phone").asText(),
+                                                           employee.path("jobTitle").asText(),
+                                                           employee.path("division").asText(),
+                                                           employee.path("location").asText(),
+                                                           employee.path("supervisorUsername").asText()
                 );
             }
 
@@ -97,8 +92,9 @@ public class EmployeesRequestMapper {
         employee.setName(request.getName());
         try {
             employee.setDob(new SimpleDateFormat("dd/MM/yyyy").parse(request.getDob()));
-        } catch (ParseException e) {
-            //TODO log exception
+        } catch (ParseException parseException) {
+            logger.error("Failed to parse given DOB as ParseException occurred with message: " +
+                         parseException.getMessage());
         }
         employee.setPhone(request.getPhone());
         employee.setJobTitle(request.getJobTitle());
@@ -121,10 +117,8 @@ public class EmployeesRequestMapper {
         String supervisorUsername;
 
         try {
-            supervisorUsername = new ObjectMapper().readTree(rawEmployeeData)
-                                                   .path("employee")
-                                                   .path("supervisorUsername")
-                                                   .asText();
+            supervisorUsername = new ObjectMapper().readTree(rawEmployeeData).path("employee")
+                                                   .path("supervisorUsername").asText();
         } catch (IOException e) {
             return "";
         }

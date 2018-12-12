@@ -10,6 +10,10 @@ public interface AdminRepository
 
     AdminModel findByDeletedIsFalseAndUsernameEquals(String username);
 
+    AdminModel findByDeletedIsTrueAndUsernameEquals(String username);
+
     boolean existsAdminModelByDeletedIsFalseAndUsernameEquals(String username);
+
+    boolean existsAdminModelByDeletedIsTrueAndUsernameEquals(String username);
 
 }

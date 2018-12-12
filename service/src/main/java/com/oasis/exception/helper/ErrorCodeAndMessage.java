@@ -13,6 +13,21 @@ public class ErrorCodeAndMessage {
             "Invalid password given"
     );
 
+    public static final BaseError INCORRECT_PARAMETER = new BaseError(
+            "INCORRECT_PARAMETER",
+            "Parameter contains empty/incorrect value"
+    );
+
+    public static final BaseError UNAUTHORIZED_OPERATION = new BaseError(
+            "UNAUTHORIZED_OPERATION",
+            "Unauthorized operation attempted"
+    );
+
+    public static final BaseError DUPLICATE_DATA_FOUND = new BaseError(
+            "DUPLICATE_DATA_FOUND",
+            "Duplicate data in database found"
+    );
+
 //    Old Ones
     public static final BaseError USER_NOT_FOUND = new BaseError("USER_NOT_FOUND",
                                                                  "User with specified username/NIK does not exist!"
@@ -22,19 +37,9 @@ public class ErrorCodeAndMessage {
                                                                      "No other request in database could be found!"
     );
 
-    public static final BaseError SUPERVISION_DATA_NOT_FOUND = new BaseError("SUPERVISION_DATA_NOT_FOUND",
-                                                                             "No supervision with specified data " +
-                                                                             "could be found!"
-    );
-
     public static final BaseError EMPTY_SEARCH_QUERY = new BaseError("EMPTY_SEARCH_QUERY",
                                                                      "System cannot perform searching process as no " +
                                                                      "search query is given!"
-    );
-
-    public static final BaseError CYCLIC_SUPERVISING_OCCURRED = new BaseError("CYCLIC_SUPERVISING_OCCURRED",
-                                                                              "Cyclic supervising between specified " +
-                                                                              "employees exists!"
     );
 
     public static final BaseError EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR = new BaseError(
@@ -47,16 +52,6 @@ public class ErrorCodeAndMessage {
     public static final BaseError SELF_DELETION_ATTEMPT = new BaseError("SELF_DELETION_ATTEMPT",
                                                                         "Administrator attempted to delete his/her " +
                                                                         "own data!"
-    );
-
-    public static final BaseError EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT = new BaseError(
-            "EXISTING_SUPERVISED_EMPLOYEES_ON_DELETION_ATTEMPT",
-            "Administrator attempted to delete an employee who still have supervised employees!"
-    );
-
-    public static final BaseError UNRETURNED_ASSETS_ON_DELETION_ATTEMPT = new BaseError(
-            "UNRETURNED_ASSETS_ON_DELETION_ATTEMPT",
-            "Administrator attempted to delete an employee who has not returned all assigned assets!"
     );
 
     public static final BaseError SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE = new BaseError(

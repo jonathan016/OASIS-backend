@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.io.Serializable;
 import java.util.Date;
 
 @Data
@@ -15,7 +16,8 @@ import java.util.Date;
 @SuppressWarnings("Lombok")
 @Document(collection = CollectionName.EMPLOYEE_COLLECTION_NAME)
 public class EmployeeModel
-        extends BaseEntity {
+        extends BaseEntity
+        implements Serializable {
 
     @Field(EmployeeFieldName.NAME)
     private String name;
@@ -49,5 +51,21 @@ public class EmployeeModel
 
     @Field(EmployeeFieldName.DELETED)
     private boolean deleted;
+
+    @Override
+    public boolean equals(Object object) {
+
+        if (object instanceof EmployeeModel) {
+            return this.username.equals(((EmployeeModel) object).getUsername()) &&
+                   this.name.equals(((EmployeeModel) object).getName()) &&
+                   this.dob.equals(((EmployeeModel) object).getDob()) &&
+                   this.phone.equals(((EmployeeModel) object).getPhone()) &&
+                   this.jobTitle.equals(((EmployeeModel) object).getJobTitle()) &&
+                   this.division.equals(((EmployeeModel) object).getDivision()) &&
+                   this.location.equals(((EmployeeModel) object).getLocation());
+        }
+
+        return false;
+    }
 
 }

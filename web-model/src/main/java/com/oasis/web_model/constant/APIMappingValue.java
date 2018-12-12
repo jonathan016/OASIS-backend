@@ -25,8 +25,9 @@ public class APIMappingValue {
 
     public static final String API_CHANGE_SUPERVISOR_ON_DELETE = "/delete/change-supervisor";
     public static final String API_DATA_EMPLOYEE = "/{username:.+}";
-    public static final String API_PHOTO_EMPLOYEE = "/{username:.+}/{image:.+}";
+    public static final String API_PHOTO_EMPLOYEE = "/{username:.+}/{photo:.+}";
     public static final String API_USERNAMES = "/usernames";
+    public static final String API_PASSWORD_CHANGE = "/change-password";
 
     public static final String API_MY_REQUESTS = "/list/{username:.+}/my";
     public static final String API_OTHERS_REQUESTS = "/list/{username:.+}/others";

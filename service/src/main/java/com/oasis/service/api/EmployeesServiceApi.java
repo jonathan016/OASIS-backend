@@ -1,10 +1,8 @@
 package com.oasis.service.api;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.DuplicateDataException;
-import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.exception.*;
 import com.oasis.model.entity.EmployeeModel;
+import com.oasis.model.entity.SupervisionModel;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -19,15 +17,15 @@ public interface EmployeesServiceApi {
             BadRequestException,
             DataNotFoundException;
 
-    Set< EmployeeModel > getSortedEmployeesList(
+    Set< EmployeeModel > getSortedEmployees(
             final String username, final int page, final String sort
     );
 
-    Set< EmployeeModel > getSortedEmployeesListFromQuery(
+    Set< EmployeeModel > getSortedEmployeesFromQuery(
             final int page, final String query, final String sort
     );
 
-    int getEmployeesCount(
+    long getEmployeesCount(
             final String username, final String query, String sort
     );
 
@@ -41,21 +39,25 @@ public interface EmployeesServiceApi {
             throws
             DataNotFoundException;
 
-    String getEmployeeDetailPhoto(
-            final String username, final String photoDirectory
+    String getEmployeeDetailImage(
+            final String username, final String imageDirectory
     );
 
-    List< String > getEmployeesUsernames(
-            String username
+    List< String > getEmployeesUsernamesForSupervisorSelection(
+            final String username
     )
             throws
             BadRequestException;
 
-    byte[] getEmployeePhoto(
-            final String username, final String photoName, final String extension
+    boolean isSafeFromCyclicSupervising(
+            final String targetUsername, final List< String > usernames
     );
 
-    List< String > getEmployeePhotos(
+    byte[] getEmployeeImage(
+            final String username, final String imageName, final String extension
+    );
+
+    List< String > getEmployeesImages(
             final List< EmployeeModel > employees
     );
 
@@ -66,8 +68,8 @@ public interface EmployeesServiceApi {
             DataNotFoundException;
 
     String saveEmployee(
-            final MultipartFile photo, final String username, final EmployeeModel employee,
-            final String supervisorUsername, final boolean isAddOperation
+            final MultipartFile image, final String username, final EmployeeModel employee,
+            final String supervisorUsername, final boolean createOperation
     )
             throws
             UnauthorizedOperationException,
@@ -75,11 +77,23 @@ public interface EmployeesServiceApi {
             DuplicateDataException,
             BadRequestException;
 
-    String generateEmployeeUsername(
+    void updateSupervisorDataOnEmployeeUpdate(
+            final String username, final EmployeeModel savedEmployee, final String employeeUsername,
+            final String supervisorUsername
+    )
+            throws
+            DataNotFoundException,
+            UnauthorizedOperationException;
+
+    void validateAndSaveImage(
+            final MultipartFile imageGiven, final boolean createEmployeeOperation, final EmployeeModel savedEmployee
+    );
+
+    String generateUsername(
             final String name, final String dob
     );
 
-    String generateEmployeeDefaultPassword(
+    String generateDefaultPassword(
             final String dob
     );
 
@@ -93,13 +107,22 @@ public interface EmployeesServiceApi {
             final String employeeUsername, final String supervisorUsername, final String adminUsername
     );
 
-    boolean checkCyclicSupervisingExists(
+    boolean hasCyclicSupervising(
             final String employeeUsername, final String supervisorUsername
     );
 
     void savePhoto(
-            final MultipartFile employeePhoto, final String sku
+            final MultipartFile photoFile, final String sku
     );
+
+    void changePassword(
+            final String username, final String oldPassword, final String newPassword,
+            final String newPasswordConfirmation
+    )
+            throws
+            DataNotFoundException,
+            UserNotAuthenticatedException,
+            BadRequestException;
 
     void deleteEmployee(
             final String adminUsername, final String employeeUsername
@@ -116,5 +139,10 @@ public interface EmployeesServiceApi {
             UnauthorizedOperationException,
             DataNotFoundException,
             BadRequestException;
+
+    void demotePreviousSupervisorFromAdminIfNecessary(
+            final String adminUsername, final String oldSupervisorUsername, final String newSupervisorUsername,
+            final List< SupervisionModel > supervisions
+    );
 
 }
