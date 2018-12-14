@@ -30,11 +30,11 @@ public class EmployeesController {
     @Autowired
     private EmployeesServiceApi employeesServiceApi;
     @Autowired
-    private EmployeesResponseMapper employeesResponseMapper;
-    @Autowired
     private FailedResponseMapper failedResponseMapper;
     @Autowired
     private EmployeesRequestMapper employeesRequestMapper;
+    @Autowired
+    private EmployeesResponseMapper employeesResponseMapper;
 
     @GetMapping(value = APIMappingValue.API_LIST, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)

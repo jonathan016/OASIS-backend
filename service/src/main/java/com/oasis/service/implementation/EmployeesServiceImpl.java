@@ -233,17 +233,17 @@ public class EmployeesServiceImpl
 
     @Override
     public String getEmployeeDetailImage(
-            final String username, final String imageLocation
+            final String username, final String photoLocation
     ) {
 
-        final boolean validImageLocation = (imageLocation != null && imageLocation.isEmpty());
+        final boolean validPhotoLocation = (photoLocation != null && photoLocation.isEmpty());
 
-        if (validImageLocation) {
-            final File image = new File(imageLocation);
+        if (validPhotoLocation) {
+            final File photo = new File(photoLocation);
 
-            if (image.exists() && Files.exists(image.toPath())) {
+            if (photo.exists() && Files.exists(photo.toPath())) {
                 return "http://localhost:8085/oasis/api/employees/" + username + "/" +
-                       username.concat("?extension=").concat(imageHelper.getExtensionFromFileName(image.getName()));
+                       username.concat("?extension=").concat(imageHelper.getExtensionFromFileName(photo.getName()));
             }
         }
 
@@ -328,14 +328,14 @@ public class EmployeesServiceImpl
 
     @Override
     public byte[] getEmployeeImage(
-            final String username, final String imageName, final String extension
+            final String username, final String photoName, final String extension
     ) {
 
         final boolean employeeWithUsernameExists = employeeRepository
                 .existsEmployeeModelByDeletedIsFalseAndUsername(username);
 
         if (!employeeWithUsernameExists) {
-            logger.info("Failed to load employee image as username does not refer any employee in database");
+            logger.info("Failed to load employee photo as username does not refer any employee in database");
             return new byte[0];
         }
 
@@ -343,26 +343,25 @@ public class EmployeesServiceImpl
 
         File file = new File(employee.getPhoto());
 
-        final boolean imageNameIsImageNotFound = imageName.equals("image_not_found");
+        final boolean photoNameIsImageNotFound = photoName.equals("image_not_found");
         final boolean correctExtensionForImage = file.getName().endsWith(extension);
 
-        if (!correctExtensionForImage || imageNameIsImageNotFound) {
+        if (!correctExtensionForImage || photoNameIsImageNotFound) {
             file = new File(
                     ServiceConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator).concat("image_not_found.jpeg"));
         }
 
-        final byte[] image;
+        final byte[] photo;
 
         try {
-            image = Files.readAllBytes(file.toPath());
+            photo = Files.readAllBytes(file.toPath());
         } catch (IOException | NullPointerException exception) {
-            logger.error("Failed to read image as IOException or NullPointerException occurred with message " +
+            logger.error("Failed to read photo as IOException or NullPointerException occurred with message " +
                          exception.getMessage());
             return new byte[0];
         }
 
-        return image;
-
+        return photo;
     }
 
     @Override
@@ -370,13 +369,13 @@ public class EmployeesServiceImpl
             final List< EmployeeModel > employees
     ) {
 
-        List< String > images = new ArrayList<>();
+        List< String > photos = new ArrayList<>();
 
         for (final EmployeeModel employee : employees) {
-            images.add(getEmployeeDetailImage(employee.getUsername(), employee.getPhoto()));
+            photos.add(getEmployeeDetailImage(employee.getUsername(), employee.getPhoto()));
         }
 
-        return images;
+        return photos;
     }
 
     @Override
@@ -414,7 +413,7 @@ public class EmployeesServiceImpl
             @CacheEvict(value = "employeesList", allEntries = true)
     })
     public String saveEmployee(
-            final MultipartFile imageGiven, final String username, final EmployeeModel employee,
+            final MultipartFile photoGiven, final String username, final EmployeeModel employee,
             final String supervisorUsername, final boolean createEmployeeOperation
     )
             throws
@@ -433,7 +432,7 @@ public class EmployeesServiceImpl
 
         if (createEmployeeOperation) {
             final boolean properNameFormatGiven = employee.getName().matches("^([A-Za-z]+ ?)*[A-Za-z]+$");
-            final boolean noImageGiven = (imageGiven == null);
+            final boolean noImageGiven = (photoGiven == null);
 
             if (!properNameFormatGiven || noImageGiven) {
                 throw new BadRequestException(INCORRECT_PARAMETER);
@@ -480,7 +479,7 @@ public class EmployeesServiceImpl
             updateSupervisorDataOnEmployeeUpdate(username, savedEmployee, employee.getUsername(), supervisorUsername);
         }
 
-        validateAndSaveImage(imageGiven, createEmployeeOperation, savedEmployee);
+        validateAndSaveImage(photoGiven, createEmployeeOperation, savedEmployee);
 
         savedEmployee.setUpdatedDate(new Date());
         savedEmployee.setUpdatedBy(username);
@@ -550,10 +549,10 @@ public class EmployeesServiceImpl
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void validateAndSaveImage(
-            final MultipartFile imageGiven, final boolean createEmployeeOperation, final EmployeeModel savedEmployee
+            final MultipartFile photoGiven, final boolean createEmployeeOperation, final EmployeeModel savedEmployee
     ) {
 
-        if (imageGiven != null) {
+        if (photoGiven != null) {
             boolean rootDirectoryCreated;
 
             if (!Files.exists(Paths.get(ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY))) {
@@ -564,20 +563,20 @@ public class EmployeesServiceImpl
 
             if (rootDirectoryCreated) {
                 if (!createEmployeeOperation && Files.exists(Paths.get(savedEmployee.getPhoto()))) {
-                    File image = new File(savedEmployee.getPhoto());
-                    image.delete();
+                    File photo = new File(savedEmployee.getPhoto());
+                    photo.delete();
                 }
 
-                final String imageLocation = ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator)
+                final String photoLocation = ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator)
                                                                                      .concat(savedEmployee
                                                                                                      .getUsername())
                                                                                      .concat(".").concat(imageHelper
                                                                                                                  .getExtensionFromFileName(
-                                                                                                                         imageGiven
+                                                                                                                         photoGiven
                                                                                                                                  .getOriginalFilename()));
-                savedEmployee.setPhoto(imageLocation);
+                savedEmployee.setPhoto(photoLocation);
 
-                savePhoto(imageGiven, savedEmployee.getUsername());
+                savePhoto(photoGiven, savedEmployee.getUsername());
             }
         }
     }
@@ -699,14 +698,14 @@ public class EmployeesServiceImpl
 
         if (photoFile != null) {
             try {
-                File image = new File(
+                File photo = new File(
                         ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator).concat(username).concat(".")
                                                                 .concat(imageHelper.getExtensionFromFileName(
                                                                         photoFile.getOriginalFilename())));
 
-                photoFile.transferTo(image);
+                photoFile.transferTo(photo);
             } catch (IOException ioException) {
-                logger.error("Failed to save image as IOException occurred with message " + ioException.getMessage());
+                logger.error("Failed to save photo as IOException occurred with message " + ioException.getMessage());
             }
         }
     }
@@ -845,6 +844,7 @@ public class EmployeesServiceImpl
     }
 
     @Override
+    @CacheEvict(value = { "employeesList", "employeeDetailData" }, allEntries = true)
     public void changeSupervisorOnPreviousSupervisorDeletion(
             final String adminUsername, final String oldSupervisorUsername, final String newSupervisorUsername
     )
