@@ -22,7 +22,7 @@ public class ServiceConstant {
     public static final String ROLE_ADMINISTRATOR = "ADMINISTRATOR";
 
     public static final String TAB_OTHERS = "Others";
-    public static final String TAB_SELF = "Self";
+    public static final String TAB_MY = "My";
 
     public static final String PREFIX_DEFAULT_PASSWORD = "gdn";
     public static final String PREFIX_SKU = "SKU";

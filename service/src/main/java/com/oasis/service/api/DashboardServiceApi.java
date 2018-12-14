@@ -5,79 +5,87 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
-import com.oasis.model.entity.SupervisionModel;
-import com.oasis.web_model.response.success.dashboard.DashboardRequestUpdateResponse;
 
 import java.util.List;
 import java.util.Map;
 
 public interface DashboardServiceApi {
 
-    List< RequestModel > getMyPendingHandoverRequests(
-            final String username
-    );
-
-    List< RequestModel > getMyRequestedRequests(
-            final String username
-    );
-
-    List< RequestModel > getOthersRequestedRequests(
-            final String username
-    );
-
-    List< RequestModel > getOthersPendingHandoverRequests(
-            final String username
-    );
-
-    AssetModel getAssetData(
-            final String sku
-    );
-
-    EmployeeModel getEmployeeData(
-            final String username
-    );
-
-    SupervisionModel getEmployeeSupervisorData(
-            final String username
-    );
-
-    String determineUserRole(
-            final String username
-    )
-            throws
-            DataNotFoundException;
-
-    List< String > getSupervisedEmployeeUsernameList(
-            final String username
-    );
-
-    List< RequestModel > getRequestsList(
-            final String requestStatus, final List< String > supervisedEmployeeUsernameList
-    );
-
-    List< RequestModel > fillData(
-            final String username, final String tab, final String role
-    );
-
-    void sortData(
-            List< RequestModel > requestUpdates, final String sort
-    );
-
-    List< DashboardRequestUpdateResponse.RequestUpdateModel > mapRequests(
-            final List< RequestModel > requestUpdates
-    );
-
-    Map< String, Integer > getStatusSectionData(
+    Map< String, Long > getStatusSectionData(
             final String username
     )
             throws
             DataNotFoundException,
             BadRequestException;
 
-    List< DashboardRequestUpdateResponse.RequestUpdateModel > getRequestUpdateSectionData(
-            final String username, final String tab, final int page, final String sort
+    Map< String, List< ? > > getRequestUpdateSectionData(
+            final String username, final String tab, final int page
     )
             throws
+            BadRequestException,
             DataNotFoundException;
+
+    Map< String, List< ? > > getMyRequestsListData(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
+
+    Map< String, List< ? > > getOthersRequestListData(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
+
+    List< RequestModel > getUsernameRequestsList(
+            final String username, final String query, final String status, final int page, String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
+
+    List< RequestModel > getOthersRequestList(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            DataNotFoundException,
+            BadRequestException;
+
+    String validateSortInformationGiven(String sort)
+            throws
+            BadRequestException;
+
+    List< RequestModel > getOthersRequestListPaged(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            DataNotFoundException,
+            BadRequestException;
+
+    List< EmployeeModel > getEmployeesDataFromRequest(
+            final List< RequestModel > requests
+    );
+
+    List< EmployeeModel > getRequestModifiersDataFromRequest(
+            final List< RequestModel > requests
+    );
+
+    List< AssetModel > getAssetDataFromRequest(
+            final List< RequestModel > requests
+    );
+
+    long getRequestsCount(
+            final String type, final String username, final String query, final String status, final int page,
+            String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
+
+    String getEmployeeDetailPhoto(
+            final String username, final String photoLocation
+    );
 
 }

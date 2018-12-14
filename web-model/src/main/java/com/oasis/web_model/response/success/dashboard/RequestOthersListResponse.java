@@ -7,56 +7,51 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class DashboardRequestUpdateResponse {
+public class RequestOthersListResponse {
 
-    private List< RequestUpdateModel > requests;
+    private List< RequestListObject > requests;
 
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
-    public static class RequestUpdateModel {
+    public static class RequestListObject {
 
         private Request request;
         private Employee employee;
-        private Supervisor supervisor;
         private Asset asset;
 
         @Data
+        @NoArgsConstructor
         @AllArgsConstructor
         public static class Request {
 
             private String id;
             private String status;
-            private String requestNote;
+            private String note;
+            private String updatedDate;
 
         }
 
         @Data
+        @NoArgsConstructor
         @AllArgsConstructor
         public static class Employee {
 
             private String username;
             private String name;
+            private String photo;
 
         }
 
         @Data
-        @AllArgsConstructor
-        public static class Supervisor {
-
-            private String username;
-            private String name;
-
-        }
-
-        @Data
+        @NoArgsConstructor
         @AllArgsConstructor
         public static class Asset {
 
             private String sku;
             private String name;
-            private int quantity;
+            private long quantity;
 
         }
 
