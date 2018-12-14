@@ -42,20 +42,9 @@ public class ErrorCodeAndMessage {
                                                                      "search query is given!"
     );
 
-    public static final BaseError EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR = new BaseError(
-            "EMPLOYEE_DELETE_ATTEMPT_BY_NON_ADMINISTRATOR", "Non-administrator attempted to delete employee data!");
-
     public static final BaseError EMPTY_EMPLOYEE_NIK = new BaseError("EMPTY_EMPLOYEE_NIK",
                                                                      "System cannot delete employee as no NIK is given!"
     );
-
-    public static final BaseError SELF_DELETION_ATTEMPT = new BaseError("SELF_DELETION_ATTEMPT",
-                                                                        "Administrator attempted to delete his/her " +
-                                                                        "own data!"
-    );
-
-    public static final BaseError SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE = new BaseError(
-            "SELECTED_EMPLOYEE_DOES_NOT_SUPERVISE", "Selected old supervisor does not supervise any employee!");
 
     public static final BaseError ASSET_NOT_FOUND = new BaseError("ASSET_NOT_FOUND",
                                                                   "Asset with given search query cannot be found!"

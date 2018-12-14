@@ -7,11 +7,14 @@ import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.io.Serializable;
+
 @Data
 @SuppressWarnings("Lombok")
 @Document(collection = CollectionName.REQUEST_COLLECTION_NAME)
 public class RequestModel
-        extends BaseEntity {
+        extends BaseEntity
+        implements Serializable {
 
     @Field(RequestFieldName.USERNAME)
     private String username;

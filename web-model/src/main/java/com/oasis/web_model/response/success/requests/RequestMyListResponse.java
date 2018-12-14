@@ -8,8 +8,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class RequestListResponse {
-
+public class RequestMyListResponse {
     private List< RequestListObject > requests;
 
     @Data
@@ -19,6 +18,7 @@ public class RequestListResponse {
 
         private Request request;
         private Employee employee;
+        private Employee modifier;
         private Asset asset;
 
         @Data
@@ -28,7 +28,7 @@ public class RequestListResponse {
 
             private String id;
             private String status;
-            private String requestNote;
+            private String note;
 
         }
 
@@ -39,7 +39,6 @@ public class RequestListResponse {
 
             private String username;
             private String name;
-            private String photo;
 
         }
 
@@ -50,10 +49,9 @@ public class RequestListResponse {
 
             private String sku;
             private String name;
-            private long quantity;
+            private int quantity;
 
         }
 
     }
-
 }

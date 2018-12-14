@@ -2,18 +2,24 @@ package com.oasis.service.implementation;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.helper.BaseError;
+import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.*;
+import com.oasis.service.ImageHelper;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.RequestsServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -22,23 +28,74 @@ import java.util.*;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
 @Service
+@Transactional
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class RequestsServiceImpl
         implements RequestsServiceApi {
 
     @Autowired
+    private ImageHelper imageHelper;
+    @Autowired
+    private AdminRepository adminRepository;
+    @Autowired
+    private AssetRepository assetRepository;
+    @Autowired
     private RequestRepository requestRepository;
     @Autowired
     private EmployeeRepository employeeRepository;
     @Autowired
-    private AssetRepository assetRepository;
-    @Autowired
     private SupervisionRepository supervisionRepository;
-    @Autowired
-    private AdminRepository adminRepository;
 
     /*-------------Requests List Methods-------------*/
     @Override
+    @Cacheable(value = "myRequestsList", key = "#username + #query + #status + #sort", unless = "#result.size() == 0")
+    public Map< String, List< ? > > getMyRequestsListData(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        Map< String, List< ? > > myRequestsListData = new HashMap<>();
+
+        final List< RequestModel > requests = getUsernameRequestsList(username, query, status, page, sort);
+        final List< EmployeeModel > employees = getEmployeesDataFromRequest(requests);
+        final List< EmployeeModel > modifiers = getRequestModifiersDataFromRequest(requests);
+        final List< AssetModel > assets = getAssetDataFromRequest(requests);
+
+        myRequestsListData.put("requests", requests);
+        myRequestsListData.put("employees", employees);
+        myRequestsListData.put("modifiers", modifiers);
+        myRequestsListData.put("assets", assets);
+
+        return myRequestsListData;
+    }
+
+    @Override
+    @Cacheable(value = "othersRequestsList", key = "#username + #query + #status + #sort",
+               unless = "#result.size() == 0")
+    public Map< String, List< ? > > getOthersRequestListData(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        Map< String, List< ? > > othersRequestsListData = new HashMap<>();
+
+        final List< RequestModel > requests = getOthersRequestListPaged(username, query, status, page, sort);
+        final List< EmployeeModel > employees = getEmployeesDataFromRequest(requests);
+        final List< AssetModel > assets = getAssetDataFromRequest(requests);
+
+        othersRequestsListData.put("requests", requests);
+        othersRequestsListData.put("employees", employees);
+        othersRequestsListData.put("assets", assets);
+
+        return othersRequestsListData;
+    }
+
+    @Override
+    @SuppressWarnings("ConstantConditions")
     public List< RequestModel > getUsernameRequestsList(
             final String username, final String query, final String status, final int page, String sort
     )
@@ -46,149 +103,430 @@ public class RequestsServiceImpl
             BadRequestException,
             DataNotFoundException {
 
-        if ((query != null && query.isEmpty()) || (sort != null && sort.isEmpty())) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY);
-        }
+        final boolean emptyQueryGiven = (query != null && query.isEmpty());
+        final boolean emptySortGiven = (sort != null && sort.isEmpty());
+        final boolean emptyStatusGiven = (status != null && status.isEmpty());
 
-        if (!status.isEmpty() && !status.equals(ServiceConstant.STATUS_REQUESTED) &&
-            !status.equals(ServiceConstant.STATUS_ACCEPTED) && !status.equals(ServiceConstant.STATUS_REJECTED) &&
-            !status.equals(ServiceConstant.STATUS_CANCELLED) && !status.equals(ServiceConstant.STATUS_DELIVERED) &&
-            !status.equals(ServiceConstant.STATUS_RETURNED)) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY);
-        }
-
-        if (sort != null && !sort.matches("^[AD]-(status|updatedDate)$")) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY);
-        }
-
-        if (sort == null) {
-            sort = "D-updatedDate";
-        }
-
-        long foundDataSize = requestRepository.countAllByUsernameAndStatus(username, status);
-
-        if (page < 1 || foundDataSize == 0 || (int) Math.ceil(
-                (double) getRequestsCount("Username", username, query, status, page, sort) /
-                ServiceConstant.REQUESTS_LIST_PAGE_SIZE) < page) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND);
-        }
-
-        if (query == null) {
-            switch (sort.substring(0, 1)) {
-                case ServiceConstant.ASCENDING:
-                    if (sort.substring(2)
-                            .equals("status")) {
-                        return requestRepository.findAllByUsernameAndStatusContainsOrderByUpdatedDateAsc(username,
-                                                                                                         status,
-                                                                                                         PageRequest.of(
-                                                                                                                 page -
-                                                                                                                 1,
-                                                                                                                 ServiceConstant.REQUESTS_LIST_PAGE_SIZE
-                                                                                                         )
-                        )
-                                                .getContent();
-                    } else {
-                        if (sort.substring(2)
-                                .equals("updatedDate")) {
-                            return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateAsc(username, status,
-                                                                                                     PageRequest.of(
-                                                                                                             page - 1,
-                                                                                                             ServiceConstant.REQUESTS_LIST_PAGE_SIZE
-                                                                                                     )
-                            )
-                                                    .getContent();
-
-                        }
-                    }
-                    break;
-                case ServiceConstant.DESCENDING:
-                    if (sort.substring(2)
-                            .equals("status")) {
-                        return requestRepository.findAllByUsernameAndStatusContainsOrderByUpdatedDateDesc(username,
-                                                                                                          status,
-                                                                                                          PageRequest.of(
-                                                                                                                  page -
-                                                                                                                  1,
-                                                                                                                  ServiceConstant.REQUESTS_LIST_PAGE_SIZE
-                                                                                                          )
-                        )
-                                                .getContent();
-                    } else {
-                        if (sort.substring(2)
-                                .equals("updatedDate")) {
-                            return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status,
-                                                                                                      PageRequest.of(
-                                                                                                              page - 1,
-                                                                                                              ServiceConstant.REQUESTS_LIST_PAGE_SIZE
-                                                                                                      )
-                            )
-                                                    .getContent();
-
-                        }
-                    }
-                    break;
-            }
+        if (emptyQueryGiven || emptySortGiven || emptyStatusGiven) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            switch (sort.substring(0, 1)) {
-                case ServiceConstant.ASCENDING:
-                    if (sort.substring(2)
-                            .equals("status")) {
-                        return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(
-                                username, query, query,
-                                PageRequest.of(page - 1, ServiceConstant.REQUESTS_LIST_PAGE_SIZE)
-                        )
-                                                .getContent();
-                    } else {
-                        if (sort.substring(2)
-                                .equals("updatedDate")) {
-                            return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
-                                    username, query, query,
-                                    PageRequest.of(page - 1, ServiceConstant.REQUESTS_LIST_PAGE_SIZE)
-                            )
-                                                    .getContent();
-                        }
-                    }
-                    break;
-                case ServiceConstant.DESCENDING:
-                    if (sort.substring(2)
-                            .equals("status")) {
-                        return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusDesc(
-                                username, query, query,
-                                PageRequest.of(page - 1, ServiceConstant.REQUESTS_LIST_PAGE_SIZE)
-                        )
-                                                .getContent();
-                    } else {
-                        if (sort.substring(2)
-                                .equals("updatedDate")) {
-                            return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
-                                    username, query, username, query,
-                                    PageRequest.of(page - 1, ServiceConstant.REQUESTS_LIST_PAGE_SIZE)
-                            )
-                                                    .getContent();
-                        }
-                    }
-                    break;
-            }
-        }
+            sort = validateSortInformationGiven(sort);
 
-        return new ArrayList<>();
+            final boolean viewAllRequestsRegardlessOfStatus = (status == null);
+
+            Set< RequestModel > requests = new LinkedHashSet<>();
+
+            if (viewAllRequestsRegardlessOfStatus) {
+                final long requestsCount = requestRepository.countAllByUsername(username);
+                final boolean noRequests = (requestsCount == 0);
+                final long totalPages = (long) Math
+                        .ceil((double) getRequestsCount("Username", username, query, status, page, sort) /
+                              ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+                final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
+
+                if (noRequests || pageIndexOutOfBounds) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                } else {
+                    final boolean viewAllRequests = (query == null);
+
+                    final int zeroBasedIndexPage = page - 1;
+                    final Pageable pageable = PageRequest
+                            .of(zeroBasedIndexPage, ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+
+                    if (viewAllRequests) {
+                        if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
+                            if (sort.substring(2).equals("status")) {
+                                requests.addAll(requestRepository.findAllByUsernameOrderByStatusAsc(username, pageable)
+                                                                 .getContent());
+                            } else {
+                                requests.addAll(
+                                        requestRepository.findAllByUsernameOrderByUpdatedDateAsc(username, pageable)
+                                                         .getContent());
+
+                            }
+                        } else {
+                            if (sort.substring(2).equals("status")) {
+                                requests.addAll(requestRepository.findAllByUsernameOrderByStatusDesc(username, pageable)
+                                                                 .getContent());
+                            } else {
+                                requests.addAll(
+                                        requestRepository.findAllByUsernameOrderByUpdatedDateDesc(username, pageable)
+                                                         .getContent());
+
+                            }
+                        }
+                    } else {
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                                        query, query, query, query, query);
+                        for (final AssetModel asset : assets) {
+                            if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
+                                if (sort.substring(2).equals("status")) {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusAsc(
+                                                                    username, asset.getSku(), pageable).getContent());
+                                } else {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+                                                                    username, asset.getSku(), pageable).getContent());
+                                }
+                            } else {
+                                if (sort.substring(2).equals("status")) {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
+                                                                    username, asset.getSku(), pageable).getContent());
+                                } else {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+                                                                    username, asset.getSku(), pageable).getContent());
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                final boolean statusIsRequested = status.equals(ServiceConstant.STATUS_REQUESTED);
+                final boolean statusIsAccepted = status.equals(ServiceConstant.STATUS_ACCEPTED);
+                final boolean statusIsRejected = status.equals(ServiceConstant.STATUS_REJECTED);
+                final boolean statusIsCancelled = status.equals(ServiceConstant.STATUS_CANCELLED);
+                final boolean statusIsDelivered = status.equals(ServiceConstant.STATUS_DELIVERED);
+                final boolean statusIsReturned = status.equals(ServiceConstant.STATUS_RETURNED);
+
+                final boolean incorrectStatusValue =
+                        !statusIsRequested && !statusIsAccepted && !statusIsRejected && !statusIsCancelled &&
+                        !statusIsDelivered && !statusIsReturned;
+
+                if (incorrectStatusValue) {
+                    throw new BadRequestException(INCORRECT_PARAMETER);
+                } else {
+                    final long requestsCount = requestRepository.countAllByUsernameAndStatus(username, status);
+                    final boolean noRequests = (requestsCount == 0);
+                    final long totalPages = (long) Math
+                            .ceil((double) getRequestsCount("Username", username, query, status, page, sort) /
+                                  ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+                    final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
+
+                    if (noRequests || pageIndexOutOfBounds) {
+                        throw new DataNotFoundException(DATA_NOT_FOUND);
+                    } else {
+                        final boolean viewAllRequests = (query == null);
+
+                        final int zeroBasedIndexPage = page - 1;
+                        final Pageable pageable = PageRequest
+                                .of(zeroBasedIndexPage, ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+
+                        if (viewAllRequests) {
+                            if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
+                                if (sort.substring(2).equals("status")) {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameAndStatusContainsOrderByUpdatedDateAsc(
+                                                                    username, status, pageable).getContent());
+                                } else {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameAndStatusOrderByUpdatedDateAsc(username,
+                                                                                                             status,
+                                                                                                             pageable
+                                                            ).getContent());
+
+                                }
+                            } else {
+                                if (sort.substring(2).equals("status")) {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameAndStatusContainsOrderByUpdatedDateDesc(
+                                                                    username, status, pageable).getContent());
+                                } else {
+                                    return requestRepository
+                                            .findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status,
+                                                                                              pageable
+                                            ).getContent();
+
+                                }
+                            }
+                        } else {
+                            List< AssetModel > assets = assetRepository
+                                    .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                                            query, query, query, query, query);
+                            for (final AssetModel asset : assets) {
+                                if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
+                                    if (sort.substring(2).equals("status")) {
+                                        requests.addAll(requestRepository
+                                                                .findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(
+                                                                        username, query, asset.getSku(), pageable)
+                                                                .getContent());
+                                    } else {
+                                        requests.addAll(requestRepository
+                                                                .findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+                                                                        username, query, asset.getSku(), pageable)
+                                                                .getContent());
+                                    }
+                                } else {
+                                    if (sort.substring(2).equals("status")) {
+                                        requests.addAll(requestRepository
+                                                                .findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
+                                                                        username, query, username, asset.getSku(),
+                                                                        pageable
+                                                                ).getContent());
+                                    } else {
+                                        requests.addAll(requestRepository
+                                                                .findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+                                                                        username, query, username, asset.getSku(),
+                                                                        pageable
+                                                                ).getContent());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new ArrayList<>(requests);
+        }
     }
 
     @Override
-    public List< EmployeeModel > getEmployeeDataFromRequest(
+    public List< RequestModel > getOthersRequestList(
+            final String username, final String query, final String status, final int page, String sort
+    )
+            throws
+            BadRequestException {
+
+        final boolean emptyQueryGiven = (query != null && query.isEmpty());
+        final boolean emptySortGiven = (sort != null && sort.isEmpty());
+        final boolean emptyStatusGiven = (status != null && status.isEmpty());
+
+        if (emptyQueryGiven || emptySortGiven || emptyStatusGiven) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            sort = validateSortInformationGiven(sort);
+
+            List< SupervisionModel > supervisions = supervisionRepository
+                    .findAllByDeletedIsFalseAndSupervisorUsername(username);
+
+            List< String > supervisedEmployeesUsernames = new ArrayList<>();
+
+            for (final SupervisionModel supervision : supervisions) {
+                supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
+            }
+
+            Set< RequestModel > requests = new LinkedHashSet<>();
+
+            for (final String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
+                boolean administratorWithUsernameExists = adminRepository
+                        .existsAdminModelByDeletedIsFalseAndUsernameEquals(supervisedEmployeeUsername);
+                boolean supervisorIsValid = supervisionRepository
+                        .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(supervisedEmployeeUsername);
+                boolean usernameIsAdminOrSupervisor = administratorWithUsernameExists || supervisorIsValid;
+
+                if (usernameIsAdminOrSupervisor) {
+                    requests.addAll(getOthersRequestList(supervisedEmployeeUsername, query, status, page, sort));
+                }
+
+                final boolean viewAllRequestsRegardlessOfStatus = (status == null);
+                final boolean viewAllRequests = (query == null);
+
+                if (viewAllRequestsRegardlessOfStatus) {
+                    if (viewAllRequests) {
+                        if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
+                            if (sort.substring(2).equals("status")) {
+                                requests.addAll(requestRepository
+                                                        .findAllByUsernameOrderByStatusAsc(supervisedEmployeeUsername));
+                            } else {
+                                if (sort.substring(2).equals("updatedDate")) {
+                                    requests.addAll(requestRepository.findAllByUsernameOrderByUpdatedDateAsc(
+                                            supervisedEmployeeUsername));
+                                }
+                            }
+                        } else {
+                            if (sort.substring(2).equals("status")) {
+                                requests.addAll(requestRepository.findAllByUsernameOrderByStatusDesc(
+                                        supervisedEmployeeUsername));
+                            } else {
+                                if (sort.substring(2).equals("updatedDate")) {
+                                    requests.addAll(requestRepository.findAllByUsernameOrderByUpdatedDateDesc(
+                                            supervisedEmployeeUsername));
+                                }
+                            }
+                        }
+                    } else {
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                                        query, query, query, query, query);
+                        for (final AssetModel asset : assets) {
+                            if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
+                                if (sort.substring(2).equals("status")) {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusAsc(
+                                                                    supervisedEmployeeUsername, asset.getSku()));
+                                } else {
+                                    if (sort.substring(2).equals("updatedDate")) {
+                                        requests.addAll(requestRepository
+                                                                .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+                                                                        supervisedEmployeeUsername, asset.getSku()));
+                                    }
+                                }
+                            } else {
+                                if (sort.substring(2).equals("status")) {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
+                                                                    supervisedEmployeeUsername, asset.getSku()));
+                                } else {
+                                    if (sort.substring(2).equals("updatedDate")) {
+                                        requests.addAll(requestRepository
+                                                                .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+                                                                        supervisedEmployeeUsername, asset.getSku()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (viewAllRequests) {
+                        if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
+                            if (sort.substring(2).equals("status")) {
+                                requests.addAll(requestRepository.findAllByUsernameAndStatusContainsOrderByStatusAsc(
+                                        supervisedEmployeeUsername, status));
+                            } else {
+                                if (sort.substring(2).equals("updatedDate")) {
+                                    requests.addAll(requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateAsc(
+                                            supervisedEmployeeUsername, status));
+                                }
+                            }
+                        } else {
+                            if (sort.substring(2).equals("status")) {
+                                requests.addAll(requestRepository.findAllByUsernameAndStatusContainsOrderByStatusDesc(
+                                        supervisedEmployeeUsername, status));
+                            } else {
+                                if (sort.substring(2).equals("updatedDate")) {
+                                    requests.addAll(requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(
+                                            supervisedEmployeeUsername, status));
+                                }
+                            }
+                        }
+                    } else {
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                                        query, query, query, query, query);
+                        for (final AssetModel asset : assets) {
+                            if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
+                                if (sort.substring(2).equals("status")) {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(
+                                                                    supervisedEmployeeUsername, query, asset.getSku()));
+                                } else {
+                                    if (sort.substring(2).equals("updatedDate")) {
+                                        requests.addAll(requestRepository
+                                                                .findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+                                                                        supervisedEmployeeUsername, query,
+                                                                        asset.getSku()
+                                                                ));
+                                    }
+                                }
+                            } else {
+                                if (sort.substring(2).equals("status")) {
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
+                                                                    supervisedEmployeeUsername, query,
+                                                                    supervisedEmployeeUsername, asset.getSku()
+                                                            ));
+                                } else {
+                                    if (sort.substring(2).equals("updatedDate")) {
+                                        requests.addAll(requestRepository
+                                                                .findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+                                                                        supervisedEmployeeUsername, query,
+                                                                        supervisedEmployeeUsername, asset.getSku()
+                                                                ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new ArrayList<>(requests);
+        }
+    }
+
+    @Override
+    public String validateSortInformationGiven(String sort)
+            throws
+            BadRequestException {
+
+        final boolean useDefaultSort = (sort == null);
+
+        if (useDefaultSort) {
+            sort = "D-updatedDate";
+        } else {
+            final boolean properSortFormatGiven = sort.matches("^[AD]-(status|updatedDate)$");
+
+            if (!properSortFormatGiven) {
+                throw new BadRequestException(INCORRECT_PARAMETER);
+            }
+        }
+        return sort;
+    }
+
+    @Override
+    public List< RequestModel > getOthersRequestListPaged(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            DataNotFoundException,
+            BadRequestException {
+
+        final List< RequestModel > requests = getOthersRequestList(username, query, status, page, sort);
+        final long totalPages = (long) Math.ceil((double) requests.size() / ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+        final boolean noRequests = requests.isEmpty();
+        final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
+
+        if (noRequests || pageIndexOutOfBounds) {
+            throw new DataNotFoundException(DATA_NOT_FOUND);
+        }
+
+        PagedListHolder< RequestModel > pagedListHolder = new PagedListHolder<>(new ArrayList<>(requests));
+        pagedListHolder.setPage(page - 1);
+        pagedListHolder.setPageSize(ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+
+        return new ArrayList<>(pagedListHolder.getPageList());
+    }
+
+    @Override
+    public List< EmployeeModel > getEmployeesDataFromRequest(
             final List< RequestModel > requests
     ) {
 
         List< EmployeeModel > employees = new ArrayList<>();
-        for (RequestModel request : requests) {
+
+        for (final RequestModel request : requests) {
             employees.add(employeeRepository.findByDeletedIsFalseAndUsername(request.getUsername()));
-            employees.get(employees.size() - 1)
-                     .setPhoto(getEmployeeDetailPhoto(employees.get(employees.size() - 1)
-                                                               .getUsername(), employees.get(employees.size() - 1)
-                                                                                        .getPhoto()));
+            employees.get(employees.size() - 1).setPhoto(
+                    getEmployeeDetailPhoto(employees.get(employees.size() - 1).getUsername(),
+                                           employees.get(employees.size() - 1).getPhoto()
+                    ));
         }
 
         return employees;
+    }
+
+    @Override
+    public List< EmployeeModel > getRequestModifiersDataFromRequest(
+            final List< RequestModel > requests
+    ) {
+
+        List< EmployeeModel > requestModifiers = new ArrayList<>();
+
+        for (final RequestModel request : requests) {
+            final String modifierUsername = request.getUpdatedBy();
+
+            requestModifiers.add(employeeRepository.findByDeletedIsFalseAndUsername(modifierUsername));
+            requestModifiers.get(requestModifiers.size() - 1).setPhoto(
+                    getEmployeeDetailPhoto(requestModifiers.get(requestModifiers.size() - 1).getUsername(),
+                                           requestModifiers.get(requestModifiers.size() - 1).getPhoto()
+                    ));
+        }
+
+        return requestModifiers;
     }
 
     @Override
@@ -197,334 +535,454 @@ public class RequestsServiceImpl
     ) {
 
         List< AssetModel > assets = new ArrayList<>();
-        for (RequestModel request : requests) {
+
+        for (final RequestModel request : requests) {
             assets.add(assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()));
-            assets.get(assets.size() - 1)
-                  .setStock(request.getQuantity());
+            assets.get(assets.size() - 1).setStock(request.getQuantity());
         }
 
         return assets;
     }
 
     @Override
+    @Cacheable(value = "requestCount", key = "#username + #query + #status + #sort")
     public long getRequestsCount(
             final String type, final String username, final String query, final String status, final int page,
-            String sort
+            final String sort
     )
             throws
-            BadRequestException,
-            DataNotFoundException {
+            BadRequestException {
 
-        if (query != null && query.isEmpty()) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY);
-        }
+        final boolean emptyQueryGiven = (query != null && query.isEmpty());
+        final boolean emptyStatusGiven = (status != null && status.isEmpty());
 
-        if (type.equals("Username")) {
-            if (query == null) {
-                return requestRepository.countAllByUsernameAndStatus(username, status);
-            } else {
-                return requestRepository.countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(username,
-                                                                                                        status, query
-                );
-            }
+        if (emptyQueryGiven || emptyStatusGiven) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            if (type.equals("Others")) {
-                if (query != null) {
+            if (type.equals("Username")) {
+                final boolean viewAllRequestsRegardlessOfStatus = (status == null);
+                final boolean viewAllRequests = (query == null);
+
+                if (viewAllRequestsRegardlessOfStatus) {
+                    if (viewAllRequests) {
+                        return requestRepository.countAllByUsername(username);
+                    } else {
+                        long requestCount = 0;
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                                        query, query, query, query, query);
+
+                        for (final AssetModel asset : assets) {
+                            requestCount += requestRepository
+                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
+                        }
+
+                        return requestCount;
+                    }
+                } else {
+                    if (viewAllRequests) {
+                        return requestRepository.countAllByUsernameAndStatus(username, status);
+                    } else {
+
+                        long requestCount = 0;
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                                        query, query, query, query, query);
+
+                        for (final AssetModel asset : assets) {
+                            requestCount += requestRepository
+                                    .countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(username, status,
+                                                                                                    asset.getSku()
+                                    );
+                        }
+
+                        return requestCount;
+                    }
+                }
+            } else {
+                if (type.equals("Others")) {
                     return getOthersRequestList(username, query, status, page, sort).size();
                 }
-                return getOthersRequestList(username, "", status, page, sort).size();
             }
-        }
 
-        return -1;
+            return -1;
+        }
     }
 
     @Override
     public String getEmployeeDetailPhoto(
-            final String username, final String photoDirectory
+            final String username, final String photoLocation
     ) {
 
-        if (photoDirectory == null || photoDirectory.isEmpty()) {
-            return "http://localhost:8085/oasis/api/employees/" + username +
-                   "/image_not_found".concat("?extension=jpeg");
-        } else {
-            File photo = new File(photoDirectory);
-            if (Files.exists(photo.toPath())) {
-                StringBuilder extensionBuilder = new StringBuilder();
-                extensionBuilder.append(photo.getName());
-                extensionBuilder.reverse();
-                extensionBuilder.replace(0, extensionBuilder.length(),
-                                         extensionBuilder.substring(0, String.valueOf(extensionBuilder)
-                                                                             .indexOf("."))
-                );
-                extensionBuilder.reverse();
+        final boolean validImageLocation = (photoLocation != null && photoLocation.isEmpty());
 
-                return "http://localhost:8085/oasis/api/employees/" + username + "/" + username.concat("?extension=")
-                                                                                               .concat(String.valueOf(
-                                                                                                       extensionBuilder));
-            } else {
-                return "http://localhost:8085/oasis/api/employees/" + username +
-                       "/image_not_found".concat("?extension=jpeg");
+        if (validImageLocation) {
+            final File photo = new File(photoLocation);
+
+            if (photo.exists() && Files.exists(photo.toPath())) {
+                return "http://localhost:8085/oasis/api/employees/" + username + "/" +
+                       username.concat("?extension=").concat(imageHelper.getExtensionFromFileName(photo.getName()));
             }
         }
+
+        return "http://localhost:8085/oasis/api/employees/" + username + "/image_not_found".concat("?extension=jpeg");
     }
 
     /*-------------Save Request Methods-------------*/
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "requestCount", allEntries = true),
+            @CacheEvict(value = "myRequestsList", allEntries = true),
+            @CacheEvict(value = "othersRequestsList", allEntries = true),
+            @CacheEvict(value = "availableAssetsList", allEntries = true)
+    })
     public void saveRequests(
             final String username, final List< RequestModel > requests
     )
             throws
             DataNotFoundException,
-            BadRequestException {
+            BadRequestException,
+            UnauthorizedOperationException {
 
-        if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(username)) {
-            throw new DataNotFoundException(USER_NOT_FOUND);
-        }
+        final boolean employeeWithUsernameExists = employeeRepository
+                .existsEmployeeModelByDeletedIsFalseAndUsername(username);
 
-        if (requests.isEmpty()) {
-            throw new BadRequestException(NO_ASSET_SELECTED);
-        }
-
-        for (RequestModel request : requests) {
-            if (!assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(request.getSku())) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND);
-            }
-
-            if (assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku())
-                               .getStock() - request.getQuantity() < 0) {
-                throw new BadRequestException(ASSET_NOT_FOUND);
-            }
-        }
-
-        if (requests.size() > 1 && requests.stream()
-                                           .anyMatch(requestModel -> requestModel.get_id() != null)) {
-            throw new BadRequestException(ASSET_NOT_FOUND);
-        }
-
-        for (RequestModel request : requests) {
-            RequestModel savedRequest;
-            if (request.get_id() == null) {
-                savedRequest = request;
-
-                savedRequest.setStatus(ServiceConstant.STATUS_REQUESTED);
-                savedRequest.setTransactionNote(null);
-                savedRequest.setCreatedBy(username);
-                savedRequest.setCreatedDate(new Date());
+        if (!employeeWithUsernameExists) {
+            throw new DataNotFoundException(DATA_NOT_FOUND);
+        } else {
+            if (requests.isEmpty()) {
+                throw new BadRequestException(INCORRECT_PARAMETER);
             } else {
-                savedRequest = requestRepository.findBy_id(request.get_id());
+                final boolean createRequestOperation = isNewRequestsValid(requests);
 
-                if (savedRequest == null || request.getStatus() == null) {
-                    throw new DataNotFoundException(new BaseError("1", "1"));
+                RequestModel savedRequest;
+                if (createRequestOperation) {
+                    validateRequestedAssets(requests);
+
+                    final boolean employeeWithUsernameIsAdministrator = adminRepository
+                            .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
+                    final boolean employeeWithUsernameDoesNotHaveSupervision = employeeRepository
+                            .existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(username);
+                    final boolean employeeWithUsernameIsTopAdministrator =
+                            employeeWithUsernameIsAdministrator && employeeWithUsernameDoesNotHaveSupervision;
+
+                    if (employeeWithUsernameIsTopAdministrator) {
+                        throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                    } else {
+                        for (final RequestModel request : requests) {
+                            savedRequest = request;
+
+                            savedRequest.setStatus(ServiceConstant.STATUS_REQUESTED);
+                            savedRequest.setTransactionNote(null);
+                            savedRequest.setCreatedBy(username);
+                            savedRequest.setCreatedDate(new Date());
+
+                            savedRequest.setUpdatedBy(username);
+                            savedRequest.setUpdatedDate(new Date());
+
+                            requestRepository.save(savedRequest);
+                        }
+                    }
                 } else {
-                    if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(request.getUsername())) {
-                        throw new DataNotFoundException(USER_NOT_FOUND);
-                    }
+                    RequestModel request = requests.get(0);
 
-                    boolean usernameIsAdmin = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals(
-                            username);
-                    boolean supervisorIsValid =
-                            supervisionRepository.existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(
-                            username, savedRequest.getUsername());
-                    boolean usernameIsAdminOrSupervisor = usernameIsAdmin || supervisorIsValid;
+                    savedRequest = requestRepository.findBy_id(request.get_id());
 
-                    boolean requestStatusIsRequested = savedRequest.getStatus()
-                                                                   .equals(ServiceConstant.STATUS_REQUESTED);
-                    boolean requestStatusIsAccepted = savedRequest.getStatus()
-                                                                  .equals(ServiceConstant.STATUS_ACCEPTED);
-                    boolean requestStatusIsDelivered = savedRequest.getStatus()
-                                                                   .equals(ServiceConstant.STATUS_DELIVERED);
+                    if (savedRequest == null) {
+                        throw new DataNotFoundException(DATA_NOT_FOUND);
+                    } else if (request.getStatus() == null) {
+                        throw new BadRequestException(INCORRECT_PARAMETER);
+                    } else {
+                        if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(request.getUsername())) {
+                            throw new DataNotFoundException(DATA_NOT_FOUND);
+                        }
 
-                    boolean newRequestStatusIsCancelled = request.getStatus()
-                                                                 .equals(ServiceConstant.STATUS_CANCELLED);
-                    boolean newRequestStatusIsAccepted = request.getStatus()
-                                                                .equals(ServiceConstant.STATUS_ACCEPTED);
-                    boolean newRequestStatusIsRejected = request.getStatus()
-                                                                .equals(ServiceConstant.STATUS_REJECTED);
-                    boolean newRequestStatusIsDelivered = request.getStatus()
-                                                                 .equals(ServiceConstant.STATUS_DELIVERED);
-                    boolean newRequestStatusIsReturned = request.getStatus()
-                                                                .equals(ServiceConstant.STATUS_RETURNED);
+                        final boolean newRequestStatusIsCancelled = request.getStatus()
+                                                                           .equals(ServiceConstant.STATUS_CANCELLED);
+                        final boolean newRequestStatusIsAccepted = request.getStatus()
+                                                                          .equals(ServiceConstant.STATUS_ACCEPTED);
+                        final boolean newRequestStatusIsRejected = request.getStatus()
+                                                                          .equals(ServiceConstant.STATUS_REJECTED);
+                        final boolean newRequestStatusIsDelivered = request.getStatus()
+                                                                           .equals(ServiceConstant.STATUS_DELIVERED);
 
-                    boolean expendableAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
-                                                             .isExpendable();
+                        if (newRequestStatusIsCancelled) {
+                            updateStatusToCancelled(savedRequest, username, request.getUsername(),
+                                                    savedRequest.getStatus(), request.getStatus()
+                            );
+                        } else if (newRequestStatusIsAccepted || newRequestStatusIsRejected) {
+                            updateAssetDataAndStatusToAcceptedOrRejected(username, request, savedRequest);
+                        } else {
+                            final boolean expendableAsset = assetRepository
+                                    .findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).isExpendable();
 
-                    boolean usernameIsRequester = request.getUsername()
-                                                         .equals(savedRequest.getUsername());
-
-                    boolean requestedToCancelled = requestStatusIsRequested && newRequestStatusIsCancelled;
-                    boolean requestedToAccepted = requestStatusIsRequested && newRequestStatusIsAccepted;
-                    boolean requestedToRejected = requestStatusIsRequested && newRequestStatusIsRejected;
-                    boolean acceptedToDelivered = requestStatusIsAccepted && newRequestStatusIsDelivered;
-                    boolean deliveredToReturned = requestStatusIsDelivered && newRequestStatusIsReturned;
-
-                    /*
-                    Cancel hanya diri sendiri
-                        Request username dan username ga sama		DONE
-                        Banyak yang dilempar buat cancel    		DONE
-                        Status bukan cancel				            DONE
-                    Accept/reject hanya supervisor/admin
-                        Supervisor bukan supervisor dari username	DONE
-                        Non supervisor/admin accept/reject		    DONE
-                        Status bukan accept/reject			        DONE
-                        Banyak yang dilempar buat accept/reject		DONE
-                        Self accept/reject				            DONE
-                    Deliver hanya admin
-                        Non admin deliver				            DONE
-                        Status bukan deliver				        DONE
-                        Banyak yang dilempar buat deliver		    DONE
-                        Self deliver					            DONE
-                    Return hanya admin
-                        Non admin return				            DONE
-                        Status bukan return				            DONE
-                        Banyak yang dilempar buat return		    DONE
-                        Self return					                DONE
-                     */
-
-                    if (!usernameIsAdminOrSupervisor && !usernameIsRequester) {
-                        throw new BadRequestException(new BaseError("2", "2"));
-                    }
-
-                    if (usernameIsRequester && !usernameIsAdminOrSupervisor && !requestedToCancelled) {
-                        throw new BadRequestException(new BaseError("3", "3"));
-                    }
-
-                    if (usernameIsRequester && usernameIsAdmin && !requestedToCancelled) {
-                        throw new BadRequestException(new BaseError("4", "4"));
-                    }
-
-                    if (requestedToCancelled && !usernameIsRequester) {
-                        throw new BadRequestException(new BaseError("5", "5"));
-                    }
-
-                    if (!usernameIsAdmin && acceptedToDelivered) {
-                        throw new BadRequestException(new BaseError("6", "6"));
-                    }
-
-                    if (!usernameIsAdminOrSupervisor && (requestedToAccepted || requestedToRejected)) {
-                        throw new BadRequestException(new BaseError("7", "7"));
-                    }
-
-                    if (usernameIsRequester && !requestedToCancelled) {
-                        throw new BadRequestException(new BaseError("8", "8"));
-                    }
-
-                    if (!usernameIsAdminOrSupervisor && (newRequestStatusIsDelivered || newRequestStatusIsReturned)) {
-                        throw new BadRequestException(new BaseError("9", "9"));
-                    }
-
-                    if (!requestedToCancelled && !requestedToAccepted && !requestedToRejected && !acceptedToDelivered &&
-                        !deliveredToReturned) {
-                        throw new BadRequestException(new BaseError("10", "10"));
-                    }
-
-                    boolean allowedToCancelRequest = usernameIsRequester && requestedToCancelled;
-
-                    boolean allowedToAcceptOrRejectRequest = usernameIsAdminOrSupervisor && requestStatusIsRequested &&
-                                                             (newRequestStatusIsAccepted || newRequestStatusIsRejected);
-
-                    boolean allowedToDeliverAsset = usernameIsAdmin && acceptedToDelivered;
-
-                    boolean assetReturned =
-                            (expendableAsset && allowedToDeliverAsset) || (usernameIsAdmin && deliveredToReturned);
-
-                    if (allowedToCancelRequest) {
-                        savedRequest.setStatus(ServiceConstant.STATUS_CANCELLED);
-                    }
-
-                    if (allowedToAcceptOrRejectRequest) {
-                        savedRequest.setStatus(request.getStatus());
-
-                        if (requestedToAccepted) {
-                            if (assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
-                                               .getStock() - savedRequest.getQuantity() < 0) {
-                                throw new BadRequestException(ASSET_NOT_FOUND);
+                            if (newRequestStatusIsDelivered) {
+                                if (!expendableAsset) {
+                                    updateStatusToDelivered(username, savedRequest, request.getStatus());
+                                } else {
+                                    updateAssetDataAndStatusToReturned(username, savedRequest, request.getStatus());
+                                }
+                            } else {
+                                if (!expendableAsset) {
+                                    updateAssetDataAndStatusToReturned(username, savedRequest, request.getStatus());
+                                } else {
+                                    throw new BadRequestException(INCORRECT_PARAMETER);
+                                }
                             }
-
-                            // TODO Handle concurrency!
-                            AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku());
-                            asset.setStock(assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
-                                                          .getStock() - savedRequest.getQuantity());
-
-                            assetRepository.save(asset);
-                        }
-
-                        if (requestedToRejected) {
-                            savedRequest.setTransactionNote(request.getTransactionNote());
                         }
                     }
+                    savedRequest.setTransactionNote(request.getTransactionNote());
+                    savedRequest.setUpdatedBy(username);
+                    savedRequest.setUpdatedDate(new Date());
 
-                    if (allowedToDeliverAsset) {
-                        savedRequest.setStatus(ServiceConstant.STATUS_DELIVERED);
-                    }
-
-                    if (assetReturned) {
-                        // TODO Handle concurrency!
-                        AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku());
-                        asset.setStock(assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
-                                                      .getStock() + savedRequest.getQuantity());
-
-                        assetRepository.save(asset);
-
-                        savedRequest.setStatus(ServiceConstant.STATUS_RETURNED);
-                    }
+                    requestRepository.save(savedRequest);
                 }
             }
-            savedRequest.setUpdatedBy(username);
-            savedRequest.setUpdatedDate(new Date());
-
-            requestRepository.save(savedRequest);
         }
-
     }
 
     @Override
-    public List< RequestModel > getOthersRequestList(
-            final String username, final String query, final String status, final int page, String sort
-    )
+    public void validateRequestedAssets(final List< RequestModel > requests)
             throws
-            BadRequestException,
-            DataNotFoundException {
+            DataNotFoundException,
+            BadRequestException {
 
-        List< SupervisionModel > supervisions = supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(
-                username);
+        for (final RequestModel request : requests) {
+            final AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku());
 
-        List< String > supervisedEmployeesUsernames = new ArrayList<>();
-        for (SupervisionModel supervision : supervisions) {
-            supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
-        }
-
-        Set< RequestModel > requests = new LinkedHashSet<>();
-        for (String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
-            boolean usernameIsAdmin = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals(
-                    supervisedEmployeeUsername);
-            boolean supervisorIsValid =
-                    supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(
-                    supervisedEmployeeUsername);
-            boolean usernameIsAdminOrSupervisor = usernameIsAdmin || supervisorIsValid;
-
-            if (usernameIsAdminOrSupervisor) {
-                requests.addAll(getOthersRequestList(supervisedEmployeeUsername, query, status, page, sort));
+            if (asset == null) {
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             }
-            requests.addAll(requestRepository.findAllByUsernameAndStatus(supervisedEmployeeUsername, status));
-        }
 
-        return new ArrayList<>(requests);
+            final boolean requestQuantityLargerThanStock = request.getQuantity() > asset.getStock();
+
+            if (requestQuantityLargerThanStock) {
+                throw new BadRequestException(UNAUTHORIZED_OPERATION);
+            }
+        }
     }
 
-    public List< RequestModel > getOthersRequestListPaged(
-            final String username, final String query, final String status, final int page, String sort
+    @Override
+    public boolean isNewRequestsValid(final List< RequestModel > requests)
+            throws
+            BadRequestException {
+
+        final boolean existingRequestFound = requests.stream().anyMatch(requestModel -> requestModel.get_id() != null);
+        final boolean moreThanOneNewRequest = requests.size() > 1;
+
+        if (moreThanOneNewRequest && existingRequestFound) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            return requests.size() != 1 || !existingRequestFound;
+        }
+    }
+
+    @Override
+    public boolean isUsernameAdminOrSupervisor(final String username, final String requesterUsername) {
+
+        final boolean administratorWithUsernameExists = adminRepository
+                .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
+        final boolean supervisorIsValid = supervisionRepository
+                .existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(username,
+                                                                                                requesterUsername
+                );
+
+        return administratorWithUsernameExists || supervisorIsValid;
+    }
+
+    @Override
+    public void updateStatusToCancelled(
+            RequestModel savedRequest, final String username, final String recordedRequesterUsername,
+            final String currentRequestStatus, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        if (isRequestCancellationValid(username, recordedRequesterUsername, currentRequestStatus, newRequestStatus)) {
+            savedRequest.setStatus(ServiceConstant.STATUS_CANCELLED);
+        }
+    }
+
+    @Override
+    public void updateAssetDataAndStatusToAcceptedOrRejected(
+            final String username, final RequestModel request, RequestModel savedRequest
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        if (isRequestAcceptanceOrRejectionValid(
+                username, savedRequest.getUsername(), savedRequest.getStatus(), request.getStatus())) {
+            savedRequest.setStatus(request.getStatus());
+
+            final boolean newRequestStatusIsAccepted = request.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
+
+            if (newRequestStatusIsAccepted) {
+                if (assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
+                    savedRequest.getQuantity() < 0) {
+                    throw new BadRequestException(ASSET_NOT_FOUND);
+                }
+
+                // TODO Handle concurrency!
+                AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku());
+
+                asset.setStock(assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
+                               savedRequest.getQuantity());
+
+                assetRepository.save(asset);
+            }
+        }
+    }
+
+    @Override
+    public void updateStatusToDelivered(
+            final String username, RequestModel savedRequest, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        final String currentRequestStatus = savedRequest.getStatus();
+
+        if (isRequestDeliveryValid(username, currentRequestStatus, newRequestStatus)) {
+            savedRequest.setStatus(ServiceConstant.STATUS_DELIVERED);
+        }
+    }
+
+    @Override
+    public void updateAssetDataAndStatusToReturned(
+            final String username, RequestModel savedRequest, final String newRequestStatus
     )
             throws
             BadRequestException,
-            DataNotFoundException {
+            UnauthorizedOperationException {
 
-        PagedListHolder< RequestModel > pagedListHolder = new PagedListHolder<>(
-                new ArrayList<>(getOthersRequestList(username, query, status, page, sort)));
-        pagedListHolder.setPage(page - 1);
-        pagedListHolder.setPageSize(ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+        if (isRequestDeliveryOrReturnValid(username, savedRequest, newRequestStatus)) {
+            // TODO Handle concurrency!
+            AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku());
+            asset.setStock(assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() +
+                           savedRequest.getQuantity());
 
-        return pagedListHolder.getPageList();
+            assetRepository.save(asset);
+
+            savedRequest.setStatus(ServiceConstant.STATUS_RETURNED);
+        }
+    }
+
+    @Override
+    public boolean isRequestCancellationValid(
+            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
+            final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        final boolean statusIsRequested = currentRequestStatus.equals(ServiceConstant.STATUS_REQUESTED);
+        final boolean newRequestStatusIsCancelled = newRequestStatus.equals(ServiceConstant.STATUS_CANCELLED);
+        final boolean requestedToCancelled = statusIsRequested && newRequestStatusIsCancelled;
+
+        if (!requestedToCancelled) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            final boolean usernameIsRequester = recordedRequesterUsername.equals(username);
+
+            if (!usernameIsRequester) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    @Override
+    public boolean isRequestAcceptanceOrRejectionValid(
+            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
+            final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        final boolean usernameIsAdminOrSupervisor = isUsernameAdminOrSupervisor(username, recordedRequesterUsername);
+
+        final boolean statusIsRequested = currentRequestStatus.equals(ServiceConstant.STATUS_REQUESTED);
+        final boolean newRequestStatusIsAccepted = newRequestStatus.equals(ServiceConstant.STATUS_ACCEPTED);
+        final boolean newRequestStatusIsRejected = newRequestStatus.equals(ServiceConstant.STATUS_REJECTED);
+        final boolean requestedToAccepted = statusIsRequested && newRequestStatusIsAccepted;
+        final boolean requestedToRejected = statusIsRequested && newRequestStatusIsRejected;
+        final boolean requestedToAcceptedOrRejected = requestedToAccepted || requestedToRejected;
+
+        if (!requestedToAcceptedOrRejected) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            if (!usernameIsAdminOrSupervisor) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    @Override
+    public boolean isRequestDeliveryValid(
+            final String username, final String currentRequestStatus, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        final boolean statusIsAccepted = currentRequestStatus.equals(ServiceConstant.STATUS_ACCEPTED);
+        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
+        final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
+
+        return isAssetDeliveryOrReturnValid(username, acceptedToDelivered);
+    }
+
+    @Override
+    public boolean isRequestDeliveryOrReturnValid(
+            final String username, final RequestModel savedRequest, final String newRequestStatus
+    )
+            throws
+            BadRequestException,
+            UnauthorizedOperationException {
+
+        final boolean statusIsAccepted = savedRequest.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
+        final boolean expendableAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
+                                                       .isExpendable();
+        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
+        final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
+        final boolean expendableAssetDelivery = expendableAsset && acceptedToDelivered;
+
+        final boolean statusIsDelivered = savedRequest.getStatus().equals(ServiceConstant.STATUS_DELIVERED);
+        final boolean newRequestStatusIsReturned = newRequestStatus.equals(ServiceConstant.STATUS_RETURNED);
+        final boolean deliveredToReturned = statusIsDelivered && newRequestStatusIsReturned;
+        final boolean nonExpendableAssetReturn = !expendableAsset && deliveredToReturned;
+
+        final boolean acceptedOrDeliveredToReturned = expendableAssetDelivery || nonExpendableAssetReturn;
+
+        return isAssetDeliveryOrReturnValid(username, acceptedOrDeliveredToReturned);
+    }
+
+    @Override
+    public boolean isAssetDeliveryOrReturnValid(final String username, final boolean acceptedOrDeliveredToReturned)
+            throws
+            BadRequestException,
+            UnauthorizedOperationException {
+
+        if (!acceptedOrDeliveredToReturned) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            final boolean administratorWithUsernameExists = adminRepository
+                    .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
+
+            if (!administratorWithUsernameExists) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            } else {
+                return true;
+            }
+        }
     }
 
 }

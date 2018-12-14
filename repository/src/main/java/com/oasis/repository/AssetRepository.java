@@ -16,8 +16,9 @@ public interface AssetRepository
 
     long countAllByDeletedIsFalseAndStockGreaterThan(long stockLimit);
 
-    long countAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCase(long stockLimit,
-            String sku, String name);
+    long countAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCase(
+            long stockLimit, String sku, String name
+    );
 
     Page< AssetModel > findAllByDeletedIsFalseAndStockGreaterThanOrderBySkuAsc(
             long stockLimit, Pageable pageable
@@ -51,20 +52,8 @@ public interface AssetRepository
             long stockLimit, String sku, String name, Pageable pageable
     );
 
-    List< AssetModel > findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
-            long stockLimit, String sku, String name
-    );
-
-    List< AssetModel > findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
-            long stockLimit, String sku, String name
-    );
-
-    List< AssetModel > findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-            long stockLimit, String sku, String name
-    );
-
-    List< AssetModel > findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
-            long stockLimit, String sku, String name
+    List< AssetModel > findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+            String sku, String name, String brand, String type, String location
     );
 
     boolean existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(

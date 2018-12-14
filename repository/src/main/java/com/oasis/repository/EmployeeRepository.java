@@ -41,18 +41,12 @@ public interface EmployeeRepository
             String username, String name, Pageable pageable
     );
 
-    List< EmployeeModel > findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
-            String username, String name
-    );
-
-    List< EmployeeModel > findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
-            String username, String name
-    );
-
     boolean existsByDeletedIsFalseAndNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
             String name, Date dob, String phone, String jobTitle, String division, String location
     );
 
     boolean existsEmployeeModelByDeletedIsFalseAndUsername(String username);
+
+    boolean existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(String username);
 
 }

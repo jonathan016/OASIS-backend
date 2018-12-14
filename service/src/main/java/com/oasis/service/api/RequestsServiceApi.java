@@ -2,13 +2,29 @@ package com.oasis.service.api;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RequestsServiceApi {
+
+    Map< String, List< ? > > getMyRequestsListData(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
+
+    Map<String, List<?>> getOthersRequestListData(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
 
     List< RequestModel > getUsernameRequestsList(
             final String username, final String query, final String status, final int page, String sort
@@ -17,7 +33,29 @@ public interface RequestsServiceApi {
             BadRequestException,
             DataNotFoundException;
 
-    List< EmployeeModel > getEmployeeDataFromRequest(
+    List< RequestModel > getOthersRequestList(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            DataNotFoundException,
+            BadRequestException;
+
+    String validateSortInformationGiven(String sort)
+            throws
+            BadRequestException;
+
+    List< RequestModel > getOthersRequestListPaged(
+            final String username, final String query, final String status, final int page, final String sort
+    )
+            throws
+            DataNotFoundException,
+            BadRequestException;
+
+    List< EmployeeModel > getEmployeesDataFromRequest(
+            final List< RequestModel > requests
+    );
+
+    List< EmployeeModel > getRequestModifiersDataFromRequest(
             final List< RequestModel > requests
     );
 
@@ -34,7 +72,7 @@ public interface RequestsServiceApi {
             DataNotFoundException;
 
     String getEmployeeDetailPhoto(
-            final String username, final String photoDirectory
+            final String username, final String photoLocation
     );
 
     void saveRequests(
@@ -42,13 +80,82 @@ public interface RequestsServiceApi {
     )
             throws
             DataNotFoundException,
+            BadRequestException,
+            UnauthorizedOperationException;
+
+    void validateRequestedAssets(final List< RequestModel > requests)
+            throws
+            DataNotFoundException,
             BadRequestException;
 
-    List< RequestModel > getOthersRequestList(
-            final String username, final String query, final String status, final int page, String sort
+    boolean isNewRequestsValid(final List< RequestModel > requests)
+            throws
+            BadRequestException;
+
+    boolean isUsernameAdminOrSupervisor(final String username, final String requesterUsername);
+
+    void updateStatusToCancelled(
+            RequestModel savedRequest, final String username, final String recordedRequesterUsername,
+            final String currentRequestStatus, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException;
+
+    void updateAssetDataAndStatusToAcceptedOrRejected(
+            final String username, final RequestModel request, RequestModel savedRequest
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException;
+
+    void updateStatusToDelivered(
+            final String username, RequestModel savedRequest, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException;
+
+    void updateAssetDataAndStatusToReturned(
+            final String username, RequestModel savedRequest, final String newRequestStatus
     )
             throws
             BadRequestException,
-            DataNotFoundException;
+            UnauthorizedOperationException;
+
+    boolean isRequestCancellationValid(
+            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
+            final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException;
+
+    boolean isRequestAcceptanceOrRejectionValid(
+            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
+            final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException;
+
+    boolean isRequestDeliveryValid(
+            final String username, final String currentRequestStatus, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException;
+
+    boolean isRequestDeliveryOrReturnValid(
+            final String username, final RequestModel savedRequest, final String newRequestStatus
+    )
+            throws
+            BadRequestException,
+            UnauthorizedOperationException;
+
+    boolean isAssetDeliveryOrReturnValid(final String username, final boolean acceptedOrDeliveredToReturned)
+            throws
+            BadRequestException,
+            UnauthorizedOperationException;
 
 }
