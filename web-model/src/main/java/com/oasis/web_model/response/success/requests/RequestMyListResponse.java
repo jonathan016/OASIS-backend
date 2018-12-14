@@ -29,6 +29,7 @@ public class RequestMyListResponse {
             private String id;
             private String status;
             private String note;
+            private String updatedDate;
 
         }
 

@@ -14,6 +14,7 @@ import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
 import org.springframework.stereotype.Component;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,9 @@ public class RequestsResponseMapper {
                         (requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote().isEmpty())
                         ? "No transaction note" : requests.get(i).getTransactionNote());
             }
+
+            mappedRequests.get(i).getRequest().setUpdatedDate(
+                    new SimpleDateFormat("EEE, dd MMM ''yy HH:mm").format(requests.get(i).getUpdatedDate()));
         }
         successResponse.setValue(new RequestOthersListResponse(mappedRequests));
 
@@ -112,6 +116,9 @@ public class RequestsResponseMapper {
                         (requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote().isEmpty())
                         ? "No transaction note" : requests.get(i).getTransactionNote());
             }
+
+            mappedRequests.get(i).getRequest().setUpdatedDate(
+                    new SimpleDateFormat("EEE, dd MMM ''yy HH:mm").format(requests.get(i).getUpdatedDate()));
         }
         successResponse.setValue(new RequestMyListResponse(mappedRequests));
 

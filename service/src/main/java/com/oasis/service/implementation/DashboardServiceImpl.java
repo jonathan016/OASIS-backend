@@ -59,8 +59,8 @@ public class DashboardServiceImpl
         } else {
             long requestedRequestsCount = 0;
             long acceptedRequestsCount = 0;
-            final long availableAssetCount =
-                    assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
+            final long availableAssetCount = assetRepository
+                    .countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
 
             switch (roleDeterminer.determineRole(username)) {
                 case ServiceConstant.ROLE_ADMINISTRATOR:

@@ -13,9 +13,6 @@ import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.RequestsServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,7 +45,6 @@ public class RequestsServiceImpl
 
     /*-------------Requests List Methods-------------*/
     @Override
-    @Cacheable(value = "myRequestsList", key = "#username + #query + #status + #sort", unless = "#result.size() == 0")
     public Map< String, List< ? > > getMyRequestsListData(
             final String username, final String query, final String status, final int page, final String sort
     )
@@ -72,8 +68,6 @@ public class RequestsServiceImpl
     }
 
     @Override
-    @Cacheable(value = "othersRequestsList", key = "#username + #query + #status + #sort",
-               unless = "#result.size() == 0")
     public Map< String, List< ? > > getOthersRequestListData(
             final String username, final String query, final String status, final int page, final String sort
     )
@@ -545,7 +539,6 @@ public class RequestsServiceImpl
     }
 
     @Override
-    @Cacheable(value = "requestCount", key = "#username + #query + #status + #sort")
     public long getRequestsCount(
             final String type, final String username, final String query, final String status, final int page,
             final String sort
@@ -630,12 +623,6 @@ public class RequestsServiceImpl
 
     /*-------------Save Request Methods-------------*/
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "requestCount", allEntries = true),
-            @CacheEvict(value = "myRequestsList", allEntries = true),
-            @CacheEvict(value = "othersRequestsList", allEntries = true),
-            @CacheEvict(value = "availableAssetsList", allEntries = true)
-    })
     public void saveRequests(
             final String username, final List< RequestModel > requests
     )
