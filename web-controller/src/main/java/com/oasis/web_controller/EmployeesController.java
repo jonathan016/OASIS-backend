@@ -5,6 +5,7 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.request_mapper.EmployeesRequestMapper;
 import com.oasis.response_mapper.EmployeesResponseMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
+import com.oasis.service.ActiveComponentManager;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.employees.ChangePasswordRequest;
@@ -35,6 +36,8 @@ public class EmployeesController {
     private EmployeesRequestMapper employeesRequestMapper;
     @Autowired
     private EmployeesResponseMapper employeesResponseMapper;
+    @Autowired
+    private ActiveComponentManager activeComponentManager;
 
     @GetMapping(value = APIMappingValue.API_LIST, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
@@ -70,11 +73,15 @@ public class EmployeesController {
             ), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(
-                employeesResponseMapper
-                        .produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employeesFound, supervisorsFound,
-                                                                employeePhotos, page, totalRecords
-                        ), HttpStatus.OK);
+        return new ResponseEntity<>(employeesResponseMapper
+                                            .produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(),
+                                                                                    employeesFound, supervisorsFound,
+                                                                                    employeePhotos,
+                                                                                    activeComponentManager
+                                                                                            .getEmployeesListActiveComponents(
+                                                                                                    username), page,
+                                                                                    totalRecords
+                                            ), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_DATA_EMPLOYEE, produces = APPLICATION_JSON_VALUE,
@@ -99,10 +106,14 @@ public class EmployeesController {
 
         String photo = employeesServiceApi.getEmployeeDetailImage(employee.getUsername(), employee.getPhoto());
 
-        return new ResponseEntity<>(employeesResponseMapper
-                                            .produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(), employee,
-                                                                                  photo, supervisor
-                                            ), HttpStatus.OK);
+        //TODO fill parameter role
+        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(),
+                                                                                                 activeComponentManager
+                                                                                                         .getEmployeeDetailActiveComponents(
+                                                                                                                 ""),
+                                                                                                 employee, photo,
+                                                                                                 supervisor
+        ), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_USERNAMES, produces = APPLICATION_JSON_VALUE,

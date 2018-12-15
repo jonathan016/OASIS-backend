@@ -9,6 +9,7 @@ import com.oasis.model.entity.RequestModel;
 import com.oasis.request_mapper.RequestsRequestMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.response_mapper.RequestsResponseMapper;
+import com.oasis.service.ActiveComponentManager;
 import com.oasis.service.api.RequestsServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.requests.SaveRequestRequest;
@@ -31,11 +32,13 @@ public class RequestsController {
     @Autowired
     private RequestsServiceApi requestsServiceApi;
     @Autowired
-    private RequestsResponseMapper requestsResponseMapper;
-    @Autowired
     private FailedResponseMapper failedResponseMapper;
     @Autowired
     private RequestsRequestMapper requestsRequestMapper;
+    @Autowired
+    private RequestsResponseMapper requestsResponseMapper;
+    @Autowired
+    private ActiveComponentManager activeComponentManager;
 
     @SuppressWarnings("unchecked")
     @GetMapping(value = APIMappingValue.API_MY_REQUESTS, produces = MediaType.APPLICATION_JSON_VALUE,
@@ -79,11 +82,15 @@ public class RequestsController {
             ), HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<>(
-                requestsResponseMapper
-                        .produceViewMyFoundRequestSuccessResult(HttpStatus.OK.value(), requests, employees, modifiers,
-                                                                assets, null, page, totalRecords
-                        ), HttpStatus.OK);
+        return new ResponseEntity<>(requestsResponseMapper
+                                            .produceViewMyFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
+                                                                                    employees, modifiers, assets,
+                                                                                    activeComponentManager
+                                                                                            .getRequestsListDataActiveComponents(
+                                                                                                    "my", username,
+                                                                                                    status
+                                                                                            ), page, totalRecords
+                                            ), HttpStatus.OK);
     }
 
     @SuppressWarnings("unchecked")
@@ -128,8 +135,12 @@ public class RequestsController {
 
         return new ResponseEntity<>(requestsResponseMapper
                                             .produceViewOthersFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
-                                                                                        employees, assets, null, page,
-                                                                                        totalRecords
+                                                                                        employees, assets,
+                                                                                        activeComponentManager
+                                                                                                .getRequestsListDataActiveComponents(
+                                                                                                        "others",
+                                                                                                        username, status
+                                                                                                ), page, totalRecords
                                             ), HttpStatus.OK);
     }
 

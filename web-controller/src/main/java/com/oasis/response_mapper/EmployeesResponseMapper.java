@@ -17,19 +17,22 @@ import org.springframework.stereotype.Component;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class EmployeesResponseMapper {
 
     public PagingResponse< EmployeeListResponse > produceViewFoundEmployeesSuccessResult(
             final int httpStatusCode, final List< EmployeeModel > employees, final List< EmployeeModel > supervisors,
-            final List< String > photos, final int pageNumber, final long totalRecords
+            final List< String > photos, final Map< String, Boolean > components, final int pageNumber,
+            final long totalRecords
     ) {
 
         PagingResponse< EmployeeListResponse > successResponse = new PagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
+        successResponse.setComponents(components);
 
         MapperFactory employeeDataFactory = new DefaultMapperFactory.Builder().build();
         employeeDataFactory.classMap(EmployeeModel.class, EmployeeListResponse.Employee.class);
@@ -39,59 +42,56 @@ public class EmployeesResponseMapper {
         List< EmployeeListResponse.Employee > mappedEmployees = new ArrayList<>();
 
         for (int i = 0; i < employees.size(); i++) {
-            mappedEmployees.add(
-                    employeeDataFactory.getMapperFacade(EmployeeModel.class, EmployeeListResponse.Employee.class)
-                                       .map(employees.get(i)));
-            mappedEmployees.get(mappedEmployees.size() - 1)
-                           .setPhoto(photos.get(i));
+            mappedEmployees
+                    .add(employeeDataFactory.getMapperFacade(EmployeeModel.class, EmployeeListResponse.Employee.class)
+                                            .map(employees.get(i)));
+            mappedEmployees.get(mappedEmployees.size() - 1).setPhoto(photos.get(i));
             if (supervisors.get(i) != null) {
-                mappedEmployees.get(mappedEmployees.size() - 1)
-                               .setSupervisor(employeeSupervisorDataFactory.getMapperFacade(EmployeeModel.class,
-                                                                                            EmployeeListResponse.Employee.Supervisor.class
-                               )
-                                                                           .map(supervisors.get(i)));
+                mappedEmployees.get(mappedEmployees.size() - 1).setSupervisor(employeeSupervisorDataFactory
+                                                                                      .getMapperFacade(
+                                                                                              EmployeeModel.class,
+                                                                                              EmployeeListResponse.Employee.Supervisor.class
+                                                                                      ).map(supervisors.get(i)));
             } else {
                 // For top administrator, who does not have any supervisor at all
-                mappedEmployees.get(mappedEmployees.size() - 1)
-                               .setSupervisor(null);
+                mappedEmployees.get(mappedEmployees.size() - 1).setSupervisor(null);
             }
         }
 
         successResponse.setValue(new EmployeeListResponse(mappedEmployees));
 
-        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE,
-                                             (int) Math.ceil((double) totalRecords /
-                                                             ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE),
-                                             totalRecords
-        ));
+        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE, (int) Math
+                .ceil((double) totalRecords / ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }
 
     public NoPagingResponse< EmployeeDetailResponse > produceEmployeeDetailSuccessResponse(
-            final int httpStatusCode, final EmployeeModel employee, final String photo, final EmployeeModel supervisor
+            final int httpStatusCode, final Map<String, Boolean> components, final EmployeeModel employee,
+            final String photo, final EmployeeModel supervisor
     ) {
 
         NoPagingResponse< EmployeeDetailResponse > successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
+        successResponse.setComponents(components);
 
         if (supervisor != null) {
             successResponse.setValue(new EmployeeDetailResponse(employee.getUsername(), employee.getName(),
-                                                                new SimpleDateFormat("dd-MM-yyyy").format(
-                                                                        employee.getDob()), photo, employee.getPhone(),
-                                                                employee.getJobTitle(), employee.getDivision(),
-                                                                employee.getLocation(),
+                                                                new SimpleDateFormat("dd-MM-yyyy")
+                                                                        .format(employee.getDob()), photo,
+                                                                employee.getPhone(), employee.getJobTitle(),
+                                                                employee.getDivision(), employee.getLocation(),
                                                                 new EmployeeDetailResponse.Supervisor(
                                                                         supervisor.getUsername(), supervisor.getName())
             ));
         } else {
             successResponse.setValue(new EmployeeDetailResponse(employee.getUsername(), employee.getName(),
-                                                                new SimpleDateFormat("dd-MM-yyyy").format(
-                                                                        employee.getDob()), photo, employee.getPhone(),
-                                                                employee.getJobTitle(), employee.getDivision(),
-                                                                employee.getLocation(), null
+                                                                new SimpleDateFormat("dd-MM-yyyy")
+                                                                        .format(employee.getDob()), photo,
+                                                                employee.getPhone(), employee.getJobTitle(),
+                                                                employee.getDivision(), employee.getLocation(), null
             ));
         }
 

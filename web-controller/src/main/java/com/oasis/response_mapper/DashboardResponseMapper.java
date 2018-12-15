@@ -32,6 +32,8 @@ public class DashboardResponseMapper {
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
+        successResponse.setComponents(null);
+
         successResponse.setValue(
                 new DashboardStatusResponse(requestedRequestsCount, acceptedRequestsCount, availableAssetsCount));
 

@@ -21,15 +21,14 @@ public class ServiceConstant {
     public static final String ROLE_SUPERIOR = "SUPERIOR";
     public static final String ROLE_ADMINISTRATOR = "ADMINISTRATOR";
 
-    public static final String TAB_OTHERS = "Others";
-    public static final String TAB_MY = "My";
+    public static final String TAB_OTHERS = "others";
+    public static final String TAB_MY = "my";
 
     public static final String PREFIX_DEFAULT_PASSWORD = "gdn";
     public static final String PREFIX_SKU = "SKU";
     public static final String EXTENSION_PDF = ".pdf";
 
     public static final String ASCENDING = "A";
-    public static final String DESCENDING = "D";
 
     private static final String ROOT_IMAGE_DIRECTORY = "C:".concat(File.separator)
                                                            .concat("oasis")

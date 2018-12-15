@@ -7,6 +7,7 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.response_mapper.DashboardResponseMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
+import com.oasis.service.ActiveComponentManager;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.DashboardServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
@@ -32,9 +33,11 @@ public class DashboardController {
     @Autowired
     private DashboardServiceApi dashboardServiceApi;
     @Autowired
-    private DashboardResponseMapper dashboardResponseMapper;
-    @Autowired
     private FailedResponseMapper failedResponseMapper;
+    @Autowired
+    private ActiveComponentManager activeComponentManager;
+    @Autowired
+    private DashboardResponseMapper dashboardResponseMapper;
 
     @GetMapping(value = APIMappingValue.API_STATUS, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
@@ -65,11 +68,11 @@ public class DashboardController {
             ), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(dashboardResponseMapper.produceDashboardStatusSuccessResult(HttpStatus.OK.value(),
-                                                                                                requestedRequestsCount,
-                                                                                                acceptedRequestsCount,
-                                                                                                availableAssetsCount
-        ), HttpStatus.OK);
+        return new ResponseEntity<>(
+                dashboardResponseMapper
+                        .produceDashboardStatusSuccessResult(HttpStatus.OK.value(), requestedRequestsCount,
+                                                             acceptedRequestsCount, availableAssetsCount
+                        ), HttpStatus.OK);
     }
 
     @SuppressWarnings("unchecked")
@@ -122,14 +125,24 @@ public class DashboardController {
             return new ResponseEntity<>(dashboardResponseMapper
                                                 .produceViewOthersFoundRequestSuccessResult(HttpStatus.OK.value(),
                                                                                             requests, employees, assets,
-                                                                                            null, page, totalRecords
+                                                                                            activeComponentManager
+                                                                                                    .getRequestsListDataActiveComponents(
+                                                                                                            tab,
+                                                                                                            username,
+                                                                                                            ServiceConstant.STATUS_REQUESTED
+                                                                                                    ), page,
+                                                                                            totalRecords
                                                 ), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(
-                    dashboardResponseMapper
-                            .produceViewMyFoundRequestSuccessResult(HttpStatus.OK.value(), requests, employees,
-                                                                    modifiers, assets, null, page, totalRecords
-                            ), HttpStatus.OK);
+            return new ResponseEntity<>(dashboardResponseMapper
+                                                .produceViewMyFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
+                                                                                        employees, modifiers, assets,
+                                                                                        activeComponentManager
+                                                                                                .getRequestsListDataActiveComponents(
+                                                                                                        tab, username,
+                                                                                                        ServiceConstant.STATUS_REQUESTED
+                                                                                                ), page, totalRecords
+                                                ), HttpStatus.OK);
         }
     }
 
