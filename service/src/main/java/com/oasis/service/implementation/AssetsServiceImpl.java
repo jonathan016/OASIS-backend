@@ -29,9 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -322,8 +323,8 @@ public class AssetsServiceImpl
         new File(sku.concat(ServiceConstant.EXTENSION_PDF));
 
         try {
-            PdfWriter writer = PdfWriter
-                    .getInstance(document, new FileOutputStream(sku.concat(ServiceConstant.EXTENSION_PDF)));
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            PdfWriter writer = PdfWriter.getInstance(document, byteArrayOutputStream);
 
             DocumentHeader event = documentHeader;
             writer.setPageEvent(event);
@@ -380,22 +381,13 @@ public class AssetsServiceImpl
             document.add(detailTable);
 
             document.close();
+
+            return byteArrayOutputStream.toByteArray();
         } catch (DocumentException | IOException exception) {
             logger.error("Failed to generate PDF document as DocumentException or IOException occurred with message: " +
                          exception.getMessage());
             return new byte[0];
         }
-
-        byte[] assetPdf;
-        try {
-            assetPdf = Files.readAllBytes(Paths.get(sku.concat(ServiceConstant.EXTENSION_PDF)));
-        } catch (IOException exception) {
-            logger.error("Failed to read generated PDF document as IOException occurred with message: " +
-                         exception.getMessage());
-            return new byte[0];
-        }
-
-        return assetPdf;
     }
 
     @Override
