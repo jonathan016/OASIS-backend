@@ -6,9 +6,18 @@ import com.oasis.model.entity.SupervisionModel;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface EmployeesServiceApi {
+
+    /*-------------Employees List Methods-------------*/
+    Map< String, List< ? > > getEmployeesListData(
+            final String username, final String query, final int page, final String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
 
     List< EmployeeModel > getEmployeesList(
             final String username, final String query, final int page, String sort
@@ -40,7 +49,7 @@ public interface EmployeesServiceApi {
             DataNotFoundException;
 
     String getEmployeeDetailImage(
-            final String username, final String imageDirectory
+            final String username, final String photoLocation
     );
 
     List< String > getEmployeesUsernamesForSupervisorSelection(
@@ -54,10 +63,10 @@ public interface EmployeesServiceApi {
     );
 
     byte[] getEmployeeImage(
-            final String username, final String imageName, final String extension
+            final String username, final String photoName, final String extension
     );
 
-    List< String > getEmployeesImages(
+    List< String > getEmployeesPhotos(
             final List< EmployeeModel > employees
     );
 
@@ -67,9 +76,10 @@ public interface EmployeesServiceApi {
             throws
             DataNotFoundException;
 
+    /*-------------Save Employee Methods-------------*/
     String saveEmployee(
-            final MultipartFile image, final String username, final EmployeeModel employee,
-            final String supervisorUsername, final boolean createOperation
+            final MultipartFile photoGiven, final String username, final EmployeeModel employee,
+            final String supervisorUsername, final boolean addEmployeeOperation
     )
             throws
             UnauthorizedOperationException,
@@ -86,15 +96,15 @@ public interface EmployeesServiceApi {
             UnauthorizedOperationException;
 
     void validateAndSaveImage(
-            final MultipartFile imageGiven, final boolean createEmployeeOperation, final EmployeeModel savedEmployee
+            final MultipartFile photoGiven, final boolean addEmployeeOperation, final EmployeeModel savedEmployee
     );
 
     String generateUsername(
-            final String name, final String dob
+            final String name, final String dobString
     );
 
     String generateDefaultPassword(
-            final String dob
+            final String dobString
     );
 
     String getSupervisionId(
@@ -112,7 +122,7 @@ public interface EmployeesServiceApi {
     );
 
     void savePhoto(
-            final MultipartFile photoFile, final String sku
+            final MultipartFile photoGiven, final String username
     );
 
     void changePassword(
@@ -124,6 +134,7 @@ public interface EmployeesServiceApi {
             UserNotAuthenticatedException,
             BadRequestException;
 
+    /*-------------Delete Employee Methods-------------*/
     void deleteEmployee(
             final String adminUsername, final String employeeUsername
     )

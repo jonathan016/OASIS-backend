@@ -2,7 +2,7 @@ package com.oasis.request_mapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.exception.BadRequestException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.web_model.request.assets.SaveAssetRequest;
 import ma.glasnost.orika.MapperFactory;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.NO_ASSET_SELECTED;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
 
 @Component
 public class AssetsRequestMapper {
@@ -21,9 +21,7 @@ public class AssetsRequestMapper {
         String adminUsername;
 
         try {
-            adminUsername = new ObjectMapper().readTree(rawAssetData)
-                                              .path("username")
-                                              .asText();
+            adminUsername = new ObjectMapper().readTree(rawAssetData).path("username").asText();
         } catch (IOException e) {
             return "";
         }
@@ -31,59 +29,43 @@ public class AssetsRequestMapper {
         return adminUsername;
     }
 
-    public boolean isCreateOperationFromRawData(final String rawAssetData)
+    public boolean isAddAssetOperationFromRawData(final String rawAssetData)
             throws
-            UnauthorizedOperationException {
+            BadRequestException {
 
         JsonNode asset;
 
         try {
-            asset = new ObjectMapper().readTree(rawAssetData)
-                                      .path("asset");
+            asset = new ObjectMapper().readTree(rawAssetData).path("asset");
         } catch (IOException e) {
-            //TODO throw real exception cause
-            throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
+            throw new BadRequestException(INCORRECT_PARAMETER);
         }
 
-        return asset.path("sku")
-                    .isNull();
+        return asset.path("sku").isNull();
     }
 
     public AssetModel getAssetModelFromRawData(
-            final String rawAssetData, final boolean isAddOperation
+            final String rawAssetData, final boolean addAssetOperation
     ) {
 
         SaveAssetRequest.Asset request;
 
         try {
 
-            JsonNode asset = new ObjectMapper().readTree(rawAssetData)
-                                               .path("asset");
+            JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
 
-            if (isAddOperation) {
-                request = new SaveAssetRequest.Asset(null, asset.path("name")
-                                                                .asText(), asset.path("location")
-                                                                                .asText(), asset.path("brand")
-                                                                                                .asText(),
-                                                     asset.path("type")
-                                                          .asText(), asset.path("quantity")
-                                                                          .asLong(), asset.path("price")
-                                                                                          .asDouble(),
-                                                     asset.path("expendable")
-                                                          .asBoolean()
+            if (addAssetOperation) {
+                request = new SaveAssetRequest.Asset(null, asset.path("name").asText(), asset.path("location").asText(),
+                                                     asset.path("brand").asText(), asset.path("type").asText(),
+                                                     asset.path("quantity").asLong(), asset.path("price").asDouble(),
+                                                     asset.path("expendable").asBoolean()
                 );
             } else {
-                request = new SaveAssetRequest.Asset(asset.path("sku")
-                                                          .asText(), asset.path("name")
-                                                                          .asText(), asset.path("location")
-                                                                                          .asText(), asset.path("brand")
-                                                                                                          .asText(),
-                                                     asset.path("type")
-                                                          .asText(), asset.path("quantity")
-                                                                          .asLong(), asset.path("price")
-                                                                                          .asDouble(),
-                                                     asset.path("expendable")
-                                                          .asBoolean()
+                request = new SaveAssetRequest.Asset(asset.path("sku").asText(), asset.path("name").asText(),
+                                                     asset.path("location").asText(), asset.path("brand").asText(),
+                                                     asset.path("type").asText(), asset.path("quantity").asLong(),
+                                                     asset.path("price").asDouble(),
+                                                     asset.path("expendable").asBoolean()
                 );
             }
 
@@ -92,13 +74,10 @@ public class AssetsRequestMapper {
         }
 
         MapperFactory assetDataFactory = new DefaultMapperFactory.Builder().build();
-        assetDataFactory.classMap(SaveAssetRequest.Asset.class, AssetModel.class)
-                        .field("quantity", "stock")
-                        .byDefault()
+        assetDataFactory.classMap(SaveAssetRequest.Asset.class, AssetModel.class).field("quantity", "stock").byDefault()
                         .register();
 
-        return assetDataFactory.getMapperFacade(SaveAssetRequest.Asset.class, AssetModel.class)
-                               .map(request);
+        return assetDataFactory.getMapperFacade(SaveAssetRequest.Asset.class, AssetModel.class).map(request);
     }
 
 }

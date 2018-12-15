@@ -2,7 +2,7 @@ package com.oasis.request_mapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.exception.BadRequestException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.web_model.request.employees.SaveEmployeeRequest;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.NO_ASSET_SELECTED;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
 
 @Component
 public class EmployeesRequestMapper {
@@ -26,7 +26,10 @@ public class EmployeesRequestMapper {
 
         try {
             adminUsername = new ObjectMapper().readTree(rawEmployeeData).path("username").asText();
-        } catch (IOException e) {
+        } catch (IOException ioException) {
+            logger.error(
+                    "Failed to read attribute 'username' from passed JSON data as IOException occurred with message: " +
+                    ioException.getMessage());
             return "";
         }
 
@@ -35,7 +38,7 @@ public class EmployeesRequestMapper {
 
     public boolean isCreateEmployeeOperation(final String rawEmployeeData)
             throws
-            UnauthorizedOperationException {
+            BadRequestException {
 
         JsonNode employee;
 
@@ -45,14 +48,14 @@ public class EmployeesRequestMapper {
             logger.error(
                     "Failed to read attribute 'employee' from passed JSON data as IOException occurred with message: " +
                     ioException.getMessage());
-            throw new UnauthorizedOperationException(NO_ASSET_SELECTED);
+            throw new BadRequestException(INCORRECT_PARAMETER);
         }
 
         return employee.path("username").isNull();
     }
 
     public EmployeeModel getEmployeeModelFromRawData(
-            final String rawEmployeeData, final boolean isAddOperation
+            final String rawEmployeeData, final boolean addEmployeeOperation
     ) {
 
         SaveEmployeeRequest.Employee request;
@@ -61,7 +64,7 @@ public class EmployeesRequestMapper {
 
             JsonNode employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
 
-            if (isAddOperation) {
+            if (addEmployeeOperation) {
                 request = new SaveEmployeeRequest.Employee(null, employee.path("name").asText(),
                                                            employee.path("dob").asText(),
                                                            employee.path("phone").asText(),
@@ -119,7 +122,10 @@ public class EmployeesRequestMapper {
         try {
             supervisorUsername = new ObjectMapper().readTree(rawEmployeeData).path("employee")
                                                    .path("supervisorUsername").asText();
-        } catch (IOException e) {
+        } catch (IOException ioException) {
+            logger.error(
+                    "Failed to read attribute 'supervisorUsername' from passed JSON data as IOException occurred with" +
+                    " message: " + ioException.getMessage());
             return "";
         }
 

@@ -732,7 +732,7 @@ public class RequestsServiceImpl
     public void validateRequestedAssets(final List< RequestModel > requests)
             throws
             DataNotFoundException,
-            BadRequestException {
+            UnauthorizedOperationException {
 
         for (final RequestModel request : requests) {
             final AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku());
@@ -744,7 +744,7 @@ public class RequestsServiceImpl
             final boolean requestQuantityLargerThanStock = request.getQuantity() > asset.getStock();
 
             if (requestQuantityLargerThanStock) {
-                throw new BadRequestException(UNAUTHORIZED_OPERATION);
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
             }
         }
     }
@@ -797,7 +797,8 @@ public class RequestsServiceImpl
     )
             throws
             UnauthorizedOperationException,
-            BadRequestException {
+            BadRequestException,
+            DataNotFoundException {
 
         if (isRequestAcceptanceOrRejectionValid(
                 username, savedRequest.getUsername(), savedRequest.getStatus(), request.getStatus())) {
@@ -808,7 +809,7 @@ public class RequestsServiceImpl
             if (newRequestStatusIsAccepted) {
                 if (assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
                     savedRequest.getQuantity() < 0) {
-                    throw new BadRequestException(ASSET_NOT_FOUND);
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
                 }
 
                 // TODO Handle concurrency!

@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 public class LoginResponseMapper {
 
     public NoPagingResponse< LoginResponse > produceLoginSuccessResponse(
-            final int httpStatusCode, final String username, final String role
+            final int httpStatusCode, final String username, final String name, final String role
     ) {
 
         NoPagingResponse< LoginResponse > successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
-        successResponse.setValue(new LoginResponse(username, role));
+        successResponse.setValue(new LoginResponse(username, name, role));
 
         return successResponse;
     }

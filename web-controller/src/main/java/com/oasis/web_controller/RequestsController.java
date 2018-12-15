@@ -15,13 +15,15 @@ import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.requests.SaveRequestRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
 @RestController
 @RequestMapping(value = APIMappingValue.API_REQUEST)
@@ -41,8 +43,8 @@ public class RequestsController {
     private ActiveComponentManager activeComponentManager;
 
     @SuppressWarnings("unchecked")
-    @GetMapping(value = APIMappingValue.API_MY_REQUESTS, produces = MediaType.APPLICATION_JSON_VALUE,
-                consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = APIMappingValue.API_MY_REQUESTS, produces = APPLICATION_JSON_VALUE,
+                consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getMyRequestsListData(
             @PathVariable(value = "username")
             final String username,
@@ -65,6 +67,7 @@ public class RequestsController {
 
         try {
             requestsListData = requestsServiceApi.getMyRequestsListData(username, query, status, page, sort);
+
             requests = (List< RequestModel >) requestsListData.get("requests");
             employees = (List< EmployeeModel >) requestsListData.get("employees");
             modifiers = (List< EmployeeModel >) requestsListData.get("modifiers");
@@ -94,8 +97,8 @@ public class RequestsController {
     }
 
     @SuppressWarnings("unchecked")
-    @GetMapping(value = APIMappingValue.API_OTHERS_REQUESTS, produces = MediaType.APPLICATION_JSON_VALUE,
-                consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = APIMappingValue.API_OTHERS_REQUESTS, produces = APPLICATION_JSON_VALUE,
+                consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getOthersRequestListData(
             @PathVariable(value = "username")
             final String username,
@@ -117,6 +120,7 @@ public class RequestsController {
 
         try {
             othersRequestListData = requestsServiceApi.getOthersRequestListData(username, query, status, page, sort);
+
             requests = (List< RequestModel >) othersRequestListData.get("requests");
             employees = (List< EmployeeModel >) othersRequestListData.get("employees");
             assets = (List< AssetModel >) othersRequestListData.get("assets");
@@ -144,8 +148,7 @@ public class RequestsController {
                                             ), HttpStatus.OK);
     }
 
-    @PostMapping(value = APIMappingValue.API_SAVE, produces = MediaType.APPLICATION_JSON_VALUE,
-                 consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = APIMappingValue.API_SAVE, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity saveRequest(
             @RequestBody
             final SaveRequestRequest request

@@ -15,6 +15,7 @@ import com.oasis.repository.AssetRepository;
 import com.oasis.repository.LastUniqueIdentifierRepository;
 import com.oasis.repository.RequestRepository;
 import com.oasis.service.DocumentHeader;
+import com.oasis.service.ImageHelper;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
 import org.slf4j.Logger;
@@ -32,7 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,6 +48,8 @@ public class AssetsServiceImpl
         implements AssetsServiceApi {
 
     private Logger logger = LoggerFactory.getLogger(AssetsServiceImpl.class);
+    @Autowired
+    private ImageHelper imageHelper;
     @Autowired
     private RoleDeterminer roleDeterminer;
     @Autowired
@@ -72,7 +74,7 @@ public class AssetsServiceImpl
         final boolean emptyQueryGiven = ((query != null) && query.isEmpty());
 
         if (emptyQueryGiven) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY);
+            throw new BadRequestException(INCORRECT_PARAMETER);
         }
 
         if (sort == null) {
@@ -80,7 +82,7 @@ public class AssetsServiceImpl
         }
 
         if (!sort.matches("^[AD]-(SKU|name)$")) {
-            throw new BadRequestException(EMPTY_SEARCH_QUERY);
+            throw new BadRequestException(INCORRECT_PARAMETER);
         }
 
         final Set< AssetModel > availableAssets;
@@ -99,7 +101,7 @@ public class AssetsServiceImpl
             pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
 
             if (noAvailableAsset || pageIndexOutOfBounds) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND);
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             }
 
             availableAssets = new LinkedHashSet<>(getSortedAvailableAssets(page, sort));
@@ -111,7 +113,7 @@ public class AssetsServiceImpl
             pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
 
             if (noAvailableAsset || pageIndexOutOfBounds) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND);
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             }
 
             availableAssets = new LinkedHashSet<>(getSortedAvailableAssetsFromQuery(page, query, sort));
@@ -219,27 +221,10 @@ public class AssetsServiceImpl
         final boolean assetWithSkuDoesNotExist = (assetDetailData == null);
 
         if (assetWithSkuDoesNotExist) {
-            throw new DataNotFoundException(ASSET_NOT_FOUND);
+            throw new DataNotFoundException(DATA_NOT_FOUND);
         }
 
         return assetDetailData;
-    }
-
-    @Override
-    public String getExtensionFromFileName(
-            final String fileName
-    ) {
-
-        StringBuilder extensionBuilder = new StringBuilder();
-
-        extensionBuilder.append(fileName);
-        extensionBuilder.reverse();
-        extensionBuilder.replace(0, extensionBuilder.length(),
-                                 extensionBuilder.substring(0, String.valueOf(extensionBuilder).indexOf("."))
-        );
-        extensionBuilder.reverse();
-
-        return String.valueOf(extensionBuilder);
     }
 
     @Override
@@ -258,7 +243,7 @@ public class AssetsServiceImpl
 
         if (Files.exists(directory.toPath()) && images != null) {
             for (int i = 0; i < images.length; i++) {
-                final String extension = getExtensionFromFileName(images[i].getName());
+                final String extension = imageHelper.getExtensionFromFileName(images[i].getName());
 
                 imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/" +
                               sku.concat("-").concat(String.valueOf(i + 1)).concat("?extension=").concat(extension));
@@ -289,7 +274,7 @@ public class AssetsServiceImpl
                 temp = new StringBuilder(String.valueOf(priceStr).substring(0, 3));
                 priceStr.replace(0, 3, "");
             } else {
-                temp = new StringBuilder(String.valueOf(priceStr).substring(0, String.valueOf(priceStr).length()));
+                temp = new StringBuilder(String.valueOf(priceStr));
                 priceStr.replace(0, String.valueOf(priceStr).length(), "");
             }
 
@@ -456,14 +441,13 @@ public class AssetsServiceImpl
 
     /*-------------Save Asset Methods-------------*/
     @Override
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Caching(evict = {
             @CacheEvict(value = "assetDetailData", key = "#asset.sku"),
             @CacheEvict(value = "availableAssetsList", allEntries = true)
     })
     public void saveAsset(
-            final List< MultipartFile > photos, final String username, final AssetModel asset,
-            final boolean createOperation
+            final List< MultipartFile > imagesGiven, final String username, final AssetModel asset,
+            final boolean addAssetOperation
     )
             throws
             DuplicateDataException,
@@ -472,23 +456,23 @@ public class AssetsServiceImpl
             BadRequestException {
 
         if (!roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
+            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
         }
 
         AssetModel savedAsset;
 
-        if (createOperation) {
+        if (addAssetOperation) {
             savedAsset = asset;
 
-            if (photos.isEmpty()) {
-                throw new BadRequestException(MISSING_ASSET_IMAGE);
+            if (imagesGiven.isEmpty()) {
+                throw new BadRequestException(INCORRECT_PARAMETER);
             }
 
             if (assetRepository
                     .existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(savedAsset.getName(), savedAsset.getBrand(),
                                                                             savedAsset.getType()
                     )) {
-                throw new DuplicateDataException(DUPLICATE_ASSET_DATA_FOUND);
+                throw new DuplicateDataException(DUPLICATE_DATA_FOUND);
             } else {
                 savedAsset.setSku(generateSkuCode(username, asset.getBrand(), asset.getType()));
                 savedAsset.setDeleted(false);
@@ -499,7 +483,7 @@ public class AssetsServiceImpl
             savedAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(asset.getSku());
 
             if (savedAsset == null) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND);
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             }
 
             if (savedAsset.equals(asset)) {
@@ -511,7 +495,7 @@ public class AssetsServiceImpl
             final boolean typeChanged = !savedAsset.getType().equals(asset.getType());
 
             if (nameChanged || brandChanged || typeChanged) {
-                throw new UnauthorizedOperationException(LOCKED_DATA_MODIFICATION_ATTEMPT);
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
             }
 
             savedAsset.setStock(asset.getStock());
@@ -520,7 +504,21 @@ public class AssetsServiceImpl
             savedAsset.setLocation(asset.getLocation());
         }
 
-        if (!photos.isEmpty()) {
+        validateAndSaveImages(imagesGiven, addAssetOperation, savedAsset);
+
+        savedAsset.setUpdatedBy(username);
+        savedAsset.setUpdatedDate(new Date());
+
+        assetRepository.save(savedAsset);
+    }
+
+    @Override
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void validateAndSaveImages(
+            List< MultipartFile > imagesGiven, boolean addAssetOperation, AssetModel savedAsset
+    ) {
+
+        if (!imagesGiven.isEmpty()) {
             boolean rootDirectoryCreated;
 
             if (!Files.exists(Paths.get(ServiceConstant.ASSET_IMAGE_DIRECTORY))) {
@@ -533,7 +531,7 @@ public class AssetsServiceImpl
                 final Path saveDirectory = Paths
                         .get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()));
 
-                if (createOperation) {
+                if (addAssetOperation) {
                     if (!Files.exists(saveDirectory)) {
                         new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
                                                                       .concat(savedAsset.getSku())).mkdir();
@@ -560,13 +558,9 @@ public class AssetsServiceImpl
                                                                              .concat(savedAsset.getSku());
                 savedAsset.setImageDirectory(imageDirectory);
 
-                savePhotos(photos, savedAsset.getSku());
+                savePhotos(imagesGiven, savedAsset.getSku());
             }
         }
-        savedAsset.setUpdatedBy(username);
-        savedAsset.setUpdatedDate(new Date());
-
-        assetRepository.save(savedAsset);
     }
 
     @Override
@@ -628,31 +622,32 @@ public class AssetsServiceImpl
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void savePhotos(
-            final List< MultipartFile > photos, final String sku
+            final List< MultipartFile > imagesGiven, final String sku
     ) {
 
-        if (photos.size() != 0) {
+        if (imagesGiven.size() != 0) {
             try {
-                for (int i = 0; i < photos.size(); i++) {
+                for (int i = 0; i < imagesGiven.size(); i++) {
                     final Path saveDirectory = Paths
                             .get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku));
 
                     if (!Files.exists(saveDirectory)) {
                         new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)).mkdir();
                     }
-                    File photo = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)
+                    File image = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)
                                                                                .concat(File.separator).concat(sku)
                                                                                .concat("-")
                                                                                .concat(String.valueOf(i + 1))
-                                                                               .concat(".")
-                                                                               .concat(getExtensionFromFileName(
-                                                                                       photos.get(i)
-                                                                                             .getOriginalFilename())));
+                                                                               .concat(".").concat(imageHelper
+                                                                                                           .getExtensionFromFileName(
+                                                                                                                   imagesGiven
+                                                                                                                           .get(i)
+                                                                                                                           .getOriginalFilename())));
 
-                    photos.get(i).transferTo(photo);
+                    imagesGiven.get(i).transferTo(image);
                 }
             } catch (IOException exception) {
-                logger.error("Failed to save photo as IOException occurred with message " + exception.getMessage());
+                logger.error("Failed to save image as IOException occurred with message " + exception.getMessage());
             }
         }
     }
@@ -662,7 +657,7 @@ public class AssetsServiceImpl
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @CacheEvict(value = { "availableAssetsList", "assetDetailData" }, allEntries = true)
     public void deleteAssets(
-            final List< String > skuList, final String username
+            final List< String > skus, final String username
     )
             throws
             UnauthorizedOperationException,
@@ -670,24 +665,24 @@ public class AssetsServiceImpl
             DataNotFoundException {
 
         if (!roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
-            throw new UnauthorizedOperationException(ASSET_SAVE_ATTEMPT_BY_NON_ADMINISTRATOR);
+            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
         }
 
-        if (skuList.isEmpty()) {
-            throw new BadRequestException(NO_ASSET_SELECTED);
+        if (skus.isEmpty()) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
         }
 
         List< AssetModel > selectedAssets = new ArrayList<>();
 
-        for (final String sku : skuList) {
+        for (final String sku : skus) {
             final AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(sku);
 
             if (asset == null) {
-                throw new DataNotFoundException(ASSET_NOT_FOUND);
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             }
 
             if (!requestRepository.findAllBySku(sku).isEmpty()) {
-                throw new BadRequestException(SELECTED_ASSET_STILL_REQUESTED);
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             }
 
             selectedAssets.add(asset);

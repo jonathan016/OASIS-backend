@@ -16,7 +16,7 @@ public interface AssetsServiceApi {
 
     /*-------------Assets List Methods-------------*/
     List< AssetModel > getAvailableAssetsList(
-            final String query, final int page, final String sort
+            final String query, final int page, String sort
     )
             throws
             BadRequestException,
@@ -39,10 +39,6 @@ public interface AssetsServiceApi {
     )
             throws
             DataNotFoundException;
-
-    String getExtensionFromFileName(
-            final String fileName
-    );
 
     List< String > getAssetDetailImages(
             final String sku, final String imageDirectory
@@ -70,8 +66,8 @@ public interface AssetsServiceApi {
 
     /*-------------Save Asset Methods-------------*/
     void saveAsset(
-            final List< MultipartFile > photos, final String username, final AssetModel asset,
-            final boolean isAddOperation
+            final List< MultipartFile > imagesGiven, final String username, final AssetModel asset,
+            final boolean addAssetOperation
     )
             throws
             DuplicateDataException,
@@ -79,12 +75,16 @@ public interface AssetsServiceApi {
             DataNotFoundException,
             BadRequestException;
 
+    void validateAndSaveImages(
+            List< MultipartFile > imagesGiven, boolean addAssetOperation, AssetModel savedAsset
+    );
+
     String generateSkuCode(
             final String username, final String brand, final String type
     );
 
     void savePhotos(
-            final List< MultipartFile > photos, final String sku
+            final List< MultipartFile > imagesGiven, final String sku
     );
 
     /*-------------Delete Asset(s) Method-------------*/

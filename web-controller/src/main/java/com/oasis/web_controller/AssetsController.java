@@ -19,7 +19,6 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.http.MediaType.*;
@@ -56,7 +55,7 @@ public class AssetsController {
         final long totalRecords;
 
         try {
-            availableAssets = new ArrayList<>(assetsServiceApi.getAvailableAssetsList(query, page, sort));
+            availableAssets = assetsServiceApi.getAvailableAssetsList(query, page, sort);
             totalRecords = assetsServiceApi.getAvailableAssetsCount(query, sort);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
@@ -112,14 +111,14 @@ public class AssetsController {
             @PathVariable(value = "identifier")
             final String sku,
             @PathVariable(value = "image")
-            final String image,
+            final String imageName,
             @RequestParam(value = "extension")
             final String extension
     ) {
 
-        final byte[] photo = assetsServiceApi.getAssetImage(sku, image, extension);
+        final byte[] image = assetsServiceApi.getAssetImage(sku, imageName, extension);
 
-        return new ResponseEntity<>(photo, HttpStatus.OK);
+        return new ResponseEntity<>(image, HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_PDF_ASSET, produces = APPLICATION_PDF_VALUE,
@@ -129,9 +128,9 @@ public class AssetsController {
             final String sku
     ) {
 
-        final byte[] pdfDocument = assetsServiceApi.getAssetDetailInPdf(sku);
+        final byte[] assetPdf = assetsServiceApi.getAssetDetailInPdf(sku);
 
-        return new ResponseEntity<>(pdfDocument, HttpStatus.OK);
+        return new ResponseEntity<>(assetPdf, HttpStatus.OK);
     }
 
     @PostMapping(value = APIMappingValue.API_SAVE, produces = APPLICATION_JSON_VALUE,
@@ -145,10 +144,10 @@ public class AssetsController {
 
         try {
             final String username = assetsRequestMapper.getAdminUsernameFromRawData(rawAssetData);
-            final boolean createOperation = assetsRequestMapper.isCreateOperationFromRawData(rawAssetData);
-            final AssetModel asset = assetsRequestMapper.getAssetModelFromRawData(rawAssetData, createOperation);
+            final boolean addAssetOperation = assetsRequestMapper.isAddAssetOperationFromRawData(rawAssetData);
+            final AssetModel asset = assetsRequestMapper.getAssetModelFromRawData(rawAssetData, addAssetOperation);
 
-            assetsServiceApi.saveAsset(photos, username, asset, createOperation);
+            assetsServiceApi.saveAsset(photos, username, asset, addAssetOperation);
         } catch (DuplicateDataException duplicateDataException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.CONFLICT.value(),
                                                                                  duplicateDataException.getErrorCode(),

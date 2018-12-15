@@ -8,7 +8,7 @@ import com.oasis.service.ServiceConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.USER_NOT_FOUND;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
 
 @Component
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
@@ -27,19 +27,18 @@ public class RoleDeterminer {
             throws
             DataNotFoundException {
 
-        boolean administratorWithUsernameExists = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals(
-                username);
+        boolean administratorWithUsernameExists = adminRepository
+                .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
 
         if (administratorWithUsernameExists) {
             return ServiceConstant.ROLE_ADMINISTRATOR;
         } else {
-            boolean employeeWithUsernameExists = employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(
-                    username);
+            boolean employeeWithUsernameExists = employeeRepository
+                    .existsEmployeeModelByDeletedIsFalseAndUsername(username);
 
             if (employeeWithUsernameExists) {
-                boolean supervisionWithUsernameAsSupervisorExists =
-                        supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(
-                        username);
+                boolean supervisionWithUsernameAsSupervisorExists = supervisionRepository
+                        .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(username);
 
                 if (supervisionWithUsernameAsSupervisorExists) {
                     return ServiceConstant.ROLE_SUPERIOR;
@@ -47,7 +46,7 @@ public class RoleDeterminer {
                     return ServiceConstant.ROLE_EMPLOYEE;
                 }
             } else {
-                throw new DataNotFoundException(USER_NOT_FOUND);
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             }
         }
     }

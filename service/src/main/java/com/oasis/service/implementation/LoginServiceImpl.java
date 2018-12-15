@@ -1,5 +1,7 @@
 package com.oasis.service.implementation;
 
+import com.oasis.RoleDeterminer;
+import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
@@ -10,8 +12,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INVALID_PASSWORD;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
 @Service
 @Transactional
@@ -20,43 +24,102 @@ public class LoginServiceImpl
         implements LoginServiceApi {
 
     @Autowired
+    private RoleDeterminer roleDeterminer;
+    @Autowired
     private EmployeeRepository employeeRepository;
 
     @Override
-    public String checkLoginCredentials(
+    public Map< String, String > getLoginData(
             final String username, final String password
     )
             throws
             DataNotFoundException,
+            BadRequestException,
             UserNotAuthenticatedException {
 
-        final boolean validUsernameWithSuffix = username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+@gdn-commerce.com");
-        final boolean validUsernameWithoutSuffix = username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+");
+        Map< String, String > loginData = new HashMap<>();
 
-        if (!validUsernameWithSuffix && !validUsernameWithoutSuffix) {
-            throw new DataNotFoundException(DATA_NOT_FOUND);
-        }
+        loginData.put("username", getUsernameIfEmployeeWithCredentialExists(username, password));
+        loginData.put("name", getFirstNameFromUsername(username));
+        loginData.put("role", getRoleFromUsername(username));
 
-        final EmployeeModel employee;
+        return loginData;
+    }
 
-        if (validUsernameWithSuffix) {
-            employee = employeeRepository.findByDeletedIsFalseAndUsername(username.substring(0, username.indexOf('@')));
+    @Override
+    public String getUsernameIfEmployeeWithCredentialExists(
+            final String username, final String password
+    )
+            throws
+            DataNotFoundException,
+            UserNotAuthenticatedException,
+            BadRequestException {
+
+        if (username == null) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
-        }
+            final boolean validUsernameWithSuffix = username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+@gdn-commerce.com");
+            final boolean validUsernameWithoutSuffix = username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+");
 
-        if (employee == null) {
-            throw new DataNotFoundException(DATA_NOT_FOUND);
-        } else {
-            final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
-            final boolean passwordMatch = encoder.matches(password, employee.getPassword());
-            if (!passwordMatch) {
-                throw new UserNotAuthenticatedException(INVALID_PASSWORD);
+            if (!validUsernameWithSuffix && !validUsernameWithoutSuffix) {
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             }
+
+            final EmployeeModel employee;
+
+            if (validUsernameWithSuffix) {
+                employee = employeeRepository
+                        .findByDeletedIsFalseAndUsername(username.toLowerCase().substring(0, username.indexOf('@')));
+            } else {
+                employee = employeeRepository.findByDeletedIsFalseAndUsername(username.toLowerCase());
+            }
+
+            if (employee == null) {
+                throw new DataNotFoundException(DATA_NOT_FOUND);
+            } else {
+                final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+                final boolean passwordMatch = encoder.matches(password, employee.getPassword());
+                if (!passwordMatch) {
+                    throw new UserNotAuthenticatedException(INVALID_PASSWORD);
+                }
+            }
+
+            return employee.getUsername();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    public String getFirstNameFromUsername(
+            final String username
+    ) {
+
+        final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
+
+        final String name = employee.getName();
+        final String firstName;
+
+        if (name.contains(" ")) {
+            firstName = name.substring(0, name.indexOf(' '));
+        } else {
+            firstName = name;
         }
 
-        return employee.getUsername();
+        return firstName;
+    }
+
+    @Override
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    public String getRoleFromUsername(
+            final String username
+    )
+            throws
+            DataNotFoundException {
+
+        final String role = roleDeterminer.determineRole(username);
+
+        return role;
     }
 
 }

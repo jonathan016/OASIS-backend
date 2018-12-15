@@ -86,7 +86,7 @@ public interface RequestsServiceApi {
     void validateRequestedAssets(final List< RequestModel > requests)
             throws
             DataNotFoundException,
-            BadRequestException;
+            UnauthorizedOperationException;
 
     boolean isNewRequestsValid(final List< RequestModel > requests)
             throws
@@ -107,7 +107,8 @@ public interface RequestsServiceApi {
     )
             throws
             UnauthorizedOperationException,
-            BadRequestException;
+            BadRequestException,
+            DataNotFoundException;
 
     void updateStatusToDelivered(
             final String username, RequestModel savedRequest, final String newRequestStatus

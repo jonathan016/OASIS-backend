@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.MediaType.*;
 
@@ -33,12 +34,13 @@ public class EmployeesController {
     @Autowired
     private FailedResponseMapper failedResponseMapper;
     @Autowired
+    private ActiveComponentManager activeComponentManager;
+    @Autowired
     private EmployeesRequestMapper employeesRequestMapper;
     @Autowired
     private EmployeesResponseMapper employeesResponseMapper;
-    @Autowired
-    private ActiveComponentManager activeComponentManager;
 
+    @SuppressWarnings("unchecked")
     @GetMapping(value = APIMappingValue.API_LIST, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesList(
@@ -52,15 +54,19 @@ public class EmployeesController {
             final String sort
     ) {
 
-        final List< EmployeeModel > employeesFound, supervisorsFound;
-        final long totalRecords;
+        final Map< String, List< ? > > employeesListData;
+        final List< EmployeeModel > employees;
+        final List< EmployeeModel > supervisors;
         final List< String > employeePhotos;
+        final long totalRecords;
 
         try {
-            employeesFound = employeesServiceApi.getEmployeesList(username, query, page, sort);
-            supervisorsFound = employeesServiceApi.getSupervisorsList(employeesFound);
+            employeesListData = employeesServiceApi.getEmployeesListData(username, query, page, sort);
+
+            employees = (List< EmployeeModel >) employeesListData.get("employees");
+            supervisors = (List< EmployeeModel >) employeesListData.get("supervisors");
+            employeePhotos = (List< String >) employeesListData.get("employeePhotos");
             totalRecords = employeesServiceApi.getEmployeesCount(username, query, sort);
-            employeePhotos = employeesServiceApi.getEmployeesImages(employeesFound);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
@@ -74,9 +80,8 @@ public class EmployeesController {
         }
 
         return new ResponseEntity<>(employeesResponseMapper
-                                            .produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(),
-                                                                                    employeesFound, supervisorsFound,
-                                                                                    employeePhotos,
+                                            .produceViewFoundEmployeesSuccessResult(HttpStatus.OK.value(), employees,
+                                                                                    supervisors, employeePhotos,
                                                                                     activeComponentManager
                                                                                             .getEmployeesListActiveComponents(
                                                                                                     username), page,
@@ -123,15 +128,18 @@ public class EmployeesController {
             final String username
     ) {
 
+        final List< String > usernames;
+
         try {
-            return new ResponseEntity<>(
-                    employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(username), HttpStatus.OK);
+            usernames = employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(username);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
                                                                                  badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
+
+        return new ResponseEntity<>(usernames, HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_PHOTO_EMPLOYEE, produces = { IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE },
@@ -154,25 +162,25 @@ public class EmployeesController {
                  consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity saveEmployee(
             @RequestParam(value = "photo", required = false)
-                    MultipartFile photo,
+                    MultipartFile photoGiven,
             @RequestParam(value = "data")
             final String rawEmployeeData
     ) {
 
         final String adminUsername;
-        final boolean createEmployeeOperation;
+        final boolean addEmployeeOperation;
         final String username;
 
         try {
             adminUsername = employeesRequestMapper.getAdminUsernameFromRawData(rawEmployeeData);
-            createEmployeeOperation = employeesRequestMapper.isCreateEmployeeOperation(rawEmployeeData);
+            addEmployeeOperation = employeesRequestMapper.isCreateEmployeeOperation(rawEmployeeData);
 
-            username = employeesServiceApi.saveEmployee(photo, adminUsername, employeesRequestMapper
+            username = employeesServiceApi.saveEmployee(photoGiven, adminUsername, employeesRequestMapper
                                                                 .getEmployeeModelFromRawData(rawEmployeeData,
-                                                                                             createEmployeeOperation)
+                                                                                             addEmployeeOperation)
                     , employeesRequestMapper
                                                                 .getSupervisorUsernameFromRawData(rawEmployeeData),
-                                                        createEmployeeOperation
+                                                        addEmployeeOperation
             );
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
@@ -199,7 +207,7 @@ public class EmployeesController {
             ), HttpStatus.BAD_REQUEST);
         }
 
-        if (createEmployeeOperation) {
+        if (addEmployeeOperation) {
             return new ResponseEntity<>(
                     employeesResponseMapper.produceEmployeeSaveAddSuccessResult(HttpStatus.CREATED.value(), username),
                     HttpStatus.CREATED

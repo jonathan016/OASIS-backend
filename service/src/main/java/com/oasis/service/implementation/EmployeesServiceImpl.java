@@ -57,7 +57,28 @@ public class EmployeesServiceImpl
 
     /*-------------Employees List Methods-------------*/
     @Override
-    @Cacheable(value = "employeesList", unless = "#result.size() == 0")
+    @Cacheable(value = "employeesListData", unless = "#result.size() == 0")
+    public Map< String, List< ? > > getEmployeesListData(
+            final String username, final String query, final int page, final String sort
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        Map< String, List< ? > > employeesListData = new HashMap<>();
+
+        final List< EmployeeModel > employees = getEmployeesList(username, query, page, sort);
+        final List< EmployeeModel > supervisors = getSupervisorsList(employees);
+        final List<String> employeePhotos = getEmployeesPhotos(employees);
+
+        employeesListData.put("employees", employees);
+        employeesListData.put("supervisors", supervisors);
+        employeesListData.put("employeePhotos", employeePhotos);
+
+        return employeesListData;
+    }
+
+    @Override
     public List< EmployeeModel > getEmployeesList(
             final String username, final String query, final int page, String sort
     )
@@ -365,7 +386,7 @@ public class EmployeesServiceImpl
     }
 
     @Override
-    public List< String > getEmployeesImages(
+    public List< String > getEmployeesPhotos(
             final List< EmployeeModel > employees
     ) {
 
@@ -410,11 +431,11 @@ public class EmployeesServiceImpl
     @SuppressWarnings("PointlessBooleanExpression")
     @Caching(evict = {
             @CacheEvict(value = "employeeDetailData", key = "#employee.username"),
-            @CacheEvict(value = "employeesList", allEntries = true)
+            @CacheEvict(value = "employeesListData", allEntries = true)
     })
     public String saveEmployee(
             final MultipartFile photoGiven, final String username, final EmployeeModel employee,
-            final String supervisorUsername, final boolean createEmployeeOperation
+            final String supervisorUsername, final boolean addEmployeeOperation
     )
             throws
             UnauthorizedOperationException,
@@ -430,7 +451,7 @@ public class EmployeesServiceImpl
 
         EmployeeModel savedEmployee;
 
-        if (createEmployeeOperation) {
+        if (addEmployeeOperation) {
             final boolean properNameFormatGiven = employee.getName().matches("^([A-Za-z]+ ?)*[A-Za-z]+$");
             final boolean noImageGiven = (photoGiven == null);
 
@@ -479,7 +500,7 @@ public class EmployeesServiceImpl
             updateSupervisorDataOnEmployeeUpdate(username, savedEmployee, employee.getUsername(), supervisorUsername);
         }
 
-        validateAndSaveImage(photoGiven, createEmployeeOperation, savedEmployee);
+        validateAndSaveImage(photoGiven, addEmployeeOperation, savedEmployee);
 
         savedEmployee.setUpdatedDate(new Date());
         savedEmployee.setUpdatedBy(username);
@@ -549,7 +570,7 @@ public class EmployeesServiceImpl
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void validateAndSaveImage(
-            final MultipartFile photoGiven, final boolean createEmployeeOperation, final EmployeeModel savedEmployee
+            final MultipartFile photoGiven, final boolean addEmployeeOperation, final EmployeeModel savedEmployee
     ) {
 
         if (photoGiven != null) {
@@ -562,7 +583,7 @@ public class EmployeesServiceImpl
             }
 
             if (rootDirectoryCreated) {
-                if (!createEmployeeOperation && Files.exists(Paths.get(savedEmployee.getPhoto()))) {
+                if (!addEmployeeOperation && Files.exists(Paths.get(savedEmployee.getPhoto()))) {
                     File photo = new File(savedEmployee.getPhoto());
                     photo.delete();
                 }
@@ -693,17 +714,17 @@ public class EmployeesServiceImpl
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void savePhoto(
-            final MultipartFile photoFile, final String username
+            final MultipartFile photoGiven, final String username
     ) {
 
-        if (photoFile != null) {
+        if (photoGiven != null) {
             try {
                 File photo = new File(
                         ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator).concat(username).concat(".")
                                                                 .concat(imageHelper.getExtensionFromFileName(
-                                                                        photoFile.getOriginalFilename())));
+                                                                        photoGiven.getOriginalFilename())));
 
-                photoFile.transferTo(photo);
+                photoGiven.transferTo(photo);
             } catch (IOException ioException) {
                 logger.error("Failed to save photo as IOException occurred with message " + ioException.getMessage());
             }
@@ -884,7 +905,7 @@ public class EmployeesServiceImpl
         final boolean employeeWithOldSupervisorUsernameDoesNotSupervise = supervisions.isEmpty();
 
         if (employeeWithOldSupervisorUsernameDoesNotSupervise) {
-            throw new DataNotFoundException(UNAUTHORIZED_OPERATION);
+            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
         } else {
             demotePreviousSupervisorFromAdminIfNecessary(adminUsername, oldSupervisorUsername, newSupervisorUsername,
                                                          supervisions
