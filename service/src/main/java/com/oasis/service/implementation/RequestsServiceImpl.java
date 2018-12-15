@@ -3,6 +3,7 @@ package com.oasis.service.implementation;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.model.BaseEntity;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
@@ -108,7 +109,7 @@ public class RequestsServiceImpl
 
             final boolean viewAllRequestsRegardlessOfStatus = (status == null);
 
-            Set< RequestModel > requests = new LinkedHashSet<>();
+            List< RequestModel > requests = new ArrayList<>();
 
             if (viewAllRequestsRegardlessOfStatus) {
                 final long requestsCount = requestRepository.countAllByUsername(username);
@@ -274,7 +275,9 @@ public class RequestsServiceImpl
                 }
             }
 
-            return new ArrayList<>(requests);
+            requests.sort(Comparator.comparing(BaseEntity::getUpdatedDate).reversed());
+
+            return requests;
         }
     }
 
@@ -303,7 +306,7 @@ public class RequestsServiceImpl
                 supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
             }
 
-            Set< RequestModel > requests = new LinkedHashSet<>();
+            List< RequestModel > requests = new ArrayList<>();
 
             for (final String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
                 boolean administratorWithUsernameExists = adminRepository
@@ -438,7 +441,9 @@ public class RequestsServiceImpl
                 }
             }
 
-            return new ArrayList<>(requests);
+            requests.sort(Comparator.comparing(BaseEntity::getUpdatedDate).reversed());
+
+            return requests;
         }
     }
 
