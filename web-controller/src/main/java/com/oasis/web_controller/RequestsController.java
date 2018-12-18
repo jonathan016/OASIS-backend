@@ -12,6 +12,7 @@ import com.oasis.response_mapper.RequestsResponseMapper;
 import com.oasis.service.ActiveComponentManager;
 import com.oasis.service.api.RequestsServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
+import com.oasis.web_model.request.requests.AssetRequestDetailsRequest;
 import com.oasis.web_model.request.requests.SaveRequestRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -145,6 +146,42 @@ public class RequestsController {
                                                                                                         "others",
                                                                                                         username, status
                                                                                                 ), page, totalRecords
+                                            ), HttpStatus.OK);
+    }
+
+    @PostMapping(value = APIMappingValue.API_REQUESTED_ASSETS, produces = APPLICATION_JSON_VALUE,
+                 consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity getAssetRequestDetailsData(
+            @RequestBody
+            final AssetRequestDetailsRequest request
+    ) {
+
+        final List< AssetModel > requestedAssets;
+        final List< List< String > > requestedAssetsImages;
+        final int page = request.getPage();
+        final long totalRecords;
+
+        try {
+            requestedAssets = requestsServiceApi.getAssetRequestDetailsList(request.getSkus(), page);
+            requestedAssetsImages = requestsServiceApi.getAssetRequestDetailsImages(requestedAssets);
+            totalRecords = requestsServiceApi.getAssetRequestDetailsCount(request.getSkus(), page);
+        } catch (BadRequestException badRequestException) {
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
+                                                                                 badRequestException.getErrorCode(),
+                                                                                 badRequestException.getErrorMessage()
+            ), HttpStatus.BAD_REQUEST);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
+                                                                                 dataNotFoundException.getErrorCode(),
+                                                                                 dataNotFoundException.getErrorMessage()
+            ), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(requestsResponseMapper
+                                            .produceViewAssetRequestDetailsSuccessResult(HttpStatus.OK.value(),
+                                                                                         requestedAssets,
+                                                                                         requestedAssetsImages, page,
+                                                                                         totalRecords
                                             ), HttpStatus.OK);
     }
 

@@ -8,6 +8,7 @@ import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.BaseResponse;
 import com.oasis.web_model.response.Paging;
 import com.oasis.web_model.response.PagingResponse;
+import com.oasis.web_model.response.success.requests.AssetRequestDetailsResponse;
 import com.oasis.web_model.response.success.requests.RequestMyListResponse;
 import com.oasis.web_model.response.success.requests.RequestOthersListResponse;
 import ma.glasnost.orika.MapperFactory;
@@ -124,6 +125,39 @@ public class RequestsResponseMapper {
 
         successResponse.setPaging(new Paging(pageNumber, ServiceConstant.REQUESTS_LIST_PAGE_SIZE, (int) Math
                 .ceil((double) totalRecords / ServiceConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
+
+        return successResponse;
+    }
+
+    public PagingResponse< AssetRequestDetailsResponse > produceViewAssetRequestDetailsSuccessResult(
+            final int httpStatusCode, final List< AssetModel > requestedAssets,
+            final List< List< String > > requestedAssetsImages, final int pageNumber, final long totalRecords
+    ) {
+
+        PagingResponse< AssetRequestDetailsResponse > successResponse = new PagingResponse<>();
+
+        successResponse.setCode(httpStatusCode);
+        successResponse.setSuccess(ResponseStatus.SUCCESS);
+
+        MapperFactory assetDataFactory = new DefaultMapperFactory.Builder().build();
+        assetDataFactory.classMap(AssetModel.class, AssetRequestDetailsResponse.AssetRequestDetailsObject.class)
+                        .field("stock", "quantity").byDefault().register();
+        List< AssetRequestDetailsResponse.AssetRequestDetailsObject > requestedAssetsListObjects = new ArrayList<>();
+        for (int i = 0; i < requestedAssets.size(); i++) {
+            requestedAssetsListObjects.add(assetDataFactory.getMapperFacade(AssetModel.class,
+                                                                            AssetRequestDetailsResponse.AssetRequestDetailsObject.class
+            ).map(requestedAssets.get(i)));
+
+            requestedAssetsListObjects.get(requestedAssetsListObjects.size() - 1)
+                                      .setImages(requestedAssetsImages.get(i));
+        }
+        successResponse.setValue(new AssetRequestDetailsResponse(requestedAssetsListObjects));
+
+        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE,
+                                             (int) Math.ceil((double) totalRecords /
+                                                             ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE),
+                                             totalRecords
+        ));
 
         return successResponse;
     }

@@ -6,6 +6,7 @@ import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ public interface RequestsServiceApi {
             BadRequestException,
             DataNotFoundException;
 
-    Map<String, List<?>> getOthersRequestListData(
+    Map< String, List< ? > > getOthersRequestListData(
             final String username, final String query, final String status, final int page, final String sort
     )
             throws
@@ -74,6 +75,35 @@ public interface RequestsServiceApi {
     String getEmployeeDetailPhoto(
             final String username, final String photoLocation
     );
+
+    Page< AssetModel > getAssetRequestDetailsData(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
+
+    List< AssetModel > getAssetRequestDetailsList(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
+
+    List< String > getAssetDetailImages(
+            final String sku, final String imageDirectory
+    );
+
+    List< List< String > > getAssetRequestDetailsImages(
+            final List< AssetModel > assets
+    );
+
+    long getAssetRequestDetailsCount(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException;
 
     void saveRequests(
             final String username, final List< RequestModel > requests

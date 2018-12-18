@@ -14,6 +14,7 @@ import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.RequestsServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -612,6 +613,124 @@ public class RequestsServiceImpl
         }
 
         return "http://localhost:8085/oasis/api/employees/" + username + "/image_not_found".concat("?extension=jpeg");
+    }
+
+    @Override
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    public Page< AssetModel > getAssetRequestDetailsData(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        if (skus == null || skus.isEmpty()) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            for (final String sku : skus) {
+                final boolean requestedAssetExists = assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
+
+                if (!requestedAssetExists) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                }
+            }
+
+            final long assetRequestDetails = assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
+            final boolean noRequests = (assetRequestDetails == 0);
+            final long totalPages = (long) Math.ceil((double) getAssetRequestDetailsCount(skus, page) /
+                                                     ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
+            final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
+
+            if (noRequests || pageIndexOutOfBounds) {
+                throw new DataNotFoundException(DATA_NOT_FOUND);
+            } else {
+                final int zeroBasedIndexPage = page - 1;
+                final Pageable pageable = PageRequest
+                        .of(zeroBasedIndexPage, ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
+
+                final Page< AssetModel > requestedAssets = assetRepository
+                        .findAllByDeletedIsFalseAndSkuIn(skus, pageable);
+
+                return requestedAssets;
+            }
+        }
+    }
+
+    @Override
+    public List< AssetModel > getAssetRequestDetailsList(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        return getAssetRequestDetailsData(skus, page).getContent();
+    }
+
+    @Override
+    public List< String > getAssetDetailImages(
+            final String sku, final String imageDirectory
+    ) {
+
+        List< String > imageURLs = new ArrayList<>();
+
+        if (imageDirectory.isEmpty()) {
+            imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/image_not_found?extension=jpeg");
+        } else {
+            final File directory = new File(imageDirectory);
+            final File[] images = directory.listFiles();
+
+            if (Files.exists(directory.toPath()) && images != null) {
+                for (int i = 0; i < images.length; i++) {
+                    final String extension = imageHelper.getExtensionFromFileName(images[i].getName());
+
+                    imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/" +
+                                  sku.concat("-").concat(String.valueOf(i + 1)).concat("?extension=")
+                                     .concat(extension));
+                }
+            } else {
+                imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/image_not_found?extension=jpeg");
+            }
+        }
+
+        return imageURLs;
+    }
+
+    @Override
+    public List< List< String > > getAssetRequestDetailsImages(
+            final List< AssetModel > assets
+    ) {
+
+        List< List< String > > imageURLs = new ArrayList<>();
+
+        for (final AssetModel asset : assets) {
+            imageURLs.add(getAssetDetailImages(asset.getSku(), asset.getImageDirectory()));
+        }
+
+        return imageURLs;
+    }
+
+    @Override
+    public long getAssetRequestDetailsCount(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        if (skus == null || skus.isEmpty()) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            for (final String sku : skus) {
+                final boolean requestedAssetExists = assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
+
+                if (!requestedAssetExists) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                }
+            }
+
+            return assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
+        }
     }
 
     /*-------------Save Request Methods-------------*/

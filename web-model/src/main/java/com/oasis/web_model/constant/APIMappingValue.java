@@ -31,5 +31,6 @@ public class APIMappingValue {
 
     public static final String API_MY_REQUESTS = "/list/{username:.+}/my";
     public static final String API_OTHERS_REQUESTS = "/list/{username:.+}/others";
+    public static final String API_REQUESTED_ASSETS = "/list/requested-assets";
 
 }
