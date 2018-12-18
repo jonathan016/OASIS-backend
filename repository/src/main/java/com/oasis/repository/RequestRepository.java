@@ -164,4 +164,36 @@ public interface RequestRepository
 
     RequestModel findBy_id(String _id);
 
+    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusAsc(
+            String username, String status, String sku, Pageable pageable
+    );
+
+    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+            String username, String status, String sku, Pageable pageable
+    );
+
+    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
+            String username, String status, String sku, Pageable pageable
+    );
+
+    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+            String username, String status, String sku, Pageable pageable
+    );
+
+    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusAsc(
+            String username, String status, String sku
+    );
+
+    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+            String username, String status, String sku
+    );
+
+    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
+            String username, String status, String sku
+    );
+
+    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+            String username, String status, String sku
+    );
+
 }

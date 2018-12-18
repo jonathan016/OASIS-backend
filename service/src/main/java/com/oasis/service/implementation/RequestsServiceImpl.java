@@ -152,8 +152,7 @@ public class RequestsServiceImpl
                         }
                     } else {
                         List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                                        query, query, query, query, query);
+                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
                         for (final AssetModel asset : assets) {
                             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                                 if (sort.substring(2).equals("status")) {
@@ -214,8 +213,10 @@ public class RequestsServiceImpl
                             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                                 if (sort.substring(2).equals("status")) {
                                     requests.addAll(requestRepository
-                                                            .findAllByUsernameAndStatusContainsOrderByUpdatedDateAsc(
-                                                                    username, status, pageable).getContent());
+                                                            .findAllByUsernameAndStatusOrderByUpdatedDateAsc(username,
+                                                                                                             status,
+                                                                                                             pageable
+                                                            ).getContent());
                                 } else {
                                     requests.addAll(requestRepository
                                                             .findAllByUsernameAndStatusOrderByUpdatedDateAsc(username,
@@ -227,46 +228,46 @@ public class RequestsServiceImpl
                             } else {
                                 if (sort.substring(2).equals("status")) {
                                     requests.addAll(requestRepository
-                                                            .findAllByUsernameAndStatusContainsOrderByUpdatedDateDesc(
-                                                                    username, status, pageable).getContent());
+                                                            .findAllByUsernameAndStatusOrderByUpdatedDateDesc(username,
+                                                                                                              status,
+                                                                                                              pageable
+                                                            ).getContent());
                                 } else {
-                                    return requestRepository
-                                            .findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status,
-                                                                                              pageable
-                                            ).getContent();
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameAndStatusOrderByUpdatedDateDesc(username,
+                                                                                                              status,
+                                                                                                              pageable
+                                                            ).getContent());
 
                                 }
                             }
                         } else {
                             List< AssetModel > assets = assetRepository
-                                    .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                                            query, query, query, query, query);
+                                    .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
                             for (final AssetModel asset : assets) {
                                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                                     if (sort.substring(2).equals("status")) {
                                         requests.addAll(requestRepository
-                                                                .findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(
-                                                                        username, query, asset.getSku(), pageable)
+                                                                .findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusAsc(
+                                                                        username, status, asset.getSku(), pageable)
                                                                 .getContent());
                                     } else {
                                         requests.addAll(requestRepository
-                                                                .findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
-                                                                        username, query, asset.getSku(), pageable)
+                                                                .findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+                                                                        username, status, asset.getSku(), pageable)
                                                                 .getContent());
                                     }
                                 } else {
                                     if (sort.substring(2).equals("status")) {
                                         requests.addAll(requestRepository
-                                                                .findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
-                                                                        username, query, username, asset.getSku(),
-                                                                        pageable
-                                                                ).getContent());
+                                                                .findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
+                                                                        username, status, asset.getSku(), pageable)
+                                                                .getContent());
                                     } else {
                                         requests.addAll(requestRepository
-                                                                .findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
-                                                                        username, query, username, asset.getSku(),
-                                                                        pageable
-                                                                ).getContent());
+                                                                .findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+                                                                        username, status, asset.getSku(), pageable)
+                                                                .getContent());
                                     }
                                 }
                             }
@@ -347,8 +348,8 @@ public class RequestsServiceImpl
                         }
                     } else {
                         List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                                        query, query, query, query, query);
+                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
+
                         for (final AssetModel asset : assets) {
                             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                                 if (sort.substring(2).equals("status")) {
@@ -356,11 +357,9 @@ public class RequestsServiceImpl
                                                             .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusAsc(
                                                                     supervisedEmployeeUsername, asset.getSku()));
                                 } else {
-                                    if (sort.substring(2).equals("updatedDate")) {
-                                        requests.addAll(requestRepository
-                                                                .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
-                                                                        supervisedEmployeeUsername, asset.getSku()));
-                                    }
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+                                                                    supervisedEmployeeUsername, asset.getSku()));
                                 }
                             } else {
                                 if (sort.substring(2).equals("status")) {
@@ -368,11 +367,9 @@ public class RequestsServiceImpl
                                                             .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
                                                                     supervisedEmployeeUsername, asset.getSku()));
                                 } else {
-                                    if (sort.substring(2).equals("updatedDate")) {
-                                        requests.addAll(requestRepository
-                                                                .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
-                                                                        supervisedEmployeeUsername, asset.getSku()));
-                                    }
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+                                                                    supervisedEmployeeUsername, asset.getSku()));
                                 }
                             }
                         }
@@ -384,56 +381,50 @@ public class RequestsServiceImpl
                                 requests.addAll(requestRepository.findAllByUsernameAndStatusContainsOrderByStatusAsc(
                                         supervisedEmployeeUsername, status));
                             } else {
-                                if (sort.substring(2).equals("updatedDate")) {
-                                    requests.addAll(requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateAsc(
-                                            supervisedEmployeeUsername, status));
-                                }
+                                requests.addAll(requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateAsc(
+                                        supervisedEmployeeUsername, status));
                             }
                         } else {
                             if (sort.substring(2).equals("status")) {
                                 requests.addAll(requestRepository.findAllByUsernameAndStatusContainsOrderByStatusDesc(
                                         supervisedEmployeeUsername, status));
                             } else {
-                                if (sort.substring(2).equals("updatedDate")) {
-                                    requests.addAll(requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(
-                                            supervisedEmployeeUsername, status));
-                                }
+                                requests.addAll(requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(
+                                        supervisedEmployeeUsername, status));
                             }
                         }
                     } else {
                         List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                                        query, query, query, query, query);
+                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
+
                         for (final AssetModel asset : assets) {
                             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                                 if (sort.substring(2).equals("status")) {
                                     requests.addAll(requestRepository
-                                                            .findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(
-                                                                    supervisedEmployeeUsername, query, asset.getSku()));
+                                                            .findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusAsc(
+                                                                    supervisedEmployeeUsername, status,
+                                                                    asset.getSku()
+                                                            ));
                                 } else {
-                                    if (sort.substring(2).equals("updatedDate")) {
-                                        requests.addAll(requestRepository
-                                                                .findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
-                                                                        supervisedEmployeeUsername, query,
-                                                                        asset.getSku()
-                                                                ));
-                                    }
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
+                                                                    supervisedEmployeeUsername, status,
+                                                                    asset.getSku()
+                                                            ));
                                 }
                             } else {
                                 if (sort.substring(2).equals("status")) {
                                     requests.addAll(requestRepository
-                                                            .findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
-                                                                    supervisedEmployeeUsername, query,
-                                                                    supervisedEmployeeUsername, asset.getSku()
+                                                            .findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
+                                                                    supervisedEmployeeUsername, status,
+                                                                    asset.getSku()
                                                             ));
                                 } else {
-                                    if (sort.substring(2).equals("updatedDate")) {
-                                        requests.addAll(requestRepository
-                                                                .findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
-                                                                        supervisedEmployeeUsername, query,
-                                                                        supervisedEmployeeUsername, asset.getSku()
-                                                                ));
-                                    }
+                                    requests.addAll(requestRepository
+                                                            .findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
+                                                                    supervisedEmployeeUsername, status,
+                                                                    asset.getSku()
+                                                            ));
                                 }
                             }
                         }
@@ -566,9 +557,9 @@ public class RequestsServiceImpl
                         return requestRepository.countAllByUsername(username);
                     } else {
                         long requestCount = 0;
+
                         List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                                        query, query, query, query, query);
+                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
 
                         for (final AssetModel asset : assets) {
                             requestCount += requestRepository
@@ -581,17 +572,14 @@ public class RequestsServiceImpl
                     if (viewAllRequests) {
                         return requestRepository.countAllByUsernameAndStatus(username, status);
                     } else {
-
                         long requestCount = 0;
+
                         List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                                        query, query, query, query, query);
+                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
 
                         for (final AssetModel asset : assets) {
                             requestCount += requestRepository
-                                    .countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(username, status,
-                                                                                                    asset.getSku()
-                                    );
+                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
                         }
 
                         return requestCount;

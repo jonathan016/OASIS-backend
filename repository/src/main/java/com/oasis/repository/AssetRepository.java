@@ -62,4 +62,6 @@ public interface AssetRepository
 
     boolean existsAssetModelByDeletedIsFalseAndSkuEquals(String sku);
 
+    List< AssetModel > findAllByDeletedIsFalseAndNameContainsIgnoreCase(String name);
+
 }
