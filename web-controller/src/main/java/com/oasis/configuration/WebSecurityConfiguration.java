@@ -34,17 +34,18 @@ public class WebSecurityConfiguration
             throws
             Exception {
 
-        http.csrf().disable().anonymous().and().authorizeRequests()
-            .antMatchers(HttpMethod.POST, "api/login").authenticated()
-            .antMatchers(HttpMethod.GET, "api/dashboard/*").authenticated()
-            .antMatchers(HttpMethod.GET, "api/assets/list").authenticated()
-            .antMatchers(HttpMethod.GET, "api/employees/list").authenticated()
-            .antMatchers(HttpMethod.POST, "api/assets/save").hasRole(ServiceConstant.ROLE_ADMINISTRATOR)
-            .antMatchers(HttpMethod.POST, "api/employees/save").hasRole(ServiceConstant.ROLE_ADMINISTRATOR)
-            .antMatchers(HttpMethod.DELETE, "api/assets/delete").hasRole(ServiceConstant.ROLE_ADMINISTRATOR)
-            .antMatchers(HttpMethod.DELETE, "api/employees/delete").hasRole(ServiceConstant.ROLE_ADMINISTRATOR)
-            .antMatchers(HttpMethod.GET, "api/requests/*").permitAll()
-            .anyRequest().authenticated().and().httpBasic();
+        http.csrf().disable().authorizeRequests().anyRequest().permitAll();
+//        http.csrf().disable().anonymous().and().authorizeRequests()
+//            .antMatchers(HttpMethod.POST, "api/login").authenticated()
+//            .antMatchers(HttpMethod.GET, "api/dashboard/*").authenticated()
+//            .antMatchers(HttpMethod.GET, "api/assets/list").authenticated()
+//            .antMatchers(HttpMethod.GET, "api/employees/list").authenticated()
+//            .antMatchers(HttpMethod.POST, "api/assets/save").hasRole(ServiceConstant.ROLE_ADMINISTRATOR)
+//            .antMatchers(HttpMethod.POST, "api/employees/save").hasRole(ServiceConstant.ROLE_ADMINISTRATOR)
+//            .antMatchers(HttpMethod.DELETE, "api/assets/delete").hasRole(ServiceConstant.ROLE_ADMINISTRATOR)
+//            .antMatchers(HttpMethod.DELETE, "api/employees/delete").hasRole(ServiceConstant.ROLE_ADMINISTRATOR)
+//            .antMatchers(HttpMethod.GET, "api/requests/*").permitAll()
+//            .anyRequest().authenticated().and().httpBasic();
     }
 
 }

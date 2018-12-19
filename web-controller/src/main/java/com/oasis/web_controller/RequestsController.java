@@ -153,12 +153,13 @@ public class RequestsController {
                  consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity getAssetRequestDetailsData(
             @RequestBody
-            final AssetRequestDetailsRequest request
+            final AssetRequestDetailsRequest request,
+            @RequestParam(value = "page")
+            final int page
     ) {
 
         final List< AssetModel > requestedAssets;
         final List< List< String > > requestedAssetsImages;
-        final int page = request.getPage();
         final long totalRecords;
 
         try {

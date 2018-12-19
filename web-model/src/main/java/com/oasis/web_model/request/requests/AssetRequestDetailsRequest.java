@@ -12,6 +12,5 @@ import java.util.List;
 public class AssetRequestDetailsRequest {
 
     List< String > skus;
-    int page;
 
 }
