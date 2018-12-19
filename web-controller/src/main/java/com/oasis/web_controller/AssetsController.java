@@ -184,7 +184,6 @@ public class AssetsController {
             @RequestBody
             final DeleteAssetRequest request
     ) {
-        //TODO Handle concurrency
 
         try {
             assetsServiceApi.deleteAssets(request.getSkus(), request.getUsername());

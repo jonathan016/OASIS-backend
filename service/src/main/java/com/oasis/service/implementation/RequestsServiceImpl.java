@@ -4,10 +4,12 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.BaseEntity;
+import com.oasis.model.CollectionName;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
+import com.oasis.model.fieldname.AssetFieldName;
 import com.oasis.repository.*;
 import com.oasis.service.ImageHelper;
 import com.oasis.service.ServiceConstant;
@@ -17,6 +19,11 @@ import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +45,8 @@ public class RequestsServiceImpl
     private AdminRepository adminRepository;
     @Autowired
     private AssetRepository assetRepository;
+    @Autowired
+    private MongoOperations mongoOperations;
     @Autowired
     private RequestRepository requestRepository;
     @Autowired
@@ -769,17 +778,25 @@ public class RequestsServiceImpl
                         throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
                     } else {
                         for (final RequestModel request : requests) {
-                            savedRequest = request;
+                            final boolean enoughStockExists =
+                                    assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()).getStock() -
+                                    request.getQuantity() >= 0;
 
-                            savedRequest.setStatus(ServiceConstant.STATUS_REQUESTED);
-                            savedRequest.setTransactionNote(null);
-                            savedRequest.setCreatedBy(username);
-                            savedRequest.setCreatedDate(new Date());
+                            if (!enoughStockExists) {
+                                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                            } else {
+                                savedRequest = request;
 
-                            savedRequest.setUpdatedBy(username);
-                            savedRequest.setUpdatedDate(new Date());
+                                savedRequest.setStatus(ServiceConstant.STATUS_REQUESTED);
+                                savedRequest.setTransactionNote(null);
+                                savedRequest.setCreatedBy(username);
+                                savedRequest.setCreatedDate(new Date());
 
-                            requestRepository.save(savedRequest);
+                                savedRequest.setUpdatedBy(username);
+                                savedRequest.setUpdatedDate(new Date());
+
+                                requestRepository.save(savedRequest);
+                            }
                         }
                     }
                 } else {
@@ -924,11 +941,14 @@ public class RequestsServiceImpl
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 }
 
-                // TODO Handle concurrency!
-                AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku());
-
-                asset.setStock(assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
-                               savedRequest.getQuantity());
+                // TODO Check concurrency
+                Query query = new Query();
+                query.addCriteria(Criteria.where(AssetFieldName.SKU).is(savedRequest.getSku()));
+                Update update = new Update().inc(AssetFieldName.STOCK, 0 - savedRequest.getQuantity());
+                AssetModel asset = mongoOperations
+                        .findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), AssetModel.class,
+                                       CollectionName.ASSET_COLLECTION_NAME
+                        );
 
                 assetRepository.save(asset);
             }
@@ -959,10 +979,14 @@ public class RequestsServiceImpl
             UnauthorizedOperationException {
 
         if (isRequestDeliveryOrReturnValid(username, savedRequest, newRequestStatus)) {
-            // TODO Handle concurrency!
-            AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku());
-            asset.setStock(assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() +
-                           savedRequest.getQuantity());
+            // TODO Check concurrency
+            Query query = new Query();
+            query.addCriteria(Criteria.where(AssetFieldName.SKU).is(savedRequest.getSku()));
+            Update update = new Update().inc(AssetFieldName.STOCK, savedRequest.getQuantity());
+            AssetModel asset = mongoOperations
+                    .findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), AssetModel.class,
+                                   CollectionName.ASSET_COLLECTION_NAME
+                    );
 
             assetRepository.save(asset);
 

@@ -9,8 +9,10 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.model.CollectionName;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.LastUniqueIdentifierModel;
+import com.oasis.model.fieldname.AssetFieldName;
 import com.oasis.repository.AssetRepository;
 import com.oasis.repository.LastUniqueIdentifierRepository;
 import com.oasis.repository.RequestRepository;
@@ -26,6 +28,11 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -56,6 +63,8 @@ public class AssetsServiceImpl
     private DocumentHeader documentHeader;
     @Autowired
     private AssetRepository assetRepository;
+    @Autowired
+    private MongoOperations mongoOperations;
     @Autowired
     private RequestRepository requestRepository;
     @Autowired
@@ -498,10 +507,25 @@ public class AssetsServiceImpl
                 throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
             }
 
-            savedAsset.setStock(asset.getStock());
-            savedAsset.setPrice(asset.getPrice());
-            savedAsset.setExpendable(asset.isExpendable());
-            savedAsset.setLocation(asset.getLocation());
+            // TODO Check concurrency
+            Query query = new Query();
+            query.addCriteria(Criteria.where(AssetFieldName.SKU).is(asset.getSku()));
+            Update update;
+            if (asset.getStock() < savedAsset.getStock()) {
+                update = new Update().inc(AssetFieldName.STOCK, 0 - asset.getStock()).set("price", asset.getPrice())
+                                     .set("expendable", asset.isExpendable()).set("location", asset.getLocation());
+            } else {
+                update = new Update().inc(AssetFieldName.STOCK, asset.getStock()).set("price", asset.getPrice())
+                                     .set("expendable", asset.isExpendable()).set("location", asset.getLocation());
+            }
+            savedAsset = mongoOperations
+                    .findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), AssetModel.class,
+                                   CollectionName.ASSET_COLLECTION_NAME
+                    );
+
+            if (savedAsset == null) {
+                throw new DataNotFoundException(DATA_NOT_FOUND);
+            }
         }
 
         validateAndSaveImages(imagesGiven, addAssetOperation, savedAsset);
