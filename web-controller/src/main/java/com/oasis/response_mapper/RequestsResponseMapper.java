@@ -148,6 +148,12 @@ public class RequestsResponseMapper {
                                                                             AssetRequestDetailsResponse.AssetRequestDetailsObject.class
             ).map(requestedAssets.get(i)));
 
+            if (requestedAssetsListObjects.get(requestedAssetsListObjects.size() - 1).getName().length() > 36) {
+                requestedAssetsListObjects.get(requestedAssetsListObjects.size() - 1).setName(
+                        requestedAssetsListObjects.get(requestedAssetsListObjects.size() - 1).getName()
+                                                  .substring(0, 33) + "...");
+            }
+
             requestedAssetsListObjects.get(requestedAssetsListObjects.size() - 1)
                                       .setImages(requestedAssetsImages.get(i));
         }
