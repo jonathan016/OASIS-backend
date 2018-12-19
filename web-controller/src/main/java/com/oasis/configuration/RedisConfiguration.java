@@ -5,10 +5,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 import org.springframework.stereotype.Component;
 
 @Component
 @EnableCaching
+@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 60 * 60 * 30)
 public class RedisConfiguration {
 
     @Bean
