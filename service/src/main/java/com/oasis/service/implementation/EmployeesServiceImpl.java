@@ -69,7 +69,7 @@ public class EmployeesServiceImpl
 
         final List< EmployeeModel > employees = getEmployeesList(username, query, page, sort);
         final List< EmployeeModel > supervisors = getSupervisorsList(employees);
-        final List<String> employeePhotos = getEmployeesPhotos(employees);
+        final List< String > employeePhotos = getEmployeesPhotos(employees);
 
         employeesListData.put("employees", employees);
         employeesListData.put("supervisors", supervisors);
@@ -145,52 +145,6 @@ public class EmployeesServiceImpl
     }
 
     @Override
-    public Set< EmployeeModel > getSortedEmployees(
-            final String username, final int page, final String sort
-    ) {
-
-        Set< EmployeeModel > sortedEmployees = new LinkedHashSet<>();
-
-        final int zeroBasedIndexPage = page - 1;
-        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE);
-
-        if (sort.equals(ServiceConstant.ASCENDING)) {
-            sortedEmployees
-                    .addAll(employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotOrderByNameAsc(username, pageable)
-                                              .getContent());
-        } else {
-            sortedEmployees.addAll(employeeRepository
-                                           .findAllByDeletedIsFalseAndUsernameIsNotOrderByNameDesc(username, pageable)
-                                           .getContent());
-        }
-
-        return sortedEmployees;
-    }
-
-    @Override
-    public Set< EmployeeModel > getSortedEmployeesFromQuery(
-            final int page, final String query, final String sort
-    ) {
-
-        Set< EmployeeModel > sortedEmployees = new LinkedHashSet<>();
-
-        final int zeroBasedIndexPage = page - 1;
-        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE);
-
-        if (sort.equals(ServiceConstant.ASCENDING)) {
-            sortedEmployees.addAll(employeeRepository
-                                           .findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
-                                                   query, query, pageable).getContent());
-        } else {
-            sortedEmployees.addAll(employeeRepository
-                                           .findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
-                                                   query, query, pageable).getContent());
-        }
-
-        return sortedEmployees;
-    }
-
-    @Override
     public long getEmployeesCount(
             final String username, final String query, String sort
     ) {
@@ -204,33 +158,6 @@ public class EmployeesServiceImpl
                     .countAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCase(
                             query, query);
         }
-    }
-
-    @Override
-    public List< EmployeeModel > getSupervisorsList(
-            final List< EmployeeModel > employees
-    ) {
-
-        List< EmployeeModel > supervisors = new ArrayList<>();
-
-        for (final EmployeeModel employee : employees) {
-
-            final SupervisionModel supervision = supervisionRepository
-                    .findByDeletedIsFalseAndEmployeeUsername(employee.getUsername());
-
-            final boolean supervisionForCurrentEmployeeExists = (supervision != null);
-
-            if (supervisionForCurrentEmployeeExists) {
-                final EmployeeModel supervisor = employeeRepository
-                        .findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
-
-                supervisors.add(supervisor);
-            } else {    // For top administrator, who does not have any supervisor at all
-                supervisors.add(null);
-            }
-        }
-
-        return supervisors;
     }
 
     @Override
@@ -253,11 +180,11 @@ public class EmployeesServiceImpl
     }
 
     @Override
-    public String getEmployeeDetailImage(
+    public String getEmployeeDetailPhoto(
             final String username, final String photoLocation
     ) {
 
-        final boolean validPhotoLocation = (photoLocation != null && photoLocation.isEmpty());
+        final boolean validPhotoLocation = (photoLocation != null && !photoLocation.isEmpty());
 
         if (validPhotoLocation) {
             final File photo = new File(photoLocation);
@@ -323,32 +250,7 @@ public class EmployeesServiceImpl
     }
 
     @Override
-    public boolean isSafeFromCyclicSupervising(
-            final String targetUsername, final List< String > usernames
-    ) {
-
-        if (usernames.size() - 1 >= 1) {
-            final String middleUsername = usernames.get(usernames.size() / 2);
-
-            if (targetUsername.equals(middleUsername)) {
-                return false;
-            }
-
-            if (targetUsername.compareTo(middleUsername) < 0) {
-                return isSafeFromCyclicSupervising(
-                        targetUsername, usernames.subList(0, usernames.indexOf(middleUsername) - 1));
-            }
-            if (targetUsername.compareTo(middleUsername) > 0) {
-                return isSafeFromCyclicSupervising(
-                        targetUsername, usernames.subList(usernames.indexOf(middleUsername) + 1, usernames.size()));
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public byte[] getEmployeeImage(
+    public byte[] getEmployeePhoto(
             final String username, final String photoName, final String extension
     ) {
 
@@ -365,9 +267,9 @@ public class EmployeesServiceImpl
         File file = new File(employee.getPhoto());
 
         final boolean photoNameIsImageNotFound = photoName.equals("image_not_found");
-        final boolean correctExtensionForImage = file.getName().endsWith(extension);
+        final boolean correctExtensionForPhoto = file.getName().endsWith(extension);
 
-        if (!correctExtensionForImage || photoNameIsImageNotFound) {
+        if (!correctExtensionForPhoto || photoNameIsImageNotFound) {
             file = new File(
                     ServiceConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator).concat("image_not_found.jpeg"));
         }
@@ -383,20 +285,6 @@ public class EmployeesServiceImpl
         }
 
         return photo;
-    }
-
-    @Override
-    public List< String > getEmployeesPhotos(
-            final List< EmployeeModel > employees
-    ) {
-
-        List< String > photos = new ArrayList<>();
-
-        for (final EmployeeModel employee : employees) {
-            photos.add(getEmployeeDetailImage(employee.getUsername(), employee.getPhoto()));
-        }
-
-        return photos;
     }
 
     @Override
@@ -453,9 +341,8 @@ public class EmployeesServiceImpl
 
         if (addEmployeeOperation) {
             final boolean properNameFormatGiven = employee.getName().matches("^([A-Za-z]+ ?)*[A-Za-z]+$");
-            final boolean noImageGiven = (photoGiven == null);
 
-            if (!properNameFormatGiven || noImageGiven) {
+            if (!properNameFormatGiven) {
                 throw new BadRequestException(INCORRECT_PARAMETER);
             }
 
@@ -472,7 +359,7 @@ public class EmployeesServiceImpl
             } else {
                 final String dobString = new SimpleDateFormat("dd-MM-yyyy").format(savedEmployee.getDob());
 
-                savedEmployee.setUsername(generateUsername(savedEmployee.getName().toLowerCase(), dobString));
+                savedEmployee.setUsername(generateUsername(savedEmployee.getName().toLowerCase()));
                 savedEmployee.setPassword(generateDefaultPassword(dobString));
                 savedEmployee.setSupervisionId(getSupervisionId(employee.getUsername(), supervisorUsername, username));
                 savedEmployee.setDeleted(false);
@@ -500,7 +387,7 @@ public class EmployeesServiceImpl
             updateSupervisorDataOnEmployeeUpdate(username, savedEmployee, employee.getUsername(), supervisorUsername);
         }
 
-        validateAndSaveImage(photoGiven, addEmployeeOperation, savedEmployee);
+        validateAndSavePhoto(photoGiven, addEmployeeOperation, savedEmployee);
 
         savedEmployee.setUpdatedDate(new Date());
         savedEmployee.setUpdatedBy(username);
@@ -510,8 +397,82 @@ public class EmployeesServiceImpl
         return savedEmployee.getUsername();
     }
 
-    @Override
-    public void updateSupervisorDataOnEmployeeUpdate(
+    private String generateUsername(
+            final String name
+    ) {
+
+        StringBuilder username = new StringBuilder();
+
+        if (name.contains(" ")) {
+            final String givenName = name.substring(0, name.lastIndexOf(" "));
+            final String firstNames[] = givenName.split(" ");
+
+            for (final String firstName : firstNames) {
+                username.append(firstName.charAt(0));
+                username.append(".");
+            }
+
+            final String lastName = name.substring(name.lastIndexOf(" ") + 1);
+
+            username.append(lastName);
+        } else {
+            username.append(name);
+        }
+
+        final long usernamesCountStartingWithGeneratedUsername = employeeRepository
+                .countAllByUsernameStartsWith(String.valueOf(username));
+        final boolean moreThanOneUsernameStartingWithGeneratedUsername = (
+                usernamesCountStartingWithGeneratedUsername != 0
+        );
+
+        if (moreThanOneUsernameStartingWithGeneratedUsername) {
+            username.append(usernamesCountStartingWithGeneratedUsername);
+        }
+
+        return String.valueOf(username);
+    }
+
+    private String generateDefaultPassword(
+            final String dobString
+    ) {
+
+        StringBuilder password = new StringBuilder(ServiceConstant.PREFIX_DEFAULT_PASSWORD);
+
+        final String dobWithoutDash = dobString.replace("-", "");
+
+        password.append(dobWithoutDash);
+
+        final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        final String encodedPassword = encoder.encode(String.valueOf(password));
+
+        password.replace(0, password.length(), encodedPassword);
+
+        return String.valueOf(password);
+    }
+
+    private String getSupervisionId(
+            final String employeeUsername, final String supervisorUsername, final String adminUsername
+    )
+            throws
+            DataNotFoundException {
+
+        final boolean employeeWithSupervisorUsernameExists = employeeRepository
+                .existsEmployeeModelByDeletedIsFalseAndUsername(supervisorUsername);
+
+        if (!employeeWithSupervisorUsernameExists) {
+            throw new DataNotFoundException(DATA_NOT_FOUND);
+        }
+
+        createSupervision(employeeUsername, supervisorUsername, adminUsername);
+
+        final SupervisionModel createdSupervision = supervisionRepository
+                .findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
+
+        return createdSupervision.get_id();
+    }
+
+    private void updateSupervisorDataOnEmployeeUpdate(
             final String username, final EmployeeModel savedEmployee, final String employeeUsername,
             final String supervisorUsername
     )
@@ -567,34 +528,36 @@ public class EmployeesServiceImpl
         }
     }
 
-    @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void validateAndSaveImage(
-            final MultipartFile photoGiven, final boolean addEmployeeOperation, final EmployeeModel savedEmployee
+    private void validateAndSavePhoto(
+            final MultipartFile photoGiven, final boolean addEmployeeOperation, EmployeeModel savedEmployee
     ) {
 
-        if (photoGiven != null) {
-            boolean rootDirectoryCreated;
+        final boolean rootDirectoryCreated;
 
-            if (!Files.exists(Paths.get(ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY))) {
-                rootDirectoryCreated = new File(ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY).mkdir();
-            } else {
-                rootDirectoryCreated = true;
+        if (!Files.exists(Paths.get(ServiceConstant.EMPLOYEE_PHOTO_DIRECTORY))) {
+            rootDirectoryCreated = new File(ServiceConstant.EMPLOYEE_PHOTO_DIRECTORY).mkdir();
+        } else {
+            rootDirectoryCreated = true;
+        }
+
+        if (rootDirectoryCreated) {
+            if (!addEmployeeOperation && Files.exists(Paths.get(savedEmployee.getPhoto()))) {
+                File photo = new File(savedEmployee.getPhoto());
+                photo.delete();
             }
 
-            if (rootDirectoryCreated) {
-                if (!addEmployeeOperation && Files.exists(Paths.get(savedEmployee.getPhoto()))) {
-                    File photo = new File(savedEmployee.getPhoto());
-                    photo.delete();
-                }
-
-                final String photoLocation = ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator)
+            if (photoGiven == null) {
+                savedEmployee.setPhoto("");
+            } else {
+                final String photoLocation = ServiceConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator)
                                                                                      .concat(savedEmployee
                                                                                                      .getUsername())
                                                                                      .concat(".").concat(imageHelper
                                                                                                                  .getExtensionFromFileName(
                                                                                                                          photoGiven
                                                                                                                                  .getOriginalFilename()));
+
                 savedEmployee.setPhoto(photoLocation);
 
                 savePhoto(photoGiven, savedEmployee.getUsername());
@@ -602,86 +565,7 @@ public class EmployeesServiceImpl
         }
     }
 
-    @Override
-    public String generateUsername(
-            final String name, final String dobString
-    ) {
-
-        StringBuilder username = new StringBuilder();
-
-        if (name.contains(" ")) {
-            final String givenName = name.substring(0, name.lastIndexOf(" "));
-            final String firstNames[] = givenName.split(" ");
-
-            for (final String firstName : firstNames) {
-                username.append(firstName.charAt(0));
-                username.append(".");
-            }
-
-            final String lastName = name.substring(name.lastIndexOf(" ") + 1);
-
-            username.append(lastName);
-        } else {
-            username.append(name);
-        }
-
-        final long usernamesCountStartingWithGeneratedUsername = employeeRepository
-                .countAllByUsernameStartsWith(String.valueOf(username));
-        final boolean moreThanOneUsernameStartingWithGeneratedUsername = (
-                usernamesCountStartingWithGeneratedUsername != 0
-        );
-
-        if (moreThanOneUsernameStartingWithGeneratedUsername) {
-            username.append(usernamesCountStartingWithGeneratedUsername);
-        }
-
-        return String.valueOf(username);
-    }
-
-    @Override
-    public String generateDefaultPassword(
-            final String dobString
-    ) {
-
-        StringBuilder password = new StringBuilder(ServiceConstant.PREFIX_DEFAULT_PASSWORD);
-
-        final String dobWithoutDash = dobString.replace("-", "");
-
-        password.append(dobWithoutDash);
-
-        final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
-        final String encodedPassword = encoder.encode(String.valueOf(password));
-
-        password.replace(0, password.length(), encodedPassword);
-
-        return String.valueOf(password);
-    }
-
-    @Override
-    public String getSupervisionId(
-            final String employeeUsername, final String supervisorUsername, final String adminUsername
-    )
-            throws
-            DataNotFoundException {
-
-        final boolean employeeWithSupervisorUsernameExists = employeeRepository
-                .existsEmployeeModelByDeletedIsFalseAndUsername(supervisorUsername);
-
-        if (!employeeWithSupervisorUsernameExists) {
-            throw new DataNotFoundException(DATA_NOT_FOUND);
-        }
-
-        createSupervision(employeeUsername, supervisorUsername, adminUsername);
-
-        final SupervisionModel createdSupervision = supervisionRepository
-                .findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
-
-        return createdSupervision.get_id();
-    }
-
-    @Override
-    public void createSupervision(
+    private void createSupervision(
             final String employeeUsername, final String supervisorUsername, final String adminUsername
     ) {
 
@@ -697,9 +581,8 @@ public class EmployeesServiceImpl
         supervisionRepository.save(supervision);
     }
 
-    @Override
     @SuppressWarnings("UnnecessaryLocalVariable")
-    public boolean hasCyclicSupervising(
+    private boolean hasCyclicSupervising(
             final String employeeUsername, String supervisorUsername
     ) {
 
@@ -711,16 +594,15 @@ public class EmployeesServiceImpl
         return isEmployeeSupervisorOfSupervisor;
     }
 
-    @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void savePhoto(
+    private void savePhoto(
             final MultipartFile photoGiven, final String username
     ) {
 
         if (photoGiven != null) {
             try {
                 File photo = new File(
-                        ServiceConstant.EMPLOYEE_IMAGE_DIRECTORY.concat(File.separator).concat(username).concat(".")
+                        ServiceConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator).concat(username).concat(".")
                                                                 .concat(imageHelper.getExtensionFromFileName(
                                                                         photoGiven.getOriginalFilename())));
 
@@ -913,9 +795,8 @@ public class EmployeesServiceImpl
         }
     }
 
-    @Override
     @SuppressWarnings("PointlessBooleanExpression")
-    public void demotePreviousSupervisorFromAdminIfNecessary(
+    private void demotePreviousSupervisorFromAdminIfNecessary(
             final String adminUsername, final String oldSupervisorUsername, final String newSupervisorUsername,
             final List< SupervisionModel > supervisions
     ) {
@@ -942,6 +823,113 @@ public class EmployeesServiceImpl
 
             supervisionRepository.save(supervision);
         }
+    }
+
+    private List< EmployeeModel > getSupervisorsList(
+            final List< EmployeeModel > employees
+    ) {
+
+        List< EmployeeModel > supervisors = new ArrayList<>();
+
+        for (final EmployeeModel employee : employees) {
+
+            final SupervisionModel supervision = supervisionRepository
+                    .findByDeletedIsFalseAndEmployeeUsername(employee.getUsername());
+
+            final boolean supervisionForCurrentEmployeeExists = (supervision != null);
+
+            if (supervisionForCurrentEmployeeExists) {
+                final EmployeeModel supervisor = employeeRepository
+                        .findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
+
+                supervisors.add(supervisor);
+            } else {    // For top administrator, who does not have any supervisor at all
+                supervisors.add(null);
+            }
+        }
+
+        return supervisors;
+    }
+
+    private List< String > getEmployeesPhotos(
+            final List< EmployeeModel > employees
+    ) {
+
+        List< String > photos = new ArrayList<>();
+
+        for (final EmployeeModel employee : employees) {
+            photos.add(getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto()));
+        }
+
+        return photos;
+    }
+
+    private Set< EmployeeModel > getSortedEmployees(
+            final String username, final int page, final String sort
+    ) {
+
+        Set< EmployeeModel > sortedEmployees = new LinkedHashSet<>();
+
+        final int zeroBasedIndexPage = page - 1;
+        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE);
+
+        if (sort.equals(ServiceConstant.ASCENDING)) {
+            sortedEmployees
+                    .addAll(employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotOrderByNameAsc(username, pageable)
+                                              .getContent());
+        } else {
+            sortedEmployees.addAll(employeeRepository
+                                           .findAllByDeletedIsFalseAndUsernameIsNotOrderByNameDesc(username, pageable)
+                                           .getContent());
+        }
+
+        return sortedEmployees;
+    }
+
+    private Set< EmployeeModel > getSortedEmployeesFromQuery(
+            final int page, final String query, final String sort
+    ) {
+
+        Set< EmployeeModel > sortedEmployees = new LinkedHashSet<>();
+
+        final int zeroBasedIndexPage = page - 1;
+        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE);
+
+        if (sort.equals(ServiceConstant.ASCENDING)) {
+            sortedEmployees.addAll(employeeRepository
+                                           .findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
+                                                   query, query, pageable).getContent());
+        } else {
+            sortedEmployees.addAll(employeeRepository
+                                           .findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
+                                                   query, query, pageable).getContent());
+        }
+
+        return sortedEmployees;
+    }
+
+    private boolean isSafeFromCyclicSupervising(
+            final String targetUsername, final List< String > usernames
+    ) {
+
+        if (usernames.size() - 1 >= 1) {
+            final String middleUsername = usernames.get(usernames.size() / 2);
+
+            if (targetUsername.equals(middleUsername)) {
+                return false;
+            }
+
+            if (targetUsername.compareTo(middleUsername) < 0) {
+                return isSafeFromCyclicSupervising(
+                        targetUsername, usernames.subList(0, usernames.indexOf(middleUsername) - 1));
+            }
+            if (targetUsername.compareTo(middleUsername) > 0) {
+                return isSafeFromCyclicSupervising(
+                        targetUsername, usernames.subList(usernames.indexOf(middleUsername) + 1, usernames.size()));
+            }
+        }
+
+        return true;
     }
 
 }

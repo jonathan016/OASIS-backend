@@ -161,8 +161,71 @@ public class DashboardServiceImpl
     }
 
     @Override
+    public long getRequestsCount(
+            final String type, final String username, final String query, final String status, final int page,
+            final String sort
+    )
+            throws
+            BadRequestException {
+
+        final boolean emptyQueryGiven = (query != null && query.isEmpty());
+        final boolean emptyStatusGiven = (status != null && status.isEmpty());
+
+        if (emptyQueryGiven || emptyStatusGiven) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            if (type.equals("Username")) {
+                final boolean viewAllRequestsRegardlessOfStatus = (status == null);
+                final boolean viewAllRequests = (query == null);
+
+                if (viewAllRequestsRegardlessOfStatus) {
+                    if (viewAllRequests) {
+                        return requestRepository.countAllByUsername(username);
+                    } else {
+                        long requestCount = 0;
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                                        query, query, query, query, query);
+
+                        for (final AssetModel asset : assets) {
+                            requestCount += requestRepository
+                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
+                        }
+
+                        return requestCount;
+                    }
+                } else {
+                    if (viewAllRequests) {
+                        return requestRepository.countAllByUsernameAndStatus(username, status);
+                    } else {
+
+                        long requestCount = 0;
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                                        query, query, query, query, query);
+
+                        for (final AssetModel asset : assets) {
+                            requestCount += requestRepository
+                                    .countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(username, status,
+                                                                                                    asset.getSku()
+                                    );
+                        }
+
+                        return requestCount;
+                    }
+                }
+            } else {
+                if (type.equals("Others")) {
+                    return getOthersRequestList(username, query, status, page, sort).size();
+                }
+            }
+
+            return -1;
+        }
+    }
+
     @SuppressWarnings("ConstantConditions")
-    public List< RequestModel > getUsernameRequestsList(
+    private List< RequestModel > getUsernameRequestsList(
             final String username, final String query, final String status, final int page, String sort
     )
             throws
@@ -352,8 +415,7 @@ public class DashboardServiceImpl
         }
     }
 
-    @Override
-    public List< RequestModel > getOthersRequestList(
+    private List< RequestModel > getOthersRequestList(
             final String username, final String query, final String status, final int page, String sort
     )
             throws
@@ -518,8 +580,7 @@ public class DashboardServiceImpl
         }
     }
 
-    @Override
-    public String validateSortInformationGiven(String sort)
+    private String validateSortInformationGiven(String sort)
             throws
             BadRequestException {
 
@@ -537,8 +598,7 @@ public class DashboardServiceImpl
         return sort;
     }
 
-    @Override
-    public List< RequestModel > getOthersRequestListPaged(
+    private List< RequestModel > getOthersRequestListPaged(
             final String username, final String query, final String status, final int page, final String sort
     )
             throws
@@ -562,8 +622,7 @@ public class DashboardServiceImpl
         return new ArrayList<>(pagedListHolder.getPageList());
     }
 
-    @Override
-    public List< EmployeeModel > getEmployeesDataFromRequest(
+    private List< EmployeeModel > getEmployeesDataFromRequest(
             final List< RequestModel > requests
     ) {
 
@@ -580,8 +639,7 @@ public class DashboardServiceImpl
         return employees;
     }
 
-    @Override
-    public List< EmployeeModel > getRequestModifiersDataFromRequest(
+    private List< EmployeeModel > getRequestModifiersDataFromRequest(
             final List< RequestModel > requests
     ) {
 
@@ -600,8 +658,7 @@ public class DashboardServiceImpl
         return requestModifiers;
     }
 
-    @Override
-    public List< AssetModel > getAssetDataFromRequest(
+    private List< AssetModel > getAssetDataFromRequest(
             final List< RequestModel > requests
     ) {
 
@@ -615,72 +672,7 @@ public class DashboardServiceImpl
         return assets;
     }
 
-    @Override
-    public long getRequestsCount(
-            final String type, final String username, final String query, final String status, final int page,
-            final String sort
-    )
-            throws
-            BadRequestException {
-
-        final boolean emptyQueryGiven = (query != null && query.isEmpty());
-        final boolean emptyStatusGiven = (status != null && status.isEmpty());
-
-        if (emptyQueryGiven || emptyStatusGiven) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            if (type.equals("Username")) {
-                final boolean viewAllRequestsRegardlessOfStatus = (status == null);
-                final boolean viewAllRequests = (query == null);
-
-                if (viewAllRequestsRegardlessOfStatus) {
-                    if (viewAllRequests) {
-                        return requestRepository.countAllByUsername(username);
-                    } else {
-                        long requestCount = 0;
-                        List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                                        query, query, query, query, query);
-
-                        for (final AssetModel asset : assets) {
-                            requestCount += requestRepository
-                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
-                        }
-
-                        return requestCount;
-                    }
-                } else {
-                    if (viewAllRequests) {
-                        return requestRepository.countAllByUsernameAndStatus(username, status);
-                    } else {
-
-                        long requestCount = 0;
-                        List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                                        query, query, query, query, query);
-
-                        for (final AssetModel asset : assets) {
-                            requestCount += requestRepository
-                                    .countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(username, status,
-                                                                                                    asset.getSku()
-                                    );
-                        }
-
-                        return requestCount;
-                    }
-                }
-            } else {
-                if (type.equals("Others")) {
-                    return getOthersRequestList(username, query, status, page, sort).size();
-                }
-            }
-
-            return -1;
-        }
-    }
-
-    @Override
-    public String getEmployeeDetailPhoto(
+    private String getEmployeeDetailPhoto(
             final String username, final String photoLocation
     ) {
 

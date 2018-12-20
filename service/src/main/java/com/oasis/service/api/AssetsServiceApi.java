@@ -22,14 +22,6 @@ public interface AssetsServiceApi {
             BadRequestException,
             DataNotFoundException;
 
-    Set< AssetModel > getSortedAvailableAssets(
-            final int page, final String sort
-    );
-
-    Set< AssetModel > getSortedAvailableAssetsFromQuery(
-            final int page, final String query, final String sort
-    );
-
     long getAvailableAssetsCount(
             final String query, final String sort
     );
@@ -44,20 +36,8 @@ public interface AssetsServiceApi {
             final String sku, final String imageDirectory
     );
 
-    String getFormattedPrice(
-            final double price
-    );
-
     byte[] getAssetDetailInPdf(
             final String sku
-    );
-
-    void addHeaderCellToTable(
-            PdfPTable table, final String value, final Font font
-    );
-
-    void addContentCellToTable(
-            PdfPTable table, final String name, final String data
     );
 
     byte[] getAssetImage(
@@ -72,20 +52,7 @@ public interface AssetsServiceApi {
             throws
             DuplicateDataException,
             UnauthorizedOperationException,
-            DataNotFoundException,
-            BadRequestException;
-
-    void validateAndSaveImages(
-            List< MultipartFile > imagesGiven, boolean addAssetOperation, AssetModel savedAsset
-    );
-
-    String generateSkuCode(
-            final String username, final String brand, final String type
-    );
-
-    void savePhotos(
-            final List< MultipartFile > imagesGiven, final String sku
-    );
+            DataNotFoundException;
 
     /*-------------Delete Asset(s) Method-------------*/
     void deleteAssets(

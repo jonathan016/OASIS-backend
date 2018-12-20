@@ -46,8 +46,7 @@ public class LoginServiceImpl
         return loginData;
     }
 
-    @Override
-    public String getUsernameIfEmployeeWithCredentialExists(
+    private String getUsernameIfEmployeeWithCredentialExists(
             final String username, final String password
     )
             throws
@@ -89,9 +88,8 @@ public class LoginServiceImpl
         }
     }
 
-    @Override
     @SuppressWarnings("UnnecessaryLocalVariable")
-    public String getFirstNameFromUsername(
+    private String getFirstNameFromUsername(
             final String username
     ) {
 
@@ -109,9 +107,8 @@ public class LoginServiceImpl
         return firstName;
     }
 
-    @Override
     @SuppressWarnings("UnnecessaryLocalVariable")
-    public String getRoleFromUsername(
+    private String getRoleFromUsername(
             final String username
     )
             throws

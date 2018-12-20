@@ -109,7 +109,7 @@ public class EmployeesController {
             ), HttpStatus.NOT_FOUND);
         }
 
-        String photo = employeesServiceApi.getEmployeeDetailImage(employee.getUsername(), employee.getPhoto());
+        String photo = employeesServiceApi.getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto());
 
         //TODO fill parameter role
         return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(),
@@ -153,7 +153,7 @@ public class EmployeesController {
             final String extension
     ) {
 
-        final byte[] photo = employeesServiceApi.getEmployeeImage(username, photoGiven, extension);
+        final byte[] photo = employeesServiceApi.getEmployeePhoto(username, photoGiven, extension);
 
         return new ResponseEntity<>(photo, HttpStatus.OK);
     }
@@ -177,8 +177,8 @@ public class EmployeesController {
 
             username = employeesServiceApi.saveEmployee(photoGiven, adminUsername, employeesRequestMapper
                                                                 .getEmployeeModelFromRawData(rawEmployeeData,
-                                                                                             addEmployeeOperation)
-                    , employeesRequestMapper
+                                                                                             addEmployeeOperation),
+                                                        employeesRequestMapper
                                                                 .getSupervisorUsernameFromRawData(rawEmployeeData),
                                                         addEmployeeOperation
             );

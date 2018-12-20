@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +19,7 @@ import java.util.List;
 
 @Component
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-public class OasisAuthenticationService {
+public class OasisAuthenticationService implements UserDetailsService {
 
     @Autowired
     private RoleDeterminer roleDeterminer;
@@ -46,6 +49,14 @@ public class OasisAuthenticationService {
 
             return new UsernamePasswordAuthenticationToken(username, password, grantedAuthorities);
         }
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String s)
+            throws
+            UsernameNotFoundException {
+
+        return null;
     }
 
 }

@@ -131,8 +131,7 @@ public class AssetsServiceImpl
         return new ArrayList<>(availableAssets);
     }
 
-    @Override
-    public Set< AssetModel > getSortedAvailableAssets(
+    private Set< AssetModel > getSortedAvailableAssets(
             final int page, final String sort
     ) {
 
@@ -162,8 +161,7 @@ public class AssetsServiceImpl
         return sortedAvailableAssets;
     }
 
-    @Override
-    public Set< AssetModel > getSortedAvailableAssetsFromQuery(
+    private Set< AssetModel > getSortedAvailableAssetsFromQuery(
             final int page, final String query, final String sort
     ) {
 
@@ -263,44 +261,6 @@ public class AssetsServiceImpl
     }
 
     @Override
-    public String getFormattedPrice(
-            final double price
-    ) {
-
-        StringBuilder priceStr = new StringBuilder(String.format("%.2f", price));
-        priceStr.reverse();
-
-        String fraction = String.valueOf(priceStr).substring(0, 3);
-        priceStr.replace(0, 3, "");
-
-        StringBuilder formattedPriceStr = new StringBuilder();
-
-        final int initialLength = priceStr.length();
-        while (priceStr.length() > 0) {
-            StringBuilder temp;
-
-            if (priceStr.length() >= 3) {
-                temp = new StringBuilder(String.valueOf(priceStr).substring(0, 3));
-                priceStr.replace(0, 3, "");
-            } else {
-                temp = new StringBuilder(String.valueOf(priceStr));
-                priceStr.replace(0, String.valueOf(priceStr).length(), "");
-            }
-
-            temp.reverse();
-            if (initialLength - 3 != priceStr.length()) {
-                temp.append(",");
-            }
-            formattedPriceStr.insert(0, temp);
-        }
-        formattedPriceStr.append(new StringBuilder(fraction).reverse());
-
-        formattedPriceStr.insert(0, "Rp. ");
-
-        return String.valueOf(formattedPriceStr);
-    }
-
-    @Override
     @SuppressWarnings("LoopStatementThatDoesntLoop")
     public byte[] getAssetDetailInPdf(
             final String sku
@@ -384,8 +344,7 @@ public class AssetsServiceImpl
         }
     }
 
-    @Override
-    public void addHeaderCellToTable(
+    private void addHeaderCellToTable(
             PdfPTable table, final String value, final Font font
     ) {
 
@@ -399,8 +358,7 @@ public class AssetsServiceImpl
         table.addCell(headerCell);
     }
 
-    @Override
-    public void addContentCellToTable(
+    private void addContentCellToTable(
             PdfPTable table, final String name, final String data
     ) {
 
@@ -412,6 +370,43 @@ public class AssetsServiceImpl
         contentCell.setPaddingBottom(5);
 
         table.addCell(contentCell);
+    }
+
+    private String getFormattedPrice(
+            final double price
+    ) {
+
+        StringBuilder priceStr = new StringBuilder(String.format("%.2f", price));
+        priceStr.reverse();
+
+        String fraction = String.valueOf(priceStr).substring(0, 3);
+        priceStr.replace(0, 3, "");
+
+        StringBuilder formattedPriceStr = new StringBuilder();
+
+        final int initialLength = priceStr.length();
+        while (priceStr.length() > 0) {
+            StringBuilder temp;
+
+            if (priceStr.length() >= 3) {
+                temp = new StringBuilder(String.valueOf(priceStr).substring(0, 3));
+                priceStr.replace(0, 3, "");
+            } else {
+                temp = new StringBuilder(String.valueOf(priceStr));
+                priceStr.replace(0, String.valueOf(priceStr).length(), "");
+            }
+
+            temp.reverse();
+            if (initialLength - 3 != priceStr.length()) {
+                temp.append(",");
+            }
+            formattedPriceStr.insert(0, temp);
+        }
+        formattedPriceStr.append(new StringBuilder(fraction).reverse());
+
+        formattedPriceStr.insert(0, "Rp. ");
+
+        return String.valueOf(formattedPriceStr);
     }
 
     @Override
@@ -461,8 +456,7 @@ public class AssetsServiceImpl
             throws
             DuplicateDataException,
             UnauthorizedOperationException,
-            DataNotFoundException,
-            BadRequestException {
+            DataNotFoundException {
 
         if (!roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
             throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
@@ -472,10 +466,6 @@ public class AssetsServiceImpl
 
         if (addAssetOperation) {
             savedAsset = asset;
-
-            if (imagesGiven.isEmpty()) {
-                throw new BadRequestException(INCORRECT_PARAMETER);
-            }
 
             if (assetRepository
                     .existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(savedAsset.getName(), savedAsset.getBrand(),
@@ -536,146 +526,6 @@ public class AssetsServiceImpl
         assetRepository.save(savedAsset);
     }
 
-    @Override
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void validateAndSaveImages(
-            List< MultipartFile > imagesGiven, boolean addAssetOperation, AssetModel savedAsset
-    ) {
-
-        if (!imagesGiven.isEmpty()) {
-            boolean rootDirectoryCreated;
-
-            if (!Files.exists(Paths.get(ServiceConstant.ASSET_IMAGE_DIRECTORY))) {
-                rootDirectoryCreated = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY).mkdir();
-            } else {
-                rootDirectoryCreated = true;
-            }
-
-            if (rootDirectoryCreated) {
-                final Path saveDirectory = Paths
-                        .get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()));
-
-                if (addAssetOperation) {
-                    if (!Files.exists(saveDirectory)) {
-                        new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
-                                                                      .concat(savedAsset.getSku())).mkdir();
-                    }
-                } else {
-                    if (Files.exists(saveDirectory)) {
-                        final File assetImageFolder = new File(
-                                ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
-                                                                     .concat(savedAsset.getSku()));
-                        final File[] images = assetImageFolder.listFiles();
-
-                        if (images != null) {
-                            for (File image : images) {
-                                image.delete();
-                            }
-                            assetImageFolder.delete();
-                        }
-                    }
-                    new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()))
-                            .mkdir();
-                }
-
-                String imageDirectory = ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
-                                                                             .concat(savedAsset.getSku());
-                savedAsset.setImageDirectory(imageDirectory);
-
-                savePhotos(imagesGiven, savedAsset.getSku());
-            }
-        }
-    }
-
-    @Override
-    public String generateSkuCode(
-            final String username, final String brand, final String type
-    ) {
-
-        StringBuilder sku;
-        LastUniqueIdentifierModel lastUniqueIdentifier;
-
-        if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrandAndType(brand, type)) {
-            lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrandAndType(brand, type);
-
-            int lastProductIdCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(12, 15));
-            lastProductIdCode++;
-
-            sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 11));
-            sku.append(String.format("-%03d", lastProductIdCode));
-        } else {
-            if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrand(brand)) {
-                lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrand(brand);
-
-                int lastTypeCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(8, 11));
-                lastTypeCode++;
-
-                sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 7));
-                sku.append(String.format("-%03d", lastTypeCode));
-                sku.append(String.format("-%03d", 1));
-            } else {
-                sku = new StringBuilder(ServiceConstant.PREFIX_SKU);
-
-                lastUniqueIdentifier = lastUniqueIdentifierRepository
-                        .findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku));
-
-                int lastBrandCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(4, 7));
-                lastBrandCode++;
-
-                sku.append(String.format("-%03d", lastBrandCode));
-                sku.append(String.format("-%03d", 1));
-                sku.append(String.format("-%03d", 1));
-            }
-
-            lastUniqueIdentifier = new LastUniqueIdentifierModel();
-            lastUniqueIdentifier.setBrand(brand);
-            lastUniqueIdentifier.setType(type);
-            lastUniqueIdentifier.setCreatedBy(username);
-            lastUniqueIdentifier.setCreatedDate(new Date());
-        }
-
-        lastUniqueIdentifier.setSku(String.valueOf(sku));
-        lastUniqueIdentifier.setUpdatedBy(username);
-        lastUniqueIdentifier.setUpdatedDate(new Date());
-
-        lastUniqueIdentifierRepository.save(lastUniqueIdentifier);
-
-        return String.valueOf(sku);
-    }
-
-    @Override
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void savePhotos(
-            final List< MultipartFile > imagesGiven, final String sku
-    ) {
-
-        if (imagesGiven.size() != 0) {
-            try {
-                for (int i = 0; i < imagesGiven.size(); i++) {
-                    final Path saveDirectory = Paths
-                            .get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku));
-
-                    if (!Files.exists(saveDirectory)) {
-                        new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)).mkdir();
-                    }
-                    File image = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)
-                                                                               .concat(File.separator).concat(sku)
-                                                                               .concat("-")
-                                                                               .concat(String.valueOf(i + 1))
-                                                                               .concat(".").concat(imageHelper
-                                                                                                           .getExtensionFromFileName(
-                                                                                                                   imagesGiven
-                                                                                                                           .get(i)
-                                                                                                                           .getOriginalFilename())));
-
-                    imagesGiven.get(i).transferTo(image);
-                }
-            } catch (IOException exception) {
-                logger.error("Failed to save image as IOException occurred with message " + exception.getMessage());
-            }
-        }
-    }
-
     /*-------------Delete Asset(s) Method-------------*/
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -717,6 +567,140 @@ public class AssetsServiceImpl
         }
 
         assetRepository.saveAll(selectedAssets);
+    }
+
+    private String generateSkuCode(
+            final String username, final String brand, final String type
+    ) {
+
+        StringBuilder sku;
+        LastUniqueIdentifierModel lastUniqueIdentifier;
+
+        if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrandAndType(brand, type)) {
+            lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrandAndType(brand, type);
+
+            int lastProductIdCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(16, 21));
+            lastProductIdCode++;
+
+            sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 15));
+            sku.append(String.format("-%05d", lastProductIdCode));
+        } else {
+            if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrand(brand)) {
+                lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrand(brand);
+
+                int lastTypeCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(10, 15));
+                lastTypeCode++;
+
+                sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 9));
+                sku.append(String.format("-%05d", lastTypeCode));
+                sku.append(String.format("-%05d", 1));
+            } else {
+                sku = new StringBuilder(ServiceConstant.PREFIX_SKU);
+
+                lastUniqueIdentifier = lastUniqueIdentifierRepository
+                        .findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku));
+
+                int lastBrandCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(4, 9));
+                lastBrandCode++;
+
+                sku.append(String.format("-%05d", lastBrandCode));
+                sku.append(String.format("-%05d", 1));
+                sku.append(String.format("-%05d", 1));
+            }
+
+            lastUniqueIdentifier = new LastUniqueIdentifierModel();
+            lastUniqueIdentifier.setBrand(brand);
+            lastUniqueIdentifier.setType(type);
+            lastUniqueIdentifier.setCreatedBy(username);
+            lastUniqueIdentifier.setCreatedDate(new Date());
+        }
+
+        lastUniqueIdentifier.setSku(String.valueOf(sku));
+        lastUniqueIdentifier.setUpdatedBy(username);
+        lastUniqueIdentifier.setUpdatedDate(new Date());
+
+        lastUniqueIdentifierRepository.save(lastUniqueIdentifier);
+
+        return String.valueOf(sku);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void validateAndSaveImages(
+            final List< MultipartFile > imagesGiven, final boolean addAssetOperation, AssetModel savedAsset
+    ) {
+
+        boolean rootDirectoryCreated;
+
+        if (!Files.exists(Paths.get(ServiceConstant.ASSET_IMAGE_DIRECTORY))) {
+            rootDirectoryCreated = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY).mkdir();
+        } else {
+            rootDirectoryCreated = true;
+        }
+
+        if (rootDirectoryCreated) {
+            final Path saveDirectory = Paths
+                    .get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()));
+
+            if (addAssetOperation) {
+                if (!Files.exists(saveDirectory)) {
+                    new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()))
+                            .mkdir();
+                }
+            } else {
+                if (Files.exists(saveDirectory)) {
+                    final File assetImageFolder = new File(
+                            ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()));
+                    final File[] images = assetImageFolder.listFiles();
+
+                    if (images != null) {
+                        for (File image : images) {
+                            image.delete();
+                        }
+                        assetImageFolder.delete();
+                    }
+                }
+                new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()))
+                        .mkdir();
+            }
+
+            String imageDirectory = ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
+                                                                         .concat(savedAsset.getSku());
+            savedAsset.setImageDirectory(imageDirectory);
+
+            saveImages(imagesGiven, savedAsset.getSku());
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void saveImages(
+            final List< MultipartFile > imagesGiven, final String sku
+    ) {
+
+        if (imagesGiven.size() != 0) {
+            try {
+                for (int i = 0; i < imagesGiven.size(); i++) {
+                    final Path saveDirectory = Paths
+                            .get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku));
+
+                    if (!Files.exists(saveDirectory)) {
+                        new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)).mkdir();
+                    }
+                    File image = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)
+                                                                               .concat(File.separator).concat(sku)
+                                                                               .concat("-")
+                                                                               .concat(String.valueOf(i + 1))
+                                                                               .concat(".").concat(imageHelper
+                                                                                                           .getExtensionFromFileName(
+                                                                                                                   imagesGiven
+                                                                                                                           .get(i)
+                                                                                                                           .getOriginalFilename())));
+
+                    imagesGiven.get(i).transferTo(image);
+                }
+            } catch (IOException exception) {
+                logger.error("Failed to save image as IOException occurred with message " + exception.getMessage());
+            }
+        }
     }
 
 }

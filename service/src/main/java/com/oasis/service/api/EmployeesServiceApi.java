@@ -26,20 +26,8 @@ public interface EmployeesServiceApi {
             BadRequestException,
             DataNotFoundException;
 
-    Set< EmployeeModel > getSortedEmployees(
-            final String username, final int page, final String sort
-    );
-
-    Set< EmployeeModel > getSortedEmployeesFromQuery(
-            final int page, final String query, final String sort
-    );
-
     long getEmployeesCount(
             final String username, final String query, String sort
-    );
-
-    List< EmployeeModel > getSupervisorsList(
-            final List< EmployeeModel > employees
     );
 
     EmployeeModel getEmployeeDetailData(
@@ -48,7 +36,7 @@ public interface EmployeesServiceApi {
             throws
             DataNotFoundException;
 
-    String getEmployeeDetailImage(
+    String getEmployeeDetailPhoto(
             final String username, final String photoLocation
     );
 
@@ -58,16 +46,8 @@ public interface EmployeesServiceApi {
             throws
             BadRequestException;
 
-    boolean isSafeFromCyclicSupervising(
-            final String targetUsername, final List< String > usernames
-    );
-
-    byte[] getEmployeeImage(
+    byte[] getEmployeePhoto(
             final String username, final String photoName, final String extension
-    );
-
-    List< String > getEmployeesPhotos(
-            final List< EmployeeModel > employees
     );
 
     EmployeeModel getEmployeeSupervisorData(
@@ -86,44 +66,6 @@ public interface EmployeesServiceApi {
             DataNotFoundException,
             DuplicateDataException,
             BadRequestException;
-
-    void updateSupervisorDataOnEmployeeUpdate(
-            final String username, final EmployeeModel savedEmployee, final String employeeUsername,
-            final String supervisorUsername
-    )
-            throws
-            DataNotFoundException,
-            UnauthorizedOperationException;
-
-    void validateAndSaveImage(
-            final MultipartFile photoGiven, final boolean addEmployeeOperation, final EmployeeModel savedEmployee
-    );
-
-    String generateUsername(
-            final String name, final String dobString
-    );
-
-    String generateDefaultPassword(
-            final String dobString
-    );
-
-    String getSupervisionId(
-            final String employeeUsername, final String supervisorUsername, final String adminUsername
-    )
-            throws
-            DataNotFoundException;
-
-    void createSupervision(
-            final String employeeUsername, final String supervisorUsername, final String adminUsername
-    );
-
-    boolean hasCyclicSupervising(
-            final String employeeUsername, final String supervisorUsername
-    );
-
-    void savePhoto(
-            final MultipartFile photoGiven, final String username
-    );
 
     void changePassword(
             final String username, final String oldPassword, final String newPassword,
@@ -150,10 +92,5 @@ public interface EmployeesServiceApi {
             UnauthorizedOperationException,
             DataNotFoundException,
             BadRequestException;
-
-    void demotePreviousSupervisorFromAdminIfNecessary(
-            final String adminUsername, final String oldSupervisorUsername, final String newSupervisorUsername,
-            final List< SupervisionModel > supervisions
-    );
 
 }

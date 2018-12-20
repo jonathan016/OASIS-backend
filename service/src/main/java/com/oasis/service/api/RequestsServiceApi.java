@@ -27,43 +27,6 @@ public interface RequestsServiceApi {
             BadRequestException,
             DataNotFoundException;
 
-    List< RequestModel > getUsernameRequestsList(
-            final String username, final String query, final String status, final int page, String sort
-    )
-            throws
-            BadRequestException,
-            DataNotFoundException;
-
-    List< RequestModel > getOthersRequestList(
-            final String username, final String query, final String status, final int page, final String sort
-    )
-            throws
-            DataNotFoundException,
-            BadRequestException;
-
-    String validateSortInformationGiven(String sort)
-            throws
-            BadRequestException;
-
-    List< RequestModel > getOthersRequestListPaged(
-            final String username, final String query, final String status, final int page, final String sort
-    )
-            throws
-            DataNotFoundException,
-            BadRequestException;
-
-    List< EmployeeModel > getEmployeesDataFromRequest(
-            final List< RequestModel > requests
-    );
-
-    List< EmployeeModel > getRequestModifiersDataFromRequest(
-            final List< RequestModel > requests
-    );
-
-    List< AssetModel > getAssetDataFromRequest(
-            final List< RequestModel > requests
-    );
-
     long getRequestsCount(
             final String type, final String username, final String query, final String status, final int page,
             String sort
@@ -71,10 +34,6 @@ public interface RequestsServiceApi {
             throws
             BadRequestException,
             DataNotFoundException;
-
-    String getEmployeeDetailPhoto(
-            final String username, final String photoLocation
-    );
 
     Page< AssetModel > getAssetRequestDetailsData(
             final List< String > skus, final int page
@@ -89,10 +48,6 @@ public interface RequestsServiceApi {
             throws
             BadRequestException,
             DataNotFoundException;
-
-    List< String > getAssetDetailImages(
-            final String sku, final String imageDirectory
-    );
 
     List< List< String > > getAssetRequestDetailsImages(
             final List< AssetModel > assets
@@ -110,82 +65,6 @@ public interface RequestsServiceApi {
     )
             throws
             DataNotFoundException,
-            BadRequestException,
-            UnauthorizedOperationException;
-
-    void validateRequestedAssets(final List< RequestModel > requests)
-            throws
-            DataNotFoundException,
-            UnauthorizedOperationException;
-
-    boolean isNewRequestsValid(final List< RequestModel > requests)
-            throws
-            BadRequestException;
-
-    boolean isUsernameAdminOrSupervisor(final String username, final String requesterUsername);
-
-    void updateStatusToCancelled(
-            RequestModel savedRequest, final String username, final String recordedRequesterUsername,
-            final String currentRequestStatus, final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException;
-
-    void updateAssetDataAndStatusToAcceptedOrRejected(
-            final String username, final RequestModel request, RequestModel savedRequest
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException,
-            DataNotFoundException;
-
-    void updateStatusToDelivered(
-            final String username, RequestModel savedRequest, final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException;
-
-    void updateAssetDataAndStatusToReturned(
-            final String username, RequestModel savedRequest, final String newRequestStatus
-    )
-            throws
-            BadRequestException,
-            UnauthorizedOperationException;
-
-    boolean isRequestCancellationValid(
-            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
-            final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException;
-
-    boolean isRequestAcceptanceOrRejectionValid(
-            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
-            final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException;
-
-    boolean isRequestDeliveryValid(
-            final String username, final String currentRequestStatus, final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException;
-
-    boolean isRequestDeliveryOrReturnValid(
-            final String username, final RequestModel savedRequest, final String newRequestStatus
-    )
-            throws
-            BadRequestException,
-            UnauthorizedOperationException;
-
-    boolean isAssetDeliveryOrReturnValid(final String username, final boolean acceptedOrDeliveredToReturned)
-            throws
             BadRequestException,
             UnauthorizedOperationException;
 

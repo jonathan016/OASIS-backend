@@ -77,9 +77,6 @@ public class DashboardResponseMapper {
                         (requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote().isEmpty())
                         ? "No transaction note" : requests.get(i).getTransactionNote());
             }
-
-            mappedRequests.get(i).getRequest().setUpdatedDate(
-                    new SimpleDateFormat("EEE, dd MMM ''yy HH:mm").format(requests.get(i).getUpdatedDate()));
         }
         successResponse.setValue(new RequestOthersListResponse(mappedRequests));
 
@@ -135,9 +132,6 @@ public class DashboardResponseMapper {
                         (requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote().isEmpty())
                         ? "No transaction note" : requests.get(i).getTransactionNote());
             }
-
-            mappedRequests.get(i).getRequest().setUpdatedDate(
-                    new SimpleDateFormat("EEE, dd MMM ''yy HH:mm").format(requests.get(i).getUpdatedDate()));
         }
         successResponse.setValue(new RequestMyListResponse(mappedRequests));
 

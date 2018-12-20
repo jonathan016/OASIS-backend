@@ -100,8 +100,608 @@ public class RequestsServiceImpl
     }
 
     @Override
+    public long getRequestsCount(
+            final String type, final String username, final String query, final String status, final int page,
+            final String sort
+    )
+            throws
+            BadRequestException {
+
+        final boolean emptyQueryGiven = (query != null && query.isEmpty());
+        final boolean emptyStatusGiven = (status != null && status.isEmpty());
+
+        if (emptyQueryGiven || emptyStatusGiven) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            if (type.equals("Username")) {
+                final boolean viewAllRequestsRegardlessOfStatus = (status == null);
+                final boolean viewAllRequests = (query == null);
+
+                if (viewAllRequestsRegardlessOfStatus) {
+                    if (viewAllRequests) {
+                        return requestRepository.countAllByUsername(username);
+                    } else {
+                        long requestCount = 0;
+
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
+
+                        for (final AssetModel asset : assets) {
+                            requestCount += requestRepository
+                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
+                        }
+
+                        return requestCount;
+                    }
+                } else {
+                    if (viewAllRequests) {
+                        return requestRepository.countAllByUsernameAndStatus(username, status);
+                    } else {
+                        long requestCount = 0;
+
+                        List< AssetModel > assets = assetRepository
+                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
+
+                        for (final AssetModel asset : assets) {
+                            requestCount += requestRepository
+                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
+                        }
+
+                        return requestCount;
+                    }
+                }
+            } else {
+                if (type.equals("Others")) {
+                    return getOthersRequestList(username, query, status, page, sort).size();
+                }
+            }
+
+            return -1;
+        }
+    }
+
+    @Override
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    public Page< AssetModel > getAssetRequestDetailsData(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        if (skus == null || skus.isEmpty()) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            for (final String sku : skus) {
+                final boolean requestedAssetExists = assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
+
+                if (!requestedAssetExists) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                }
+            }
+
+            final long assetRequestDetails = assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
+            final boolean noRequests = (assetRequestDetails == 0);
+            final long totalPages = (long) Math.ceil((double) getAssetRequestDetailsCount(skus, page) /
+                                                     ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
+            final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
+
+            if (noRequests || pageIndexOutOfBounds) {
+                throw new DataNotFoundException(DATA_NOT_FOUND);
+            } else {
+                final int zeroBasedIndexPage = page - 1;
+                final Pageable pageable = PageRequest
+                        .of(zeroBasedIndexPage, ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
+
+                final Page< AssetModel > requestedAssets = assetRepository
+                        .findAllByDeletedIsFalseAndSkuIn(skus, pageable);
+
+                return requestedAssets;
+            }
+        }
+    }
+
+    @Override
+    public List< AssetModel > getAssetRequestDetailsList(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        return getAssetRequestDetailsData(skus, page).getContent();
+    }
+
+    @Override
+    public List< List< String > > getAssetRequestDetailsImages(
+            final List< AssetModel > assets
+    ) {
+
+        List< List< String > > imageURLs = new ArrayList<>();
+
+        for (final AssetModel asset : assets) {
+            imageURLs.add(getAssetDetailImages(asset.getSku(), asset.getImageDirectory()));
+        }
+
+        return imageURLs;
+    }
+
+    private List< String > getAssetDetailImages(
+            final String sku, final String imageDirectory
+    ) {
+
+        List< String > imageURLs = new ArrayList<>();
+
+        if (imageDirectory.isEmpty()) {
+            imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/image_not_found?extension=jpeg");
+        } else {
+            final File directory = new File(imageDirectory);
+            final File[] images = directory.listFiles();
+
+            if (Files.exists(directory.toPath()) && images != null) {
+                for (int i = 0; i < images.length; i++) {
+                    final String extension = imageHelper.getExtensionFromFileName(images[i].getName());
+
+                    imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/" +
+                                  sku.concat("-").concat(String.valueOf(i + 1)).concat("?extension=")
+                                     .concat(extension));
+                }
+            } else {
+                imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/image_not_found?extension=jpeg");
+            }
+        }
+
+        return imageURLs;
+    }
+
+    @Override
+    public long getAssetRequestDetailsCount(
+            final List< String > skus, final int page
+    )
+            throws
+            BadRequestException,
+            DataNotFoundException {
+
+        if (skus == null || skus.isEmpty()) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            for (final String sku : skus) {
+                final boolean requestedAssetExists = assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
+
+                if (!requestedAssetExists) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                }
+            }
+
+            return assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
+        }
+    }
+
+    /*-------------Save Request Methods-------------*/
+    @Override
+    public void saveRequests(
+            final String username, final List< RequestModel > requests
+    )
+            throws
+            DataNotFoundException,
+            BadRequestException,
+            UnauthorizedOperationException {
+
+        final boolean employeeWithUsernameExists = employeeRepository
+                .existsEmployeeModelByDeletedIsFalseAndUsername(username);
+
+        if (!employeeWithUsernameExists) {
+            throw new DataNotFoundException(DATA_NOT_FOUND);
+        } else {
+            if (requests.isEmpty()) {
+                throw new BadRequestException(INCORRECT_PARAMETER);
+            } else {
+                final boolean createRequestOperation = isNewRequestsValid(requests);
+
+                RequestModel savedRequest;
+                if (createRequestOperation) {
+                    validateRequestedAssets(requests);
+
+                    final boolean employeeWithUsernameIsAdministrator = adminRepository
+                            .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
+                    final boolean employeeWithUsernameDoesNotHaveSupervision = employeeRepository
+                            .existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(username);
+                    final boolean employeeWithUsernameIsTopAdministrator =
+                            employeeWithUsernameIsAdministrator && employeeWithUsernameDoesNotHaveSupervision;
+
+                    if (employeeWithUsernameIsTopAdministrator) {
+                        throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                    } else {
+                        for (final RequestModel request : requests) {
+                            final boolean enoughStockExists =
+                                    assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()).getStock() -
+                                    request.getQuantity() >= 0;
+
+                            if (!enoughStockExists) {
+                                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                            } else {
+                                savedRequest = request;
+
+                                savedRequest.setStatus(ServiceConstant.STATUS_REQUESTED);
+                                savedRequest.setTransactionNote(null);
+                                savedRequest.setCreatedBy(username);
+                                savedRequest.setCreatedDate(new Date());
+
+                                savedRequest.setUpdatedBy(username);
+                                savedRequest.setUpdatedDate(new Date());
+
+                                requestRepository.save(savedRequest);
+                            }
+                        }
+                    }
+                } else {
+                    RequestModel request = requests.get(0);
+
+                    savedRequest = requestRepository.findBy_id(request.get_id());
+
+                    if (savedRequest == null) {
+                        throw new DataNotFoundException(DATA_NOT_FOUND);
+                    } else if (request.getStatus() == null) {
+                        throw new BadRequestException(INCORRECT_PARAMETER);
+                    } else {
+                        if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(request.getUsername())) {
+                            throw new DataNotFoundException(DATA_NOT_FOUND);
+                        }
+
+                        final boolean newRequestStatusIsCancelled = request.getStatus()
+                                                                           .equals(ServiceConstant.STATUS_CANCELLED);
+                        final boolean newRequestStatusIsAccepted = request.getStatus()
+                                                                          .equals(ServiceConstant.STATUS_ACCEPTED);
+                        final boolean newRequestStatusIsRejected = request.getStatus()
+                                                                          .equals(ServiceConstant.STATUS_REJECTED);
+                        final boolean newRequestStatusIsDelivered = request.getStatus()
+                                                                           .equals(ServiceConstant.STATUS_DELIVERED);
+
+                        if (newRequestStatusIsCancelled) {
+                            updateStatusToCancelled(savedRequest, username, request.getUsername(),
+                                                    savedRequest.getStatus(), request.getStatus()
+                            );
+                        } else if (newRequestStatusIsAccepted || newRequestStatusIsRejected) {
+                            updateAssetDataAndStatusToAcceptedOrRejected(username, request, savedRequest);
+                        } else {
+                            final boolean expendableAsset = assetRepository
+                                    .findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).isExpendable();
+
+                            if (newRequestStatusIsDelivered) {
+                                if (!expendableAsset) {
+                                    updateStatusToDelivered(username, savedRequest, request.getStatus());
+                                } else {
+                                    updateAssetDataAndStatusToReturned(username, savedRequest, request.getStatus());
+                                }
+                            } else {
+                                if (!expendableAsset) {
+                                    updateAssetDataAndStatusToReturned(username, savedRequest, request.getStatus());
+                                } else {
+                                    throw new BadRequestException(INCORRECT_PARAMETER);
+                                }
+                            }
+                        }
+                    }
+                    savedRequest.setTransactionNote(request.getTransactionNote());
+                    savedRequest.setUpdatedBy(username);
+                    savedRequest.setUpdatedDate(new Date());
+
+                    requestRepository.save(savedRequest);
+                }
+            }
+        }
+    }
+
+    private boolean isNewRequestsValid(final List< RequestModel > requests)
+            throws
+            BadRequestException {
+
+        final boolean existingRequestFound = requests.stream().anyMatch(requestModel -> requestModel.get_id() != null);
+        final boolean moreThanOneNewRequest = requests.size() > 1;
+
+        if (moreThanOneNewRequest && existingRequestFound) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            return requests.size() != 1 || !existingRequestFound;
+        }
+    }
+
+    private void validateRequestedAssets(final List< RequestModel > requests)
+            throws
+            DataNotFoundException,
+            UnauthorizedOperationException {
+
+        for (final RequestModel request : requests) {
+            final AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku());
+
+            if (asset == null) {
+                throw new DataNotFoundException(DATA_NOT_FOUND);
+            }
+
+            final boolean requestQuantityLargerThanStock = request.getQuantity() > asset.getStock();
+
+            if (requestQuantityLargerThanStock) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            }
+        }
+    }
+
+    private void updateStatusToCancelled(
+            RequestModel savedRequest, final String username, final String recordedRequesterUsername,
+            final String currentRequestStatus, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        if (isRequestCancellationValid(username, recordedRequesterUsername, currentRequestStatus, newRequestStatus)) {
+            savedRequest.setStatus(ServiceConstant.STATUS_CANCELLED);
+        }
+    }
+
+    private void updateAssetDataAndStatusToAcceptedOrRejected(
+            final String username, final RequestModel request, RequestModel savedRequest
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException,
+            DataNotFoundException {
+
+        if (isRequestAcceptanceOrRejectionValid(
+                username, savedRequest.getUsername(), savedRequest.getStatus(), request.getStatus())) {
+            savedRequest.setStatus(request.getStatus());
+
+            final boolean newRequestStatusIsAccepted = request.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
+
+            if (newRequestStatusIsAccepted) {
+                if (assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
+                    savedRequest.getQuantity() < 0) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                }
+
+                // TODO Check concurrency
+                Query query = new Query();
+                query.addCriteria(Criteria.where(AssetFieldName.SKU).is(savedRequest.getSku()));
+                Update update = new Update().inc(AssetFieldName.STOCK, 0 - savedRequest.getQuantity());
+                AssetModel asset = mongoOperations
+                        .findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), AssetModel.class,
+                                       CollectionName.ASSET_COLLECTION_NAME
+                        );
+
+                assetRepository.save(asset);
+            }
+        }
+    }
+
+    private void updateStatusToDelivered(
+            final String username, RequestModel savedRequest, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        final String currentRequestStatus = savedRequest.getStatus();
+
+        if (isRequestDeliveryValid(username, currentRequestStatus, newRequestStatus)) {
+            savedRequest.setStatus(ServiceConstant.STATUS_DELIVERED);
+        }
+    }
+
+    private void updateAssetDataAndStatusToReturned(
+            final String username, RequestModel savedRequest, final String newRequestStatus
+    )
+            throws
+            BadRequestException,
+            UnauthorizedOperationException {
+
+        if (isRequestDeliveryOrReturnValid(username, savedRequest, newRequestStatus)) {
+            // TODO Check concurrency
+            Query query = new Query();
+            query.addCriteria(Criteria.where(AssetFieldName.SKU).is(savedRequest.getSku()));
+            Update update = new Update().inc(AssetFieldName.STOCK, savedRequest.getQuantity());
+            AssetModel asset = mongoOperations
+                    .findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), AssetModel.class,
+                                   CollectionName.ASSET_COLLECTION_NAME
+                    );
+
+            assetRepository.save(asset);
+
+            savedRequest.setStatus(ServiceConstant.STATUS_RETURNED);
+        }
+    }
+
+    private boolean isRequestCancellationValid(
+            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
+            final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        final boolean statusIsRequested = currentRequestStatus.equals(ServiceConstant.STATUS_REQUESTED);
+        final boolean newRequestStatusIsCancelled = newRequestStatus.equals(ServiceConstant.STATUS_CANCELLED);
+        final boolean requestedToCancelled = statusIsRequested && newRequestStatusIsCancelled;
+
+        if (!requestedToCancelled) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            final boolean usernameIsRequester = recordedRequesterUsername.equals(username);
+
+            if (!usernameIsRequester) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    private boolean isRequestAcceptanceOrRejectionValid(
+            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
+            final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        final boolean usernameIsAdminOrSupervisor = isUsernameAdminOrSupervisor(username, recordedRequesterUsername);
+
+        final boolean statusIsRequested = currentRequestStatus.equals(ServiceConstant.STATUS_REQUESTED);
+        final boolean newRequestStatusIsAccepted = newRequestStatus.equals(ServiceConstant.STATUS_ACCEPTED);
+        final boolean newRequestStatusIsRejected = newRequestStatus.equals(ServiceConstant.STATUS_REJECTED);
+        final boolean requestedToAccepted = statusIsRequested && newRequestStatusIsAccepted;
+        final boolean requestedToRejected = statusIsRequested && newRequestStatusIsRejected;
+        final boolean requestedToAcceptedOrRejected = requestedToAccepted || requestedToRejected;
+
+        if (!requestedToAcceptedOrRejected) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            if (!usernameIsAdminOrSupervisor) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    private boolean isRequestDeliveryValid(
+            final String username, final String currentRequestStatus, final String newRequestStatus
+    )
+            throws
+            UnauthorizedOperationException,
+            BadRequestException {
+
+        final boolean statusIsAccepted = currentRequestStatus.equals(ServiceConstant.STATUS_ACCEPTED);
+        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
+        final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
+
+        return isAssetDeliveryOrReturnValid(username, acceptedToDelivered);
+    }
+
+    private boolean isRequestDeliveryOrReturnValid(
+            final String username, final RequestModel savedRequest, final String newRequestStatus
+    )
+            throws
+            BadRequestException,
+            UnauthorizedOperationException {
+
+        final boolean statusIsAccepted = savedRequest.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
+        final boolean expendableAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
+                                                       .isExpendable();
+        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
+        final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
+        final boolean expendableAssetDelivery = expendableAsset && acceptedToDelivered;
+
+        final boolean statusIsDelivered = savedRequest.getStatus().equals(ServiceConstant.STATUS_DELIVERED);
+        final boolean newRequestStatusIsReturned = newRequestStatus.equals(ServiceConstant.STATUS_RETURNED);
+        final boolean deliveredToReturned = statusIsDelivered && newRequestStatusIsReturned;
+        final boolean nonExpendableAssetReturn = !expendableAsset && deliveredToReturned;
+
+        final boolean acceptedOrDeliveredToReturned = expendableAssetDelivery || nonExpendableAssetReturn;
+
+        return isAssetDeliveryOrReturnValid(username, acceptedOrDeliveredToReturned);
+    }
+
+    private boolean isUsernameAdminOrSupervisor(final String username, final String requesterUsername) {
+
+        final boolean administratorWithUsernameExists = adminRepository
+                .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
+        final boolean supervisorIsValid = supervisionRepository
+                .existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(username,
+                                                                                                requesterUsername
+                );
+
+        return administratorWithUsernameExists || supervisorIsValid;
+    }
+
+    private boolean isAssetDeliveryOrReturnValid(final String username, final boolean acceptedOrDeliveredToReturned)
+            throws
+            BadRequestException,
+            UnauthorizedOperationException {
+
+        if (!acceptedOrDeliveredToReturned) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
+        } else {
+            final boolean administratorWithUsernameExists = adminRepository
+                    .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
+
+            if (!administratorWithUsernameExists) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    private List< EmployeeModel > getEmployeesDataFromRequest(
+            final List< RequestModel > requests
+    ) {
+
+        List< EmployeeModel > employees = new ArrayList<>();
+
+        for (final RequestModel request : requests) {
+            employees.add(employeeRepository.findByDeletedIsFalseAndUsername(request.getUsername()));
+            employees.get(employees.size() - 1).setPhoto(
+                    getEmployeeDetailPhoto(employees.get(employees.size() - 1).getUsername(),
+                                           employees.get(employees.size() - 1).getPhoto()
+                    ));
+        }
+
+        return employees;
+    }
+
+    private List< EmployeeModel > getRequestModifiersDataFromRequest(
+            final List< RequestModel > requests
+    ) {
+
+        List< EmployeeModel > requestModifiers = new ArrayList<>();
+
+        for (final RequestModel request : requests) {
+            final String modifierUsername = request.getUpdatedBy();
+
+            requestModifiers.add(employeeRepository.findByDeletedIsFalseAndUsername(modifierUsername));
+            requestModifiers.get(requestModifiers.size() - 1).setPhoto(
+                    getEmployeeDetailPhoto(requestModifiers.get(requestModifiers.size() - 1).getUsername(),
+                                           requestModifiers.get(requestModifiers.size() - 1).getPhoto()
+                    ));
+        }
+
+        return requestModifiers;
+    }
+
+    private List< AssetModel > getAssetDataFromRequest(
+            final List< RequestModel > requests
+    ) {
+
+        List< AssetModel > assets = new ArrayList<>();
+
+        for (final RequestModel request : requests) {
+            assets.add(assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()));
+            assets.get(assets.size() - 1).setStock(request.getQuantity());
+        }
+
+        return assets;
+    }
+
+    private String getEmployeeDetailPhoto(
+            final String username, final String photoLocation
+    ) {
+
+        final boolean validImageLocation = (photoLocation != null && photoLocation.isEmpty());
+
+        if (validImageLocation) {
+            final File photo = new File(photoLocation);
+
+            if (photo.exists() && Files.exists(photo.toPath())) {
+                return "http://localhost:8085/oasis/api/employees/" + username + "/" +
+                       username.concat("?extension=").concat(imageHelper.getExtensionFromFileName(photo.getName()));
+            }
+        }
+
+        return "http://localhost:8085/oasis/api/employees/" + username + "/image_not_found".concat("?extension=jpeg");
+    }
+
     @SuppressWarnings("ConstantConditions")
-    public List< RequestModel > getUsernameRequestsList(
+    private List< RequestModel > getUsernameRequestsList(
             final String username, final String query, final String status, final int page, String sort
     )
             throws
@@ -292,8 +892,7 @@ public class RequestsServiceImpl
         }
     }
 
-    @Override
-    public List< RequestModel > getOthersRequestList(
+    private List< RequestModel > getOthersRequestList(
             final String username, final String query, final String status, final int page, String sort
     )
             throws
@@ -448,8 +1047,7 @@ public class RequestsServiceImpl
         }
     }
 
-    @Override
-    public String validateSortInformationGiven(String sort)
+    private String validateSortInformationGiven(String sort)
             throws
             BadRequestException {
 
@@ -467,8 +1065,7 @@ public class RequestsServiceImpl
         return sort;
     }
 
-    @Override
-    public List< RequestModel > getOthersRequestListPaged(
+    private List< RequestModel > getOthersRequestListPaged(
             final String username, final String query, final String status, final int page, final String sort
     )
             throws
@@ -489,624 +1086,6 @@ public class RequestsServiceImpl
         pagedListHolder.setPageSize(ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
 
         return new ArrayList<>(pagedListHolder.getPageList());
-    }
-
-    @Override
-    public List< EmployeeModel > getEmployeesDataFromRequest(
-            final List< RequestModel > requests
-    ) {
-
-        List< EmployeeModel > employees = new ArrayList<>();
-
-        for (final RequestModel request : requests) {
-            employees.add(employeeRepository.findByDeletedIsFalseAndUsername(request.getUsername()));
-            employees.get(employees.size() - 1).setPhoto(
-                    getEmployeeDetailPhoto(employees.get(employees.size() - 1).getUsername(),
-                                           employees.get(employees.size() - 1).getPhoto()
-                    ));
-        }
-
-        return employees;
-    }
-
-    @Override
-    public List< EmployeeModel > getRequestModifiersDataFromRequest(
-            final List< RequestModel > requests
-    ) {
-
-        List< EmployeeModel > requestModifiers = new ArrayList<>();
-
-        for (final RequestModel request : requests) {
-            final String modifierUsername = request.getUpdatedBy();
-
-            requestModifiers.add(employeeRepository.findByDeletedIsFalseAndUsername(modifierUsername));
-            requestModifiers.get(requestModifiers.size() - 1).setPhoto(
-                    getEmployeeDetailPhoto(requestModifiers.get(requestModifiers.size() - 1).getUsername(),
-                                           requestModifiers.get(requestModifiers.size() - 1).getPhoto()
-                    ));
-        }
-
-        return requestModifiers;
-    }
-
-    @Override
-    public List< AssetModel > getAssetDataFromRequest(
-            final List< RequestModel > requests
-    ) {
-
-        List< AssetModel > assets = new ArrayList<>();
-
-        for (final RequestModel request : requests) {
-            assets.add(assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()));
-            assets.get(assets.size() - 1).setStock(request.getQuantity());
-        }
-
-        return assets;
-    }
-
-    @Override
-    public long getRequestsCount(
-            final String type, final String username, final String query, final String status, final int page,
-            final String sort
-    )
-            throws
-            BadRequestException {
-
-        final boolean emptyQueryGiven = (query != null && query.isEmpty());
-        final boolean emptyStatusGiven = (status != null && status.isEmpty());
-
-        if (emptyQueryGiven || emptyStatusGiven) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            if (type.equals("Username")) {
-                final boolean viewAllRequestsRegardlessOfStatus = (status == null);
-                final boolean viewAllRequests = (query == null);
-
-                if (viewAllRequestsRegardlessOfStatus) {
-                    if (viewAllRequests) {
-                        return requestRepository.countAllByUsername(username);
-                    } else {
-                        long requestCount = 0;
-
-                        List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
-
-                        for (final AssetModel asset : assets) {
-                            requestCount += requestRepository
-                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
-                        }
-
-                        return requestCount;
-                    }
-                } else {
-                    if (viewAllRequests) {
-                        return requestRepository.countAllByUsernameAndStatus(username, status);
-                    } else {
-                        long requestCount = 0;
-
-                        List< AssetModel > assets = assetRepository
-                                .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
-
-                        for (final AssetModel asset : assets) {
-                            requestCount += requestRepository
-                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
-                        }
-
-                        return requestCount;
-                    }
-                }
-            } else {
-                if (type.equals("Others")) {
-                    return getOthersRequestList(username, query, status, page, sort).size();
-                }
-            }
-
-            return -1;
-        }
-    }
-
-    @Override
-    public String getEmployeeDetailPhoto(
-            final String username, final String photoLocation
-    ) {
-
-        final boolean validImageLocation = (photoLocation != null && photoLocation.isEmpty());
-
-        if (validImageLocation) {
-            final File photo = new File(photoLocation);
-
-            if (photo.exists() && Files.exists(photo.toPath())) {
-                return "http://localhost:8085/oasis/api/employees/" + username + "/" +
-                       username.concat("?extension=").concat(imageHelper.getExtensionFromFileName(photo.getName()));
-            }
-        }
-
-        return "http://localhost:8085/oasis/api/employees/" + username + "/image_not_found".concat("?extension=jpeg");
-    }
-
-    @Override
-    @SuppressWarnings("UnnecessaryLocalVariable")
-    public Page< AssetModel > getAssetRequestDetailsData(
-            final List< String > skus, final int page
-    )
-            throws
-            BadRequestException,
-            DataNotFoundException {
-
-        if (skus == null || skus.isEmpty()) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            for (final String sku : skus) {
-                final boolean requestedAssetExists = assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
-
-                if (!requestedAssetExists) {
-                    throw new DataNotFoundException(DATA_NOT_FOUND);
-                }
-            }
-
-            final long assetRequestDetails = assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
-            final boolean noRequests = (assetRequestDetails == 0);
-            final long totalPages = (long) Math.ceil((double) getAssetRequestDetailsCount(skus, page) /
-                                                     ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
-            final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
-
-            if (noRequests || pageIndexOutOfBounds) {
-                throw new DataNotFoundException(DATA_NOT_FOUND);
-            } else {
-                final int zeroBasedIndexPage = page - 1;
-                final Pageable pageable = PageRequest
-                        .of(zeroBasedIndexPage, ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
-
-                final Page< AssetModel > requestedAssets = assetRepository
-                        .findAllByDeletedIsFalseAndSkuIn(skus, pageable);
-
-                return requestedAssets;
-            }
-        }
-    }
-
-    @Override
-    public List< AssetModel > getAssetRequestDetailsList(
-            final List< String > skus, final int page
-    )
-            throws
-            BadRequestException,
-            DataNotFoundException {
-
-        return getAssetRequestDetailsData(skus, page).getContent();
-    }
-
-    @Override
-    public List< String > getAssetDetailImages(
-            final String sku, final String imageDirectory
-    ) {
-
-        List< String > imageURLs = new ArrayList<>();
-
-        if (imageDirectory.isEmpty()) {
-            imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/image_not_found?extension=jpeg");
-        } else {
-            final File directory = new File(imageDirectory);
-            final File[] images = directory.listFiles();
-
-            if (Files.exists(directory.toPath()) && images != null) {
-                for (int i = 0; i < images.length; i++) {
-                    final String extension = imageHelper.getExtensionFromFileName(images[i].getName());
-
-                    imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/" +
-                                  sku.concat("-").concat(String.valueOf(i + 1)).concat("?extension=")
-                                     .concat(extension));
-                }
-            } else {
-                imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/image_not_found?extension=jpeg");
-            }
-        }
-
-        return imageURLs;
-    }
-
-    @Override
-    public List< List< String > > getAssetRequestDetailsImages(
-            final List< AssetModel > assets
-    ) {
-
-        List< List< String > > imageURLs = new ArrayList<>();
-
-        for (final AssetModel asset : assets) {
-            imageURLs.add(getAssetDetailImages(asset.getSku(), asset.getImageDirectory()));
-        }
-
-        return imageURLs;
-    }
-
-    @Override
-    public long getAssetRequestDetailsCount(
-            final List< String > skus, final int page
-    )
-            throws
-            BadRequestException,
-            DataNotFoundException {
-
-        if (skus == null || skus.isEmpty()) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            for (final String sku : skus) {
-                final boolean requestedAssetExists = assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
-
-                if (!requestedAssetExists) {
-                    throw new DataNotFoundException(DATA_NOT_FOUND);
-                }
-            }
-
-            return assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
-        }
-    }
-
-    /*-------------Save Request Methods-------------*/
-    @Override
-    public void saveRequests(
-            final String username, final List< RequestModel > requests
-    )
-            throws
-            DataNotFoundException,
-            BadRequestException,
-            UnauthorizedOperationException {
-
-        final boolean employeeWithUsernameExists = employeeRepository
-                .existsEmployeeModelByDeletedIsFalseAndUsername(username);
-
-        if (!employeeWithUsernameExists) {
-            throw new DataNotFoundException(DATA_NOT_FOUND);
-        } else {
-            if (requests.isEmpty()) {
-                throw new BadRequestException(INCORRECT_PARAMETER);
-            } else {
-                final boolean createRequestOperation = isNewRequestsValid(requests);
-
-                RequestModel savedRequest;
-                if (createRequestOperation) {
-                    validateRequestedAssets(requests);
-
-                    final boolean employeeWithUsernameIsAdministrator = adminRepository
-                            .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
-                    final boolean employeeWithUsernameDoesNotHaveSupervision = employeeRepository
-                            .existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(username);
-                    final boolean employeeWithUsernameIsTopAdministrator =
-                            employeeWithUsernameIsAdministrator && employeeWithUsernameDoesNotHaveSupervision;
-
-                    if (employeeWithUsernameIsTopAdministrator) {
-                        throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-                    } else {
-                        for (final RequestModel request : requests) {
-                            final boolean enoughStockExists =
-                                    assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()).getStock() -
-                                    request.getQuantity() >= 0;
-
-                            if (!enoughStockExists) {
-                                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-                            } else {
-                                savedRequest = request;
-
-                                savedRequest.setStatus(ServiceConstant.STATUS_REQUESTED);
-                                savedRequest.setTransactionNote(null);
-                                savedRequest.setCreatedBy(username);
-                                savedRequest.setCreatedDate(new Date());
-
-                                savedRequest.setUpdatedBy(username);
-                                savedRequest.setUpdatedDate(new Date());
-
-                                requestRepository.save(savedRequest);
-                            }
-                        }
-                    }
-                } else {
-                    RequestModel request = requests.get(0);
-
-                    savedRequest = requestRepository.findBy_id(request.get_id());
-
-                    if (savedRequest == null) {
-                        throw new DataNotFoundException(DATA_NOT_FOUND);
-                    } else if (request.getStatus() == null) {
-                        throw new BadRequestException(INCORRECT_PARAMETER);
-                    } else {
-                        if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(request.getUsername())) {
-                            throw new DataNotFoundException(DATA_NOT_FOUND);
-                        }
-
-                        final boolean newRequestStatusIsCancelled = request.getStatus()
-                                                                           .equals(ServiceConstant.STATUS_CANCELLED);
-                        final boolean newRequestStatusIsAccepted = request.getStatus()
-                                                                          .equals(ServiceConstant.STATUS_ACCEPTED);
-                        final boolean newRequestStatusIsRejected = request.getStatus()
-                                                                          .equals(ServiceConstant.STATUS_REJECTED);
-                        final boolean newRequestStatusIsDelivered = request.getStatus()
-                                                                           .equals(ServiceConstant.STATUS_DELIVERED);
-
-                        if (newRequestStatusIsCancelled) {
-                            updateStatusToCancelled(savedRequest, username, request.getUsername(),
-                                                    savedRequest.getStatus(), request.getStatus()
-                            );
-                        } else if (newRequestStatusIsAccepted || newRequestStatusIsRejected) {
-                            updateAssetDataAndStatusToAcceptedOrRejected(username, request, savedRequest);
-                        } else {
-                            final boolean expendableAsset = assetRepository
-                                    .findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).isExpendable();
-
-                            if (newRequestStatusIsDelivered) {
-                                if (!expendableAsset) {
-                                    updateStatusToDelivered(username, savedRequest, request.getStatus());
-                                } else {
-                                    updateAssetDataAndStatusToReturned(username, savedRequest, request.getStatus());
-                                }
-                            } else {
-                                if (!expendableAsset) {
-                                    updateAssetDataAndStatusToReturned(username, savedRequest, request.getStatus());
-                                } else {
-                                    throw new BadRequestException(INCORRECT_PARAMETER);
-                                }
-                            }
-                        }
-                    }
-                    savedRequest.setTransactionNote(request.getTransactionNote());
-                    savedRequest.setUpdatedBy(username);
-                    savedRequest.setUpdatedDate(new Date());
-
-                    requestRepository.save(savedRequest);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void validateRequestedAssets(final List< RequestModel > requests)
-            throws
-            DataNotFoundException,
-            UnauthorizedOperationException {
-
-        for (final RequestModel request : requests) {
-            final AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku());
-
-            if (asset == null) {
-                throw new DataNotFoundException(DATA_NOT_FOUND);
-            }
-
-            final boolean requestQuantityLargerThanStock = request.getQuantity() > asset.getStock();
-
-            if (requestQuantityLargerThanStock) {
-                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-            }
-        }
-    }
-
-    @Override
-    public boolean isNewRequestsValid(final List< RequestModel > requests)
-            throws
-            BadRequestException {
-
-        final boolean existingRequestFound = requests.stream().anyMatch(requestModel -> requestModel.get_id() != null);
-        final boolean moreThanOneNewRequest = requests.size() > 1;
-
-        if (moreThanOneNewRequest && existingRequestFound) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            return requests.size() != 1 || !existingRequestFound;
-        }
-    }
-
-    @Override
-    public boolean isUsernameAdminOrSupervisor(final String username, final String requesterUsername) {
-
-        final boolean administratorWithUsernameExists = adminRepository
-                .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
-        final boolean supervisorIsValid = supervisionRepository
-                .existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(username,
-                                                                                                requesterUsername
-                );
-
-        return administratorWithUsernameExists || supervisorIsValid;
-    }
-
-    @Override
-    public void updateStatusToCancelled(
-            RequestModel savedRequest, final String username, final String recordedRequesterUsername,
-            final String currentRequestStatus, final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException {
-
-        if (isRequestCancellationValid(username, recordedRequesterUsername, currentRequestStatus, newRequestStatus)) {
-            savedRequest.setStatus(ServiceConstant.STATUS_CANCELLED);
-        }
-    }
-
-    @Override
-    public void updateAssetDataAndStatusToAcceptedOrRejected(
-            final String username, final RequestModel request, RequestModel savedRequest
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException,
-            DataNotFoundException {
-
-        if (isRequestAcceptanceOrRejectionValid(
-                username, savedRequest.getUsername(), savedRequest.getStatus(), request.getStatus())) {
-            savedRequest.setStatus(request.getStatus());
-
-            final boolean newRequestStatusIsAccepted = request.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
-
-            if (newRequestStatusIsAccepted) {
-                if (assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
-                    savedRequest.getQuantity() < 0) {
-                    throw new DataNotFoundException(DATA_NOT_FOUND);
-                }
-
-                // TODO Check concurrency
-                Query query = new Query();
-                query.addCriteria(Criteria.where(AssetFieldName.SKU).is(savedRequest.getSku()));
-                Update update = new Update().inc(AssetFieldName.STOCK, 0 - savedRequest.getQuantity());
-                AssetModel asset = mongoOperations
-                        .findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), AssetModel.class,
-                                       CollectionName.ASSET_COLLECTION_NAME
-                        );
-
-                assetRepository.save(asset);
-            }
-        }
-    }
-
-    @Override
-    public void updateStatusToDelivered(
-            final String username, RequestModel savedRequest, final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException {
-
-        final String currentRequestStatus = savedRequest.getStatus();
-
-        if (isRequestDeliveryValid(username, currentRequestStatus, newRequestStatus)) {
-            savedRequest.setStatus(ServiceConstant.STATUS_DELIVERED);
-        }
-    }
-
-    @Override
-    public void updateAssetDataAndStatusToReturned(
-            final String username, RequestModel savedRequest, final String newRequestStatus
-    )
-            throws
-            BadRequestException,
-            UnauthorizedOperationException {
-
-        if (isRequestDeliveryOrReturnValid(username, savedRequest, newRequestStatus)) {
-            // TODO Check concurrency
-            Query query = new Query();
-            query.addCriteria(Criteria.where(AssetFieldName.SKU).is(savedRequest.getSku()));
-            Update update = new Update().inc(AssetFieldName.STOCK, savedRequest.getQuantity());
-            AssetModel asset = mongoOperations
-                    .findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), AssetModel.class,
-                                   CollectionName.ASSET_COLLECTION_NAME
-                    );
-
-            assetRepository.save(asset);
-
-            savedRequest.setStatus(ServiceConstant.STATUS_RETURNED);
-        }
-    }
-
-    @Override
-    public boolean isRequestCancellationValid(
-            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
-            final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException {
-
-        final boolean statusIsRequested = currentRequestStatus.equals(ServiceConstant.STATUS_REQUESTED);
-        final boolean newRequestStatusIsCancelled = newRequestStatus.equals(ServiceConstant.STATUS_CANCELLED);
-        final boolean requestedToCancelled = statusIsRequested && newRequestStatusIsCancelled;
-
-        if (!requestedToCancelled) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            final boolean usernameIsRequester = recordedRequesterUsername.equals(username);
-
-            if (!usernameIsRequester) {
-                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-            } else {
-                return true;
-            }
-        }
-    }
-
-    @Override
-    public boolean isRequestAcceptanceOrRejectionValid(
-            final String username, final String recordedRequesterUsername, final String currentRequestStatus,
-            final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException {
-
-        final boolean usernameIsAdminOrSupervisor = isUsernameAdminOrSupervisor(username, recordedRequesterUsername);
-
-        final boolean statusIsRequested = currentRequestStatus.equals(ServiceConstant.STATUS_REQUESTED);
-        final boolean newRequestStatusIsAccepted = newRequestStatus.equals(ServiceConstant.STATUS_ACCEPTED);
-        final boolean newRequestStatusIsRejected = newRequestStatus.equals(ServiceConstant.STATUS_REJECTED);
-        final boolean requestedToAccepted = statusIsRequested && newRequestStatusIsAccepted;
-        final boolean requestedToRejected = statusIsRequested && newRequestStatusIsRejected;
-        final boolean requestedToAcceptedOrRejected = requestedToAccepted || requestedToRejected;
-
-        if (!requestedToAcceptedOrRejected) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            if (!usernameIsAdminOrSupervisor) {
-                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-            } else {
-                return true;
-            }
-        }
-    }
-
-    @Override
-    public boolean isRequestDeliveryValid(
-            final String username, final String currentRequestStatus, final String newRequestStatus
-    )
-            throws
-            UnauthorizedOperationException,
-            BadRequestException {
-
-        final boolean statusIsAccepted = currentRequestStatus.equals(ServiceConstant.STATUS_ACCEPTED);
-        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
-        final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
-
-        return isAssetDeliveryOrReturnValid(username, acceptedToDelivered);
-    }
-
-    @Override
-    public boolean isRequestDeliveryOrReturnValid(
-            final String username, final RequestModel savedRequest, final String newRequestStatus
-    )
-            throws
-            BadRequestException,
-            UnauthorizedOperationException {
-
-        final boolean statusIsAccepted = savedRequest.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
-        final boolean expendableAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
-                                                       .isExpendable();
-        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
-        final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
-        final boolean expendableAssetDelivery = expendableAsset && acceptedToDelivered;
-
-        final boolean statusIsDelivered = savedRequest.getStatus().equals(ServiceConstant.STATUS_DELIVERED);
-        final boolean newRequestStatusIsReturned = newRequestStatus.equals(ServiceConstant.STATUS_RETURNED);
-        final boolean deliveredToReturned = statusIsDelivered && newRequestStatusIsReturned;
-        final boolean nonExpendableAssetReturn = !expendableAsset && deliveredToReturned;
-
-        final boolean acceptedOrDeliveredToReturned = expendableAssetDelivery || nonExpendableAssetReturn;
-
-        return isAssetDeliveryOrReturnValid(username, acceptedOrDeliveredToReturned);
-    }
-
-    @Override
-    public boolean isAssetDeliveryOrReturnValid(final String username, final boolean acceptedOrDeliveredToReturned)
-            throws
-            BadRequestException,
-            UnauthorizedOperationException {
-
-        if (!acceptedOrDeliveredToReturned) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            final boolean administratorWithUsernameExists = adminRepository
-                    .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
-
-            if (!administratorWithUsernameExists) {
-                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-            } else {
-                return true;
-            }
-        }
     }
 
 }

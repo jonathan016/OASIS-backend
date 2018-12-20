@@ -16,22 +16,4 @@ public interface LoginServiceApi {
             BadRequestException,
             UserNotAuthenticatedException;
 
-    String getUsernameIfEmployeeWithCredentialExists(
-            final String username, final String password
-    )
-            throws
-            DataNotFoundException,
-            UserNotAuthenticatedException,
-            BadRequestException;
-
-    String getFirstNameFromUsername(
-            final String username
-    );
-
-    String getRoleFromUsername(
-            final String username
-    )
-            throws
-            DataNotFoundException;
-
 }
