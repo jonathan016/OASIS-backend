@@ -1,21 +1,26 @@
 package com.oasis.configuration;
 
 import com.oasis.service.ServiceConstant;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
 @EnableWebMvc
+@Configuration
+@PropertySource("classpath:environment.properties")
 public class ResourceHandlerConfiguration
         implements WebMvcConfigurer {
+
+    @Value("${resource.path.patterns}")
+    private String pathPatterns;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-        registry.addResourceHandler("/resources/**")
-                .addResourceLocations("file:" + ServiceConstant.ASSET_IMAGE_DIRECTORY);
+        registry.addResourceHandler(pathPatterns).addResourceLocations("file:" + ServiceConstant.ASSET_IMAGE_DIRECTORY);
     }
 
 }

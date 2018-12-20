@@ -1,16 +1,28 @@
 package com.oasis.configuration;
 
 import com.mongodb.MongoClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-@Configuration
 @EnableWebMvc
+@Configuration
+@PropertySource("classpath:environment.properties")
 public class DatabaseConfiguration {
+
+    @Value("${mongodb.host}")
+    private String host;
+
+    @Value("${mongodb.port}")
+    private int port;
+
+    @Value("${mongodb.database.name}")
+    private String databaseName;
 
     @Bean
     public MongoTemplate mongoTemplate() {
@@ -21,8 +33,8 @@ public class DatabaseConfiguration {
     @Bean
     public MongoDbFactory mongoDbFactory() {
 
-        MongoClient mongoClient = new MongoClient("localhost", 27017);
-        return new SimpleMongoDbFactory(mongoClient, "oasis");
+        MongoClient mongoClient = new MongoClient(host, port);
+        return new SimpleMongoDbFactory(mongoClient, databaseName);
     }
 
 }
