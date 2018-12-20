@@ -10,9 +10,11 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.model.fieldname.AssetFieldName;
-import com.oasis.repository.*;
+import com.oasis.repository.RequestRepository;
 import com.oasis.service.ImageHelper;
 import com.oasis.service.ServiceConstant;
+import com.oasis.service.api.AssetsServiceApi;
+import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.service.api.RequestsServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
@@ -42,17 +44,13 @@ public class RequestsServiceImpl
     @Autowired
     private ImageHelper imageHelper;
     @Autowired
-    private AdminRepository adminRepository;
-    @Autowired
-    private AssetRepository assetRepository;
-    @Autowired
     private MongoOperations mongoOperations;
+    @Autowired
+    private AssetsServiceApi assetsServiceApi;
     @Autowired
     private RequestRepository requestRepository;
     @Autowired
-    private EmployeeRepository employeeRepository;
-    @Autowired
-    private SupervisionRepository supervisionRepository;
+    private EmployeesServiceApi employeesServiceApi;
 
     /*-------------Requests List Methods-------------*/
     @Override
@@ -123,7 +121,7 @@ public class RequestsServiceImpl
                     } else {
                         long requestCount = 0;
 
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
 
                         for (final AssetModel asset : assets) {
@@ -139,7 +137,7 @@ public class RequestsServiceImpl
                     } else {
                         long requestCount = 0;
 
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
 
                         for (final AssetModel asset : assets) {
@@ -173,14 +171,14 @@ public class RequestsServiceImpl
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
             for (final String sku : skus) {
-                final boolean requestedAssetExists = assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
+                final boolean requestedAssetExists = assetsServiceApi.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
 
                 if (!requestedAssetExists) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 }
             }
 
-            final long assetRequestDetails = assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
+            final long assetRequestDetails = assetsServiceApi.countAllByDeletedIsFalseAndSkuIn(skus);
             final boolean noRequests = (assetRequestDetails == 0);
             final long totalPages = (long) Math.ceil((double) getAssetRequestDetailsCount(skus, page) /
                                                      ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
@@ -193,7 +191,7 @@ public class RequestsServiceImpl
                 final Pageable pageable = PageRequest
                         .of(zeroBasedIndexPage, ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
 
-                final Page< AssetModel > requestedAssets = assetRepository
+                final Page< AssetModel > requestedAssets = assetsServiceApi
                         .findAllByDeletedIsFalseAndSkuIn(skus, pageable);
 
                 return requestedAssets;
@@ -266,14 +264,14 @@ public class RequestsServiceImpl
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
             for (final String sku : skus) {
-                final boolean requestedAssetExists = assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
+                final boolean requestedAssetExists = assetsServiceApi.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
 
                 if (!requestedAssetExists) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 }
             }
 
-            return assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
+            return assetsServiceApi.countAllByDeletedIsFalseAndSkuIn(skus);
         }
     }
 
@@ -287,7 +285,7 @@ public class RequestsServiceImpl
             BadRequestException,
             UnauthorizedOperationException {
 
-        final boolean employeeWithUsernameExists = employeeRepository
+        final boolean employeeWithUsernameExists = employeesServiceApi
                 .existsEmployeeModelByDeletedIsFalseAndUsername(username);
 
         if (!employeeWithUsernameExists) {
@@ -302,9 +300,9 @@ public class RequestsServiceImpl
                 if (createRequestOperation) {
                     validateRequestedAssets(requests);
 
-                    final boolean employeeWithUsernameIsAdministrator = adminRepository
+                    final boolean employeeWithUsernameIsAdministrator = employeesServiceApi
                             .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
-                    final boolean employeeWithUsernameDoesNotHaveSupervision = employeeRepository
+                    final boolean employeeWithUsernameDoesNotHaveSupervision = employeesServiceApi
                             .existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(username);
                     final boolean employeeWithUsernameIsTopAdministrator =
                             employeeWithUsernameIsAdministrator && employeeWithUsernameDoesNotHaveSupervision;
@@ -314,7 +312,7 @@ public class RequestsServiceImpl
                     } else {
                         for (final RequestModel request : requests) {
                             final boolean enoughStockExists =
-                                    assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()).getStock() -
+                                    assetsServiceApi.findByDeletedIsFalseAndSkuEquals(request.getSku()).getStock() -
                                     request.getQuantity() >= 0;
 
                             if (!enoughStockExists) {
@@ -344,7 +342,8 @@ public class RequestsServiceImpl
                     } else if (request.getStatus() == null) {
                         throw new BadRequestException(INCORRECT_PARAMETER);
                     } else {
-                        if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(request.getUsername())) {
+                        if (!employeesServiceApi
+                                .existsEmployeeModelByDeletedIsFalseAndUsername(request.getUsername())) {
                             throw new DataNotFoundException(DATA_NOT_FOUND);
                         }
 
@@ -364,7 +363,7 @@ public class RequestsServiceImpl
                         } else if (newRequestStatusIsAccepted || newRequestStatusIsRejected) {
                             updateAssetDataAndStatusToAcceptedOrRejected(username, request, savedRequest);
                         } else {
-                            final boolean expendableAsset = assetRepository
+                            final boolean expendableAsset = assetsServiceApi
                                     .findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).isExpendable();
 
                             if (newRequestStatusIsDelivered) {
@@ -412,7 +411,7 @@ public class RequestsServiceImpl
             UnauthorizedOperationException {
 
         for (final RequestModel request : requests) {
-            final AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku());
+            final AssetModel asset = assetsServiceApi.findByDeletedIsFalseAndSkuEquals(request.getSku());
 
             if (asset == null) {
                 throw new DataNotFoundException(DATA_NOT_FOUND);
@@ -454,7 +453,7 @@ public class RequestsServiceImpl
             final boolean newRequestStatusIsAccepted = request.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
 
             if (newRequestStatusIsAccepted) {
-                if (assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
+                if (assetsServiceApi.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
                     savedRequest.getQuantity() < 0) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 }
@@ -468,7 +467,7 @@ public class RequestsServiceImpl
                                        CollectionName.ASSET_COLLECTION_NAME
                         );
 
-                assetRepository.save(asset);
+                assetsServiceApi.save(asset);
             }
         }
     }
@@ -504,7 +503,7 @@ public class RequestsServiceImpl
                                    CollectionName.ASSET_COLLECTION_NAME
                     );
 
-            assetRepository.save(asset);
+            assetsServiceApi.save(asset);
 
             savedRequest.setStatus(ServiceConstant.STATUS_RETURNED);
         }
@@ -585,8 +584,8 @@ public class RequestsServiceImpl
             UnauthorizedOperationException {
 
         final boolean statusIsAccepted = savedRequest.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
-        final boolean expendableAsset = assetRepository.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
-                                                       .isExpendable();
+        final boolean expendableAsset = assetsServiceApi.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
+                                                        .isExpendable();
         final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
         final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
         final boolean expendableAssetDelivery = expendableAsset && acceptedToDelivered;
@@ -603,9 +602,9 @@ public class RequestsServiceImpl
 
     private boolean isUsernameAdminOrSupervisor(final String username, final String requesterUsername) {
 
-        final boolean administratorWithUsernameExists = adminRepository
+        final boolean administratorWithUsernameExists = employeesServiceApi
                 .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
-        final boolean supervisorIsValid = supervisionRepository
+        final boolean supervisorIsValid = employeesServiceApi
                 .existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(username,
                                                                                                 requesterUsername
                 );
@@ -621,7 +620,7 @@ public class RequestsServiceImpl
         if (!acceptedOrDeliveredToReturned) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            final boolean administratorWithUsernameExists = adminRepository
+            final boolean administratorWithUsernameExists = employeesServiceApi
                     .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
 
             if (!administratorWithUsernameExists) {
@@ -632,6 +631,24 @@ public class RequestsServiceImpl
         }
     }
 
+    @Override
+    public List< RequestModel > findAllBySku(final String sku) {
+
+        return requestRepository.findAllBySku(sku);
+    }
+
+    @Override
+    public List< RequestModel > findAllByUsernameAndStatus(final String username, final String status) {
+
+        return requestRepository.findAllByUsernameAndStatus(username, status);
+    }
+
+    @Override
+    public void save(final RequestModel request) {
+
+        requestRepository.save(request);
+    }
+
     private List< EmployeeModel > getEmployeesDataFromRequest(
             final List< RequestModel > requests
     ) {
@@ -639,7 +656,7 @@ public class RequestsServiceImpl
         List< EmployeeModel > employees = new ArrayList<>();
 
         for (final RequestModel request : requests) {
-            employees.add(employeeRepository.findByDeletedIsFalseAndUsername(request.getUsername()));
+            employees.add(employeesServiceApi.findByDeletedIsFalseAndUsername(request.getUsername()));
             employees.get(employees.size() - 1).setPhoto(
                     getEmployeeDetailPhoto(employees.get(employees.size() - 1).getUsername(),
                                            employees.get(employees.size() - 1).getPhoto()
@@ -658,7 +675,7 @@ public class RequestsServiceImpl
         for (final RequestModel request : requests) {
             final String modifierUsername = request.getUpdatedBy();
 
-            requestModifiers.add(employeeRepository.findByDeletedIsFalseAndUsername(modifierUsername));
+            requestModifiers.add(employeesServiceApi.findByDeletedIsFalseAndUsername(modifierUsername));
             requestModifiers.get(requestModifiers.size() - 1).setPhoto(
                     getEmployeeDetailPhoto(requestModifiers.get(requestModifiers.size() - 1).getUsername(),
                                            requestModifiers.get(requestModifiers.size() - 1).getPhoto()
@@ -675,7 +692,7 @@ public class RequestsServiceImpl
         List< AssetModel > assets = new ArrayList<>();
 
         for (final RequestModel request : requests) {
-            assets.add(assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()));
+            assets.add(assetsServiceApi.findByDeletedIsFalseAndSkuEquals(request.getSku()));
             assets.get(assets.size() - 1).setStock(request.getQuantity());
         }
 
@@ -761,7 +778,7 @@ public class RequestsServiceImpl
                             }
                         }
                     } else {
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
                         for (final AssetModel asset : assets) {
                             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
@@ -852,7 +869,7 @@ public class RequestsServiceImpl
                                 }
                             }
                         } else {
-                            List< AssetModel > assets = assetRepository
+                            List< AssetModel > assets = assetsServiceApi
                                     .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
                             for (final AssetModel asset : assets) {
                                 if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
@@ -907,7 +924,7 @@ public class RequestsServiceImpl
         } else {
             sort = validateSortInformationGiven(sort);
 
-            List< SupervisionModel > supervisions = supervisionRepository
+            List< SupervisionModel > supervisions = employeesServiceApi
                     .findAllByDeletedIsFalseAndSupervisorUsername(username);
 
             List< String > supervisedEmployeesUsernames = new ArrayList<>();
@@ -919,9 +936,9 @@ public class RequestsServiceImpl
             List< RequestModel > requests = new ArrayList<>();
 
             for (final String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
-                boolean administratorWithUsernameExists = adminRepository
+                boolean administratorWithUsernameExists = employeesServiceApi
                         .existsAdminModelByDeletedIsFalseAndUsernameEquals(supervisedEmployeeUsername);
-                boolean supervisorIsValid = supervisionRepository
+                boolean supervisorIsValid = employeesServiceApi
                         .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(supervisedEmployeeUsername);
                 boolean usernameIsAdminOrSupervisor = administratorWithUsernameExists || supervisorIsValid;
 
@@ -956,7 +973,7 @@ public class RequestsServiceImpl
                             }
                         }
                     } else {
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
 
                         for (final AssetModel asset : assets) {
@@ -1003,7 +1020,7 @@ public class RequestsServiceImpl
                             }
                         }
                     } else {
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndNameContainsIgnoreCase(query);
 
                         for (final AssetModel asset : assets) {

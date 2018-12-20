@@ -8,10 +8,12 @@ import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
-import com.oasis.repository.*;
+import com.oasis.repository.RequestRepository;
 import com.oasis.service.ImageHelper;
 import com.oasis.service.ServiceConstant;
+import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.service.api.DashboardServiceApi;
+import com.oasis.service.api.EmployeesServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.PageRequest;
@@ -36,17 +38,13 @@ public class DashboardServiceImpl
     @Autowired
     private ImageHelper imageHelper;
     @Autowired
-    private AdminRepository adminRepository;
+    private RoleDeterminer roleDeterminer;
     @Autowired
-    private AssetRepository assetRepository;
+    private AssetsServiceApi assetsServiceApi;
     @Autowired
-    private EmployeeRepository employeeRepository;
+    private EmployeesServiceApi employeesServiceApi;
     @Autowired
     private RequestRepository requestRepository;
-    @Autowired
-    private SupervisionRepository supervisionRepository;
-    @Autowired
-    private RoleDeterminer roleDeterminer;
 
     /*--------------Status Section--------------*/
     @Override
@@ -60,7 +58,7 @@ public class DashboardServiceImpl
         } else {
             long requestedRequestsCount = 0;
             long acceptedRequestsCount = 0;
-            final long availableAssetCount = assetRepository
+            final long availableAssetCount = assetsServiceApi
                     .countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
 
             switch (roleDeterminer.determineRole(username)) {
@@ -183,7 +181,7 @@ public class DashboardServiceImpl
                         return requestRepository.countAllByUsername(username);
                     } else {
                         long requestCount = 0;
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
                                         query, query, query, query, query);
 
@@ -200,7 +198,7 @@ public class DashboardServiceImpl
                     } else {
 
                         long requestCount = 0;
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
                                         query, query, query, query, query);
 
@@ -285,7 +283,7 @@ public class DashboardServiceImpl
                             }
                         }
                     } else {
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
                                         query, query, query, query, query);
                         for (final AssetModel asset : assets) {
@@ -372,7 +370,7 @@ public class DashboardServiceImpl
                                 }
                             }
                         } else {
-                            List< AssetModel > assets = assetRepository
+                            List< AssetModel > assets = assetsServiceApi
                                     .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
                                             query, query, query, query, query);
                             for (final AssetModel asset : assets) {
@@ -430,7 +428,7 @@ public class DashboardServiceImpl
         } else {
             sort = validateSortInformationGiven(sort);
 
-            List< SupervisionModel > supervisions = supervisionRepository
+            List< SupervisionModel > supervisions = employeesServiceApi
                     .findAllByDeletedIsFalseAndSupervisorUsername(username);
 
             List< String > supervisedEmployeesUsernames = new ArrayList<>();
@@ -442,9 +440,9 @@ public class DashboardServiceImpl
             List< RequestModel > requests = new ArrayList<>();
 
             for (final String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
-                boolean administratorWithUsernameExists = adminRepository
+                boolean administratorWithUsernameExists = employeesServiceApi
                         .existsAdminModelByDeletedIsFalseAndUsernameEquals(supervisedEmployeeUsername);
-                boolean supervisorIsValid = supervisionRepository
+                boolean supervisorIsValid = employeesServiceApi
                         .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(supervisedEmployeeUsername);
                 boolean usernameIsAdminOrSupervisor = administratorWithUsernameExists || supervisorIsValid;
 
@@ -479,7 +477,7 @@ public class DashboardServiceImpl
                             }
                         }
                     } else {
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
                                         query, query, query, query, query);
                         for (final AssetModel asset : assets) {
@@ -534,7 +532,7 @@ public class DashboardServiceImpl
                             }
                         }
                     } else {
-                        List< AssetModel > assets = assetRepository
+                        List< AssetModel > assets = assetsServiceApi
                                 .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
                                         query, query, query, query, query);
                         for (final AssetModel asset : assets) {
@@ -629,7 +627,7 @@ public class DashboardServiceImpl
         List< EmployeeModel > employees = new ArrayList<>();
 
         for (final RequestModel request : requests) {
-            employees.add(employeeRepository.findByDeletedIsFalseAndUsername(request.getUsername()));
+            employees.add(employeesServiceApi.findByDeletedIsFalseAndUsername(request.getUsername()));
             employees.get(employees.size() - 1).setPhoto(
                     getEmployeeDetailPhoto(employees.get(employees.size() - 1).getUsername(),
                                            employees.get(employees.size() - 1).getPhoto()
@@ -648,7 +646,7 @@ public class DashboardServiceImpl
         for (final RequestModel request : requests) {
             final String modifierUsername = request.getUpdatedBy();
 
-            requestModifiers.add(employeeRepository.findByDeletedIsFalseAndUsername(modifierUsername));
+            requestModifiers.add(employeesServiceApi.findByDeletedIsFalseAndUsername(modifierUsername));
             requestModifiers.get(requestModifiers.size() - 1).setPhoto(
                     getEmployeeDetailPhoto(requestModifiers.get(requestModifiers.size() - 1).getUsername(),
                                            requestModifiers.get(requestModifiers.size() - 1).getPhoto()
@@ -665,7 +663,7 @@ public class DashboardServiceImpl
         List< AssetModel > assets = new ArrayList<>();
 
         for (final RequestModel request : requests) {
-            assets.add(assetRepository.findByDeletedIsFalseAndSkuEquals(request.getSku()));
+            assets.add(assetsServiceApi.findByDeletedIsFalseAndSkuEquals(request.getSku()));
             assets.get(assets.size() - 1).setStock(request.getQuantity());
         }
 

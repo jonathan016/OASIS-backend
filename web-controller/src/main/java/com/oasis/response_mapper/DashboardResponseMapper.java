@@ -80,7 +80,7 @@ public class DashboardResponseMapper {
         }
         successResponse.setValue(new RequestOthersListResponse(mappedRequests));
 
-        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.REQUESTS_LIST_PAGE_SIZE, (int) Math
+        successResponse.setPaging(new Paging(pageNumber, requests.size(), (int) Math
                 .ceil((double) totalRecords / ServiceConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
 
         return successResponse;
@@ -135,7 +135,7 @@ public class DashboardResponseMapper {
         }
         successResponse.setValue(new RequestMyListResponse(mappedRequests));
 
-        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.REQUESTS_LIST_PAGE_SIZE, (int) Math
+        successResponse.setPaging(new Paging(pageNumber, requests.size(), (int) Math
                 .ceil((double) totalRecords / ServiceConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
 
         return successResponse;

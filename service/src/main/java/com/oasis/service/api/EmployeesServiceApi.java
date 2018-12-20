@@ -7,7 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public interface EmployeesServiceApi {
 
@@ -92,5 +91,21 @@ public interface EmployeesServiceApi {
             UnauthorizedOperationException,
             DataNotFoundException,
             BadRequestException;
+
+    EmployeeModel findByDeletedIsFalseAndUsername(final String username);
+
+    boolean existsAdminModelByDeletedIsFalseAndUsernameEquals(final String username);
+
+    boolean existsEmployeeModelByDeletedIsFalseAndUsername(final String username);
+
+    boolean existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(final String username);
+
+    boolean existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(
+            final String supervisorUsername, final String employeeUsername
+    );
+
+    List< SupervisionModel > findAllByDeletedIsFalseAndSupervisorUsername(final String supervisorUsername);
+
+    boolean existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(final String supervisorUsername);
 
 }

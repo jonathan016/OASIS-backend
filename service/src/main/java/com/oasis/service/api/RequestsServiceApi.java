@@ -4,7 +4,6 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
-import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import org.springframework.data.domain.Page;
 
@@ -67,5 +66,11 @@ public interface RequestsServiceApi {
             DataNotFoundException,
             BadRequestException,
             UnauthorizedOperationException;
+
+    List< RequestModel > findAllBySku(final String sku);
+
+    List< RequestModel > findAllByUsernameAndStatus(final String username, final String status);
+
+    void save(final RequestModel request);
 
 }

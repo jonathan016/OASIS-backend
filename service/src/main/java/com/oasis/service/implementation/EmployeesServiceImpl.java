@@ -8,11 +8,11 @@ import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
-import com.oasis.repository.RequestRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.ImageHelper;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
+import com.oasis.service.api.RequestsServiceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,9 +49,9 @@ public class EmployeesServiceImpl
     @Autowired
     private AdminRepository adminRepository;
     @Autowired
-    private RequestRepository requestRepository;
-    @Autowired
     private EmployeeRepository employeeRepository;
+    @Autowired
+    private RequestsServiceApi requestsServiceApi;
     @Autowired
     private SupervisionRepository supervisionRepository;
 
@@ -685,7 +685,7 @@ public class EmployeesServiceImpl
         final boolean selfDeletionAttempt = employeeUsername.equals(adminUsername);
         final boolean employeeWithEmployeeUsernameStillSupervises = supervisionRepository
                 .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername);
-        final boolean allDeliveredAssetsHaveBeenReturned = requestRepository
+        final boolean allDeliveredAssetsHaveBeenReturned = requestsServiceApi
                 .findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_DELIVERED).isEmpty();
 
         if (!validAdministrator || selfDeletionAttempt || employeeWithEmployeeUsernameStillSupervises ||
@@ -706,9 +706,9 @@ public class EmployeesServiceImpl
 
         List< RequestModel > requests = new ArrayList<>();
 
-        final List< RequestModel > acceptedRequests = requestRepository
+        final List< RequestModel > acceptedRequests = requestsServiceApi
                 .findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_ACCEPTED);
-        final List< RequestModel > requestedRequests = requestRepository
+        final List< RequestModel > requestedRequests = requestsServiceApi
                 .findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_REQUESTED);
 
         requests.addAll(acceptedRequests);
@@ -722,7 +722,7 @@ public class EmployeesServiceImpl
                 request.setUpdatedDate(new Date());
                 request.setUpdatedBy(adminUsername);
 
-                requestRepository.save(request);
+                requestsServiceApi.save(request);
             }
         }
 
@@ -823,6 +823,53 @@ public class EmployeesServiceImpl
 
             supervisionRepository.save(supervision);
         }
+    }
+
+    @Override
+    public EmployeeModel findByDeletedIsFalseAndUsername(final String username) {
+
+        return employeeRepository.findByDeletedIsFalseAndUsername(username);
+    }
+
+    @Override
+    public boolean existsAdminModelByDeletedIsFalseAndUsernameEquals(final String username) {
+
+        return adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
+    }
+
+    @Override
+    public boolean existsEmployeeModelByDeletedIsFalseAndUsername(final String username) {
+
+        return employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(username);
+    }
+
+    @Override
+    public boolean existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(final String username) {
+
+        return employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(username);
+    }
+
+    @Override
+    public boolean existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(
+            final String supervisorUsername, final String employeeUsername
+    ) {
+
+        return supervisionRepository
+                .existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(supervisorUsername,
+                                                                                                employeeUsername
+                );
+    }
+
+    @Override
+    public List< SupervisionModel > findAllByDeletedIsFalseAndSupervisorUsername(final String supervisorUsername) {
+
+        return supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(supervisorUsername);
+    }
+
+    @Override
+    public boolean existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(final String supervisorUsername) {
+
+        return supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(supervisorUsername);
     }
 
     private List< EmployeeModel > getSupervisorsList(

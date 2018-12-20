@@ -15,17 +15,18 @@ import com.oasis.model.entity.LastUniqueIdentifierModel;
 import com.oasis.model.fieldname.AssetFieldName;
 import com.oasis.repository.AssetRepository;
 import com.oasis.repository.LastUniqueIdentifierRepository;
-import com.oasis.repository.RequestRepository;
 import com.oasis.service.DocumentHeader;
 import com.oasis.service.ImageHelper;
 import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
+import com.oasis.service.api.RequestsServiceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -66,7 +67,7 @@ public class AssetsServiceImpl
     @Autowired
     private MongoOperations mongoOperations;
     @Autowired
-    private RequestRepository requestRepository;
+    private RequestsServiceApi requestsServiceApi;
     @Autowired
     private LastUniqueIdentifierRepository lastUniqueIdentifierRepository;
 
@@ -555,7 +556,7 @@ public class AssetsServiceImpl
                 throw new DataNotFoundException(DATA_NOT_FOUND);
             }
 
-            if (!requestRepository.findAllBySku(sku).isEmpty()) {
+            if (!requestsServiceApi.findAllBySku(sku).isEmpty()) {
                 throw new DataNotFoundException(DATA_NOT_FOUND);
             }
 
@@ -567,6 +568,58 @@ public class AssetsServiceImpl
         }
 
         assetRepository.saveAll(selectedAssets);
+    }
+
+    @Override
+    public List< AssetModel > findAllByDeletedIsFalseAndNameContainsIgnoreCase(final String name) {
+
+        return assetRepository.findAllByDeletedIsFalseAndNameContainsIgnoreCase(name);
+    }
+
+    @Override
+    public boolean existsAssetModelByDeletedIsFalseAndSkuEquals(final String sku) {
+
+        return assetRepository.existsAssetModelByDeletedIsFalseAndSkuEquals(sku);
+    }
+
+    @Override
+    public long countAllByDeletedIsFalseAndSkuIn(final List< String > skus) {
+
+        return assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
+    }
+
+    @Override
+    public Page< AssetModel > findAllByDeletedIsFalseAndSkuIn(final List< String > skus, final Pageable pageable) {
+
+        return assetRepository.findAllByDeletedIsFalseAndSkuIn(skus, pageable);
+    }
+
+    @Override
+    public AssetModel findByDeletedIsFalseAndSkuEquals(final String sku) {
+
+        return assetRepository.findByDeletedIsFalseAndSkuEquals(sku);
+    }
+
+    @Override
+    public void save(final AssetModel asset) {
+
+        assetRepository.save(asset);
+    }
+
+    @Override
+    public List< AssetModel > findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+            final String sku, final String name, final String brand, final String type, final String location
+    ) {
+
+        return assetRepository
+                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+                        sku, name, brand, type, location);
+    }
+
+    @Override
+    public long countAllByDeletedIsFalseAndStockGreaterThan(final long stock) {
+
+        return assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(stock);
     }
 
     private String generateSkuCode(

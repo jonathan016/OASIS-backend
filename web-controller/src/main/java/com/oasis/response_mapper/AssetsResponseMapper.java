@@ -42,7 +42,7 @@ public class AssetsResponseMapper {
         successResponse.setValue(new AssetListResponse(mappedAssets));
 
         final int totalPage = (int) Math.ceil((double) totalRecords / ServiceConstant.ASSETS_LIST_PAGE_SIZE);
-        successResponse.setPaging(new Paging(pageNumber, ServiceConstant.ASSETS_LIST_PAGE_SIZE, totalPage, totalRecords));
+        successResponse.setPaging(new Paging(pageNumber, assets.size(), totalPage, totalRecords));
 
         return successResponse;
     }

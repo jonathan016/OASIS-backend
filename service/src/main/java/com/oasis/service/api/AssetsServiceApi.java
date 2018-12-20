@@ -1,16 +1,15 @@
 package com.oasis.service.api;
 
-import com.itextpdf.text.Font;
-import com.itextpdf.text.pdf.PdfPTable;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Set;
 
 public interface AssetsServiceApi {
 
@@ -62,5 +61,23 @@ public interface AssetsServiceApi {
             UnauthorizedOperationException,
             BadRequestException,
             DataNotFoundException;
+
+    List< AssetModel > findAllByDeletedIsFalseAndNameContainsIgnoreCase(final String name);
+
+    boolean existsAssetModelByDeletedIsFalseAndSkuEquals(final String sku);
+
+    long countAllByDeletedIsFalseAndSkuIn(final List< String > skus);
+
+    Page< AssetModel > findAllByDeletedIsFalseAndSkuIn(final List< String > skus, final Pageable pageable);
+
+    AssetModel findByDeletedIsFalseAndSkuEquals(final String sku);
+
+    void save(final AssetModel asset);
+
+    List< AssetModel > findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
+            final String sku, final String name, final String brand, final String type, final String location
+    );
+
+    long countAllByDeletedIsFalseAndStockGreaterThan(final long stock);
 
 }

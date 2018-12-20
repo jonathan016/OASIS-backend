@@ -5,7 +5,7 @@ import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.repository.EmployeeRepository;
+import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.service.api.LoginServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,7 +26,7 @@ public class LoginServiceImpl
     @Autowired
     private RoleDeterminer roleDeterminer;
     @Autowired
-    private EmployeeRepository employeeRepository;
+    private EmployeesServiceApi employeesServiceApi;
 
     @Override
     public Map< String, String > getLoginData(
@@ -67,10 +67,10 @@ public class LoginServiceImpl
             final EmployeeModel employee;
 
             if (validUsernameWithSuffix) {
-                employee = employeeRepository
+                employee = employeesServiceApi
                         .findByDeletedIsFalseAndUsername(username.toLowerCase().substring(0, username.indexOf('@')));
             } else {
-                employee = employeeRepository.findByDeletedIsFalseAndUsername(username.toLowerCase());
+                employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username.toLowerCase());
             }
 
             if (employee == null) {
@@ -93,7 +93,7 @@ public class LoginServiceImpl
             final String username
     ) {
 
-        final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
+        final EmployeeModel employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username);
 
         final String name = employee.getName();
         final String firstName;

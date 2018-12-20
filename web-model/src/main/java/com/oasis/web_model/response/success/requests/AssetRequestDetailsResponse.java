@@ -18,6 +18,7 @@ public class AssetRequestDetailsResponse {
     @AllArgsConstructor
     public static class AssetRequestDetailsObject {
 
+        private String sku;
         private String name;
         private long quantity;
         private List<String> images;
