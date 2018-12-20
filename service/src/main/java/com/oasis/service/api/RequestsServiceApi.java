@@ -6,6 +6,7 @@ import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.RequestModel;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
@@ -72,5 +73,21 @@ public interface RequestsServiceApi {
     List< RequestModel > findAllByUsernameAndStatus(final String username, final String status);
 
     void save(final RequestModel request);
+
+    long countAllByUsername(final String username);
+
+    long countAllByUsernameAndStatus(final String username, final String status);
+
+    List< RequestModel > findAllByUsernameOrderByUpdatedDateDesc(final String username);
+
+    List< RequestModel > findAllByUsernameAndStatusOrderByUpdatedDateDesc(final String username, final String status);
+
+    Page< RequestModel > findAllByUsernameOrderByUpdatedDateDesc(
+            final String username, final Pageable pageable
+    );
+
+    Page<RequestModel> findAllByUsernameAndStatusOrderByUpdatedDateDesc(
+            final String username, final String status, final Pageable pageable
+    );
 
 }

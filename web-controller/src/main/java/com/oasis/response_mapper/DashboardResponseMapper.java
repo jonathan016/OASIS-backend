@@ -15,7 +15,6 @@ import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +80,7 @@ public class DashboardResponseMapper {
         successResponse.setValue(new RequestOthersListResponse(mappedRequests));
 
         successResponse.setPaging(new Paging(pageNumber, requests.size(), (int) Math
-                .ceil((double) totalRecords / ServiceConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
+                .ceil((double) totalRecords / ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }
@@ -136,7 +135,7 @@ public class DashboardResponseMapper {
         successResponse.setValue(new RequestMyListResponse(mappedRequests));
 
         successResponse.setPaging(new Paging(pageNumber, requests.size(), (int) Math
-                .ceil((double) totalRecords / ServiceConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
+                .ceil((double) totalRecords / ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }

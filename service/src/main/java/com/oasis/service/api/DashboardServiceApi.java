@@ -23,22 +23,21 @@ public interface DashboardServiceApi {
             DataNotFoundException;
 
     Map< String, List< ? > > getMyRequestsListData(
-            final String username, final String query, final String status, final int page, final String sort
+            final String username, final String status, final int page
     )
             throws
             BadRequestException,
             DataNotFoundException;
 
     Map< String, List< ? > > getOthersRequestListData(
-            final String username, final String query, final String status, final int page, final String sort
+            final String username, final String status, final int page
     )
             throws
             BadRequestException,
             DataNotFoundException;
 
     long getRequestsCount(
-            final String type, final String username, final String query, final String status, final int page,
-            String sort
+            final String type, final String username, final String status, final int page
     )
             throws
             BadRequestException,

@@ -649,6 +649,48 @@ public class RequestsServiceImpl
         requestRepository.save(request);
     }
 
+    @Override
+    public long countAllByUsername(final String username) {
+
+        return requestRepository.countAllByUsername(username);
+    }
+
+    @Override
+    public long countAllByUsernameAndStatus(final String username, final String status) {
+
+        return requestRepository.countAllByUsernameAndStatus(username, status);
+    }
+
+    @Override
+    public List< RequestModel > findAllByUsernameOrderByUpdatedDateDesc(final String username) {
+
+        return requestRepository.findAllByUsernameOrderByUpdatedDateDesc(username);
+    }
+
+    @Override
+    public List< RequestModel > findAllByUsernameAndStatusOrderByUpdatedDateDesc(
+            final String username, final String status
+    ) {
+
+        return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status);
+    }
+
+    @Override
+    public Page< RequestModel > findAllByUsernameOrderByUpdatedDateDesc(
+            final String username, final Pageable pageable
+    ) {
+
+        return requestRepository.findAllByUsernameOrderByUpdatedDateDesc(username, pageable);
+    }
+
+    @Override
+    public Page< RequestModel > findAllByUsernameAndStatusOrderByUpdatedDateDesc(
+            final String username, final String status, final Pageable pageable
+    ) {
+
+        return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status, pageable);
+    }
+
     private List< EmployeeModel > getEmployeesDataFromRequest(
             final List< RequestModel > requests
     ) {

@@ -103,11 +103,11 @@ public class DashboardController {
 
             if (tab.equals(ServiceConstant.TAB_OTHERS)) {
                 totalRecords = dashboardServiceApi
-                        .getRequestsCount("Others", username, null, ServiceConstant.STATUS_REQUESTED, page, null);
+                        .getRequestsCount("Others", username, ServiceConstant.STATUS_REQUESTED, page);
             } else {
                 modifiers.addAll((List< EmployeeModel >) requestsListData.get("modifiers"));
                 totalRecords = dashboardServiceApi
-                        .getRequestsCount("Username", username, null, ServiceConstant.STATUS_REQUESTED, page, null);
+                        .getRequestsCount("Username", username, ServiceConstant.STATUS_REQUESTED, page);
             }
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
