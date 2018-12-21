@@ -1,7 +1,7 @@
 package com.oasis.response_mapper;
 
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.service.ServiceConstant;
+import com.oasis.tool.constant.PageSizeConstant;
 import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.BaseResponse;
 import com.oasis.web_model.response.NoPagingResponse;
@@ -61,13 +61,13 @@ public class EmployeesResponseMapper {
         successResponse.setValue(new EmployeeListResponse(mappedEmployees));
 
         successResponse.setPaging(new Paging(pageNumber, employees.size(), (int) Math
-                .ceil((double) totalRecords / ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE), totalRecords));
+                .ceil((double) totalRecords / PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }
 
     public NoPagingResponse< EmployeeDetailResponse > produceEmployeeDetailSuccessResponse(
-            final int httpStatusCode, final Map<String, Boolean> components, final EmployeeModel employee,
+            final int httpStatusCode, final Map< String, Boolean > components, final EmployeeModel employee,
             final String photo, final EmployeeModel supervisor
     ) {
 

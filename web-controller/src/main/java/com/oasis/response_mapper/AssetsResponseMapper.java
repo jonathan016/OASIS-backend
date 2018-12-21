@@ -1,7 +1,7 @@
 package com.oasis.response_mapper;
 
 import com.oasis.model.entity.AssetModel;
-import com.oasis.service.ServiceConstant;
+import com.oasis.tool.constant.PageSizeConstant;
 import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.BaseResponse;
 import com.oasis.web_model.response.NoPagingResponse;
@@ -41,7 +41,7 @@ public class AssetsResponseMapper {
         }
         successResponse.setValue(new AssetListResponse(mappedAssets));
 
-        final int totalPage = (int) Math.ceil((double) totalRecords / ServiceConstant.ASSETS_LIST_PAGE_SIZE);
+        final int totalPage = (int) Math.ceil((double) totalRecords / PageSizeConstant.ASSETS_LIST_PAGE_SIZE);
         successResponse.setPaging(new Paging(pageNumber, assets.size(), totalPage, totalRecords));
 
         return successResponse;

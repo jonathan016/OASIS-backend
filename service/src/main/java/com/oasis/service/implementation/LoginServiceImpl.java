@@ -1,12 +1,13 @@
 package com.oasis.service.implementation;
 
-import com.oasis.RoleDeterminer;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.service.api.LoginServiceApi;
+import com.oasis.tool.helper.RoleDeterminer;
+import com.oasis.tool.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -57,8 +58,8 @@ public class LoginServiceImpl
         if (username == null) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            final boolean validUsernameWithSuffix = username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+@gdn-commerce.com");
-            final boolean validUsernameWithoutSuffix = username.matches("([A-Za-z0-9]+.?[A-Za-z0-9]+)+");
+            final boolean validUsernameWithSuffix = username.matches(Regex.REGEX_USERNAME_LOGIN_SUFFIX);
+            final boolean validUsernameWithoutSuffix = username.matches(Regex.REGEX_USERNAME_LOGIN_NO_SUFFIX);
 
             if (!validUsernameWithSuffix && !validUsernameWithoutSuffix) {
                 throw new DataNotFoundException(DATA_NOT_FOUND);

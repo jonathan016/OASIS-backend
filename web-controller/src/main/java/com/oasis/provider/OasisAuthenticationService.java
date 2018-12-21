@@ -1,9 +1,9 @@
 package com.oasis.provider;
 
-import com.oasis.RoleDeterminer;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.repository.EmployeeRepository;
+import com.oasis.tool.helper.RoleDeterminer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,7 +19,8 @@ import java.util.List;
 
 @Component
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-public class OasisAuthenticationService implements UserDetailsService {
+public class OasisAuthenticationService
+        implements UserDetailsService {
 
     @Autowired
     private RoleDeterminer roleDeterminer;

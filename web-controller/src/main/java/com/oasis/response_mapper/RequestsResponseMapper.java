@@ -3,7 +3,8 @@ package com.oasis.response_mapper;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
-import com.oasis.service.ServiceConstant;
+import com.oasis.tool.constant.PageSizeConstant;
+import com.oasis.tool.constant.StatusConstant;
 import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.BaseResponse;
 import com.oasis.web_model.response.Paging;
@@ -53,7 +54,7 @@ public class RequestsResponseMapper {
             ).map(employees.get(i)), assetDataFactory.getMapperFacade(
                     AssetModel.class, RequestOthersListResponse.RequestListObject.Asset.class).map(assets.get(i))));
 
-            if (!mappedRequests.get(i).getRequest().getStatus().equals(ServiceConstant.STATUS_REQUESTED)) {
+            if (!mappedRequests.get(i).getRequest().getStatus().equals(StatusConstant.STATUS_REQUESTED)) {
                 mappedRequests.get(i).getRequest().setNote(
                         (requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote().isEmpty())
                         ? "No transaction note" : requests.get(i).getTransactionNote());
@@ -62,7 +63,7 @@ public class RequestsResponseMapper {
         successResponse.setValue(new RequestOthersListResponse(mappedRequests));
 
         successResponse.setPaging(new Paging(pageNumber, requests.size(), (int) Math
-                .ceil((double) totalRecords / ServiceConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
+                .ceil((double) totalRecords / PageSizeConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }
@@ -108,7 +109,7 @@ public class RequestsResponseMapper {
                                                                                    ).map(assets.get(i))
             ));
 
-            if (!mappedRequests.get(i).getRequest().getStatus().equals(ServiceConstant.STATUS_REQUESTED)) {
+            if (!mappedRequests.get(i).getRequest().getStatus().equals(StatusConstant.STATUS_REQUESTED)) {
                 mappedRequests.get(i).getRequest().setNote(
                         (requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote().isEmpty())
                         ? "No transaction note" : requests.get(i).getTransactionNote());
@@ -117,7 +118,7 @@ public class RequestsResponseMapper {
         successResponse.setValue(new RequestMyListResponse(mappedRequests));
 
         successResponse.setPaging(new Paging(pageNumber, requests.size(), (int) Math
-                .ceil((double) totalRecords / ServiceConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
+                .ceil((double) totalRecords / PageSizeConstant.REQUESTS_LIST_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }
@@ -153,7 +154,7 @@ public class RequestsResponseMapper {
         successResponse.setValue(new AssetRequestDetailsResponse(requestedAssetsListObjects));
 
         successResponse.setPaging(new Paging(pageNumber, requestedAssets.size(), (int) Math
-                .ceil((double) totalRecords / ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE), totalRecords));
+                .ceil((double) totalRecords / PageSizeConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }

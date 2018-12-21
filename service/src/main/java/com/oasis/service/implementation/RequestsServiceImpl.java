@@ -11,11 +11,14 @@ import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.model.fieldname.AssetFieldName;
 import com.oasis.repository.RequestRepository;
-import com.oasis.service.ImageHelper;
-import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.service.api.RequestsServiceApi;
+import com.oasis.tool.constant.PageSizeConstant;
+import com.oasis.tool.constant.ServiceConstant;
+import com.oasis.tool.constant.StatusConstant;
+import com.oasis.tool.helper.ImageHelper;
+import com.oasis.tool.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.Page;
@@ -181,7 +184,7 @@ public class RequestsServiceImpl
             final long assetRequestDetails = assetsServiceApi.countAllByDeletedIsFalseAndSkuIn(skus);
             final boolean noRequests = (assetRequestDetails == 0);
             final long totalPages = (long) Math.ceil((double) getAssetRequestDetailsCount(skus, page) /
-                                                     ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
+                                                     PageSizeConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
             final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
 
             if (noRequests || pageIndexOutOfBounds) {
@@ -189,7 +192,7 @@ public class RequestsServiceImpl
             } else {
                 final int zeroBasedIndexPage = page - 1;
                 final Pageable pageable = PageRequest
-                        .of(zeroBasedIndexPage, ServiceConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
+                        .of(zeroBasedIndexPage, PageSizeConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
 
                 final Page< AssetModel > requestedAssets = assetsServiceApi
                         .findAllByDeletedIsFalseAndSkuIn(skus, pageable);
@@ -320,7 +323,7 @@ public class RequestsServiceImpl
                             } else {
                                 savedRequest = request;
 
-                                savedRequest.setStatus(ServiceConstant.STATUS_REQUESTED);
+                                savedRequest.setStatus(StatusConstant.STATUS_REQUESTED);
                                 savedRequest.setTransactionNote(null);
                                 savedRequest.setCreatedBy(username);
                                 savedRequest.setCreatedDate(new Date());
@@ -348,13 +351,13 @@ public class RequestsServiceImpl
                         }
 
                         final boolean newRequestStatusIsCancelled = request.getStatus()
-                                                                           .equals(ServiceConstant.STATUS_CANCELLED);
+                                                                           .equals(StatusConstant.STATUS_CANCELLED);
                         final boolean newRequestStatusIsAccepted = request.getStatus()
-                                                                          .equals(ServiceConstant.STATUS_ACCEPTED);
+                                                                          .equals(StatusConstant.STATUS_ACCEPTED);
                         final boolean newRequestStatusIsRejected = request.getStatus()
-                                                                          .equals(ServiceConstant.STATUS_REJECTED);
+                                                                          .equals(StatusConstant.STATUS_REJECTED);
                         final boolean newRequestStatusIsDelivered = request.getStatus()
-                                                                           .equals(ServiceConstant.STATUS_DELIVERED);
+                                                                           .equals(StatusConstant.STATUS_DELIVERED);
 
                         if (newRequestStatusIsCancelled) {
                             updateStatusToCancelled(savedRequest, username, request.getUsername(),
@@ -434,7 +437,7 @@ public class RequestsServiceImpl
             BadRequestException {
 
         if (isRequestCancellationValid(username, recordedRequesterUsername, currentRequestStatus, newRequestStatus)) {
-            savedRequest.setStatus(ServiceConstant.STATUS_CANCELLED);
+            savedRequest.setStatus(StatusConstant.STATUS_CANCELLED);
         }
     }
 
@@ -450,7 +453,7 @@ public class RequestsServiceImpl
                 username, savedRequest.getUsername(), savedRequest.getStatus(), request.getStatus())) {
             savedRequest.setStatus(request.getStatus());
 
-            final boolean newRequestStatusIsAccepted = request.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
+            final boolean newRequestStatusIsAccepted = request.getStatus().equals(StatusConstant.STATUS_ACCEPTED);
 
             if (newRequestStatusIsAccepted) {
                 if (assetsServiceApi.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
@@ -482,7 +485,7 @@ public class RequestsServiceImpl
         final String currentRequestStatus = savedRequest.getStatus();
 
         if (isRequestDeliveryValid(username, currentRequestStatus, newRequestStatus)) {
-            savedRequest.setStatus(ServiceConstant.STATUS_DELIVERED);
+            savedRequest.setStatus(StatusConstant.STATUS_DELIVERED);
         }
     }
 
@@ -505,7 +508,7 @@ public class RequestsServiceImpl
 
             assetsServiceApi.save(asset);
 
-            savedRequest.setStatus(ServiceConstant.STATUS_RETURNED);
+            savedRequest.setStatus(StatusConstant.STATUS_RETURNED);
         }
     }
 
@@ -517,8 +520,8 @@ public class RequestsServiceImpl
             UnauthorizedOperationException,
             BadRequestException {
 
-        final boolean statusIsRequested = currentRequestStatus.equals(ServiceConstant.STATUS_REQUESTED);
-        final boolean newRequestStatusIsCancelled = newRequestStatus.equals(ServiceConstant.STATUS_CANCELLED);
+        final boolean statusIsRequested = currentRequestStatus.equals(StatusConstant.STATUS_REQUESTED);
+        final boolean newRequestStatusIsCancelled = newRequestStatus.equals(StatusConstant.STATUS_CANCELLED);
         final boolean requestedToCancelled = statusIsRequested && newRequestStatusIsCancelled;
 
         if (!requestedToCancelled) {
@@ -544,9 +547,9 @@ public class RequestsServiceImpl
 
         final boolean usernameIsAdminOrSupervisor = isUsernameAdminOrSupervisor(username, recordedRequesterUsername);
 
-        final boolean statusIsRequested = currentRequestStatus.equals(ServiceConstant.STATUS_REQUESTED);
-        final boolean newRequestStatusIsAccepted = newRequestStatus.equals(ServiceConstant.STATUS_ACCEPTED);
-        final boolean newRequestStatusIsRejected = newRequestStatus.equals(ServiceConstant.STATUS_REJECTED);
+        final boolean statusIsRequested = currentRequestStatus.equals(StatusConstant.STATUS_REQUESTED);
+        final boolean newRequestStatusIsAccepted = newRequestStatus.equals(StatusConstant.STATUS_ACCEPTED);
+        final boolean newRequestStatusIsRejected = newRequestStatus.equals(StatusConstant.STATUS_REJECTED);
         final boolean requestedToAccepted = statusIsRequested && newRequestStatusIsAccepted;
         final boolean requestedToRejected = statusIsRequested && newRequestStatusIsRejected;
         final boolean requestedToAcceptedOrRejected = requestedToAccepted || requestedToRejected;
@@ -569,8 +572,8 @@ public class RequestsServiceImpl
             UnauthorizedOperationException,
             BadRequestException {
 
-        final boolean statusIsAccepted = currentRequestStatus.equals(ServiceConstant.STATUS_ACCEPTED);
-        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
+        final boolean statusIsAccepted = currentRequestStatus.equals(StatusConstant.STATUS_ACCEPTED);
+        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(StatusConstant.STATUS_DELIVERED);
         final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
 
         return isAssetDeliveryOrReturnValid(username, acceptedToDelivered);
@@ -583,15 +586,15 @@ public class RequestsServiceImpl
             BadRequestException,
             UnauthorizedOperationException {
 
-        final boolean statusIsAccepted = savedRequest.getStatus().equals(ServiceConstant.STATUS_ACCEPTED);
+        final boolean statusIsAccepted = savedRequest.getStatus().equals(StatusConstant.STATUS_ACCEPTED);
         final boolean expendableAsset = assetsServiceApi.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku())
                                                         .isExpendable();
-        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(ServiceConstant.STATUS_DELIVERED);
+        final boolean newRequestStatusIsDelivered = newRequestStatus.equals(StatusConstant.STATUS_DELIVERED);
         final boolean acceptedToDelivered = statusIsAccepted && newRequestStatusIsDelivered;
         final boolean expendableAssetDelivery = expendableAsset && acceptedToDelivered;
 
-        final boolean statusIsDelivered = savedRequest.getStatus().equals(ServiceConstant.STATUS_DELIVERED);
-        final boolean newRequestStatusIsReturned = newRequestStatus.equals(ServiceConstant.STATUS_RETURNED);
+        final boolean statusIsDelivered = savedRequest.getStatus().equals(StatusConstant.STATUS_DELIVERED);
+        final boolean newRequestStatusIsReturned = newRequestStatus.equals(StatusConstant.STATUS_RETURNED);
         final boolean deliveredToReturned = statusIsDelivered && newRequestStatusIsReturned;
         final boolean nonExpendableAssetReturn = !expendableAsset && deliveredToReturned;
 
@@ -785,7 +788,7 @@ public class RequestsServiceImpl
                 final boolean noRequests = (requestsCount == 0);
                 final long totalPages = (long) Math
                         .ceil((double) getRequestsCount("Username", username, query, status, page, sort) /
-                              ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+                              PageSizeConstant.REQUESTS_LIST_PAGE_SIZE);
                 final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
 
                 if (noRequests || pageIndexOutOfBounds) {
@@ -795,7 +798,7 @@ public class RequestsServiceImpl
 
                     final int zeroBasedIndexPage = page - 1;
                     final Pageable pageable = PageRequest
-                            .of(zeroBasedIndexPage, ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+                            .of(zeroBasedIndexPage, PageSizeConstant.REQUESTS_LIST_PAGE_SIZE);
 
                     if (viewAllRequests) {
                         if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
@@ -848,12 +851,12 @@ public class RequestsServiceImpl
                     }
                 }
             } else {
-                final boolean statusIsRequested = status.equals(ServiceConstant.STATUS_REQUESTED);
-                final boolean statusIsAccepted = status.equals(ServiceConstant.STATUS_ACCEPTED);
-                final boolean statusIsRejected = status.equals(ServiceConstant.STATUS_REJECTED);
-                final boolean statusIsCancelled = status.equals(ServiceConstant.STATUS_CANCELLED);
-                final boolean statusIsDelivered = status.equals(ServiceConstant.STATUS_DELIVERED);
-                final boolean statusIsReturned = status.equals(ServiceConstant.STATUS_RETURNED);
+                final boolean statusIsRequested = status.equals(StatusConstant.STATUS_REQUESTED);
+                final boolean statusIsAccepted = status.equals(StatusConstant.STATUS_ACCEPTED);
+                final boolean statusIsRejected = status.equals(StatusConstant.STATUS_REJECTED);
+                final boolean statusIsCancelled = status.equals(StatusConstant.STATUS_CANCELLED);
+                final boolean statusIsDelivered = status.equals(StatusConstant.STATUS_DELIVERED);
+                final boolean statusIsReturned = status.equals(StatusConstant.STATUS_RETURNED);
 
                 final boolean incorrectStatusValue =
                         !statusIsRequested && !statusIsAccepted && !statusIsRejected && !statusIsCancelled &&
@@ -866,7 +869,7 @@ public class RequestsServiceImpl
                     final boolean noRequests = (requestsCount == 0);
                     final long totalPages = (long) Math
                             .ceil((double) getRequestsCount("Username", username, query, status, page, sort) /
-                                  ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+                                  PageSizeConstant.REQUESTS_LIST_PAGE_SIZE);
                     final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
 
                     if (noRequests || pageIndexOutOfBounds) {
@@ -876,7 +879,7 @@ public class RequestsServiceImpl
 
                         final int zeroBasedIndexPage = page - 1;
                         final Pageable pageable = PageRequest
-                                .of(zeroBasedIndexPage, ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+                                .of(zeroBasedIndexPage, PageSizeConstant.REQUESTS_LIST_PAGE_SIZE);
 
                         if (viewAllRequests) {
                             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
@@ -1115,7 +1118,7 @@ public class RequestsServiceImpl
         if (useDefaultSort) {
             sort = "D-updatedDate";
         } else {
-            final boolean properSortFormatGiven = sort.matches("^[AD]-(status|updatedDate)$");
+            final boolean properSortFormatGiven = sort.matches(Regex.REGEX_REQUEST_SORT);
 
             if (!properSortFormatGiven) {
                 throw new BadRequestException(INCORRECT_PARAMETER);
@@ -1132,7 +1135,7 @@ public class RequestsServiceImpl
             BadRequestException {
 
         final List< RequestModel > requests = getOthersRequestList(username, query, status, page, sort);
-        final long totalPages = (long) Math.ceil((double) requests.size() / ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+        final long totalPages = (long) Math.ceil((double) requests.size() / PageSizeConstant.REQUESTS_LIST_PAGE_SIZE);
         final boolean noRequests = requests.isEmpty();
         final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
 
@@ -1142,7 +1145,7 @@ public class RequestsServiceImpl
 
         PagedListHolder< RequestModel > pagedListHolder = new PagedListHolder<>(new ArrayList<>(requests));
         pagedListHolder.setPage(page - 1);
-        pagedListHolder.setPageSize(ServiceConstant.REQUESTS_LIST_PAGE_SIZE);
+        pagedListHolder.setPageSize(PageSizeConstant.REQUESTS_LIST_PAGE_SIZE);
 
         return new ArrayList<>(pagedListHolder.getPageList());
     }

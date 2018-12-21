@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class RequestMyListResponse {
+
     private List< RequestListObject > requests;
 
     @Data
@@ -55,4 +56,5 @@ public class RequestMyListResponse {
         }
 
     }
+
 }

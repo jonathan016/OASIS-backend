@@ -7,9 +7,10 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.response_mapper.DashboardResponseMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
-import com.oasis.service.ActiveComponentManager;
-import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.DashboardServiceApi;
+import com.oasis.tool.constant.ServiceConstant;
+import com.oasis.tool.constant.StatusConstant;
+import com.oasis.tool.helper.ActiveComponentManager;
 import com.oasis.web_model.constant.APIMappingValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -103,11 +104,11 @@ public class DashboardController {
 
             if (tab.equals(ServiceConstant.TAB_OTHERS)) {
                 totalRecords = dashboardServiceApi
-                        .getRequestsCount("Others", username, ServiceConstant.STATUS_REQUESTED, page);
+                        .getRequestsCount("Others", username, StatusConstant.STATUS_REQUESTED, page);
             } else {
                 modifiers.addAll((List< EmployeeModel >) requestsListData.get("modifiers"));
                 totalRecords = dashboardServiceApi
-                        .getRequestsCount("Username", username, ServiceConstant.STATUS_REQUESTED, page);
+                        .getRequestsCount("Username", username, StatusConstant.STATUS_REQUESTED, page);
             }
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
@@ -129,7 +130,7 @@ public class DashboardController {
                                                                                                     .getRequestsListDataActiveComponents(
                                                                                                             tab,
                                                                                                             username,
-                                                                                                            ServiceConstant.STATUS_REQUESTED
+                                                                                                            StatusConstant.STATUS_REQUESTED
                                                                                                     ), page,
                                                                                             totalRecords
                                                 ), HttpStatus.OK);
@@ -140,7 +141,7 @@ public class DashboardController {
                                                                                         activeComponentManager
                                                                                                 .getRequestsListDataActiveComponents(
                                                                                                         tab, username,
-                                                                                                        ServiceConstant.STATUS_REQUESTED
+                                                                                                        StatusConstant.STATUS_REQUESTED
                                                                                                 ), page, totalRecords
                                                 ), HttpStatus.OK);
         }

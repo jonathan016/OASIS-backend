@@ -1,7 +1,9 @@
-package com.oasis.service;
+package com.oasis.tool.helper;
 
-import com.oasis.RoleDeterminer;
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.tool.constant.RoleConstant;
+import com.oasis.tool.constant.ServiceConstant;
+import com.oasis.tool.constant.StatusConstant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +63,7 @@ public class ActiveComponentManager {
             activeComponents.put("editBtn", false);
             activeComponents.put("deleteBtn", false);
 
-            if (role.equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+            if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
                 activeComponents.put("addBtn", true);
                 activeComponents.put("editBtn", true);
                 activeComponents.put("deleteBtn", true);
@@ -106,27 +108,27 @@ public class ActiveComponentManager {
 
             if (status != null) {
                 if (tab.equals(ServiceConstant.TAB_OTHERS)) {
-                    if (role.equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+                    if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
                         switch (status) {
-                            case ServiceConstant.STATUS_REQUESTED:
+                            case StatusConstant.STATUS_REQUESTED:
                                 activeComponents.put("acceptBtn", true);
                                 activeComponents.put("rejectBtn", true);
                                 break;
-                            case ServiceConstant.STATUS_ACCEPTED:
+                            case StatusConstant.STATUS_ACCEPTED:
                                 activeComponents.put("deliverBtn", true);
                                 break;
-                            case ServiceConstant.STATUS_DELIVERED:
+                            case StatusConstant.STATUS_DELIVERED:
                                 activeComponents.put("returnBtn", true);
                                 break;
                         }
-                    } else if (role.equals(ServiceConstant.ROLE_SUPERIOR)) {
-                        if (status.equals(ServiceConstant.STATUS_REQUESTED)) {
+                    } else if (role.equals(RoleConstant.ROLE_SUPERIOR)) {
+                        if (status.equals(StatusConstant.STATUS_REQUESTED)) {
                             activeComponents.put("acceptBtn", true);
                             activeComponents.put("rejectBtn", true);
                         }
                     }
                 } else {
-                    if (status.equals(ServiceConstant.STATUS_REQUESTED)) {
+                    if (status.equals(StatusConstant.STATUS_REQUESTED)) {
                         activeComponents.put("cancelBtn", true);
                     }
                 }

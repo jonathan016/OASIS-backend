@@ -4,7 +4,6 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.oasis.RoleDeterminer;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.DuplicateDataException;
@@ -15,11 +14,13 @@ import com.oasis.model.entity.LastUniqueIdentifierModel;
 import com.oasis.model.fieldname.AssetFieldName;
 import com.oasis.repository.AssetRepository;
 import com.oasis.repository.LastUniqueIdentifierRepository;
-import com.oasis.service.DocumentHeader;
-import com.oasis.service.ImageHelper;
-import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.service.api.RequestsServiceApi;
+import com.oasis.tool.constant.*;
+import com.oasis.tool.helper.DocumentHeader;
+import com.oasis.tool.helper.ImageHelper;
+import com.oasis.tool.helper.RoleDeterminer;
+import com.oasis.tool.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +92,7 @@ public class AssetsServiceImpl
             sort = "A-name";
         }
 
-        if (!sort.matches("^[AD]-(SKU|name)$")) {
+        if (!sort.matches(Regex.REGEX_ASSET_SORT)) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         }
 
@@ -105,7 +106,7 @@ public class AssetsServiceImpl
 
         if (noQueryGiven) {
             availableAssetsCount = assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
-            availablePages = (long) Math.ceil((double) availableAssetsCount / ServiceConstant.ASSETS_LIST_PAGE_SIZE);
+            availablePages = (long) Math.ceil((double) availableAssetsCount / PageSizeConstant.ASSETS_LIST_PAGE_SIZE);
 
             noAvailableAsset = (availableAssetsCount == 0);
             pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
@@ -117,7 +118,7 @@ public class AssetsServiceImpl
             availableAssets = new LinkedHashSet<>(getSortedAvailableAssets(page, sort));
         } else {
             availableAssetsCount = getAvailableAssetsCount(query, sort);
-            availablePages = (long) Math.ceil((double) availableAssetsCount / ServiceConstant.ASSETS_LIST_PAGE_SIZE);
+            availablePages = (long) Math.ceil((double) availableAssetsCount / PageSizeConstant.ASSETS_LIST_PAGE_SIZE);
 
             noAvailableAsset = (availableAssetsCount == 0);
             pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
@@ -139,7 +140,7 @@ public class AssetsServiceImpl
         Set< AssetModel > sortedAvailableAssets = new LinkedHashSet<>();
 
         final int zeroBasedIndexPage = page - 1;
-        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, ServiceConstant.ASSETS_LIST_PAGE_SIZE);
+        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, PageSizeConstant.ASSETS_LIST_PAGE_SIZE);
 
         if (sort.substring(2).equals("SKU")) {
             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
@@ -169,7 +170,7 @@ public class AssetsServiceImpl
         Set< AssetModel > sortedAvailableAssets = new LinkedHashSet<>();
 
         final int zeroBasedIndexPage = page - 1;
-        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, ServiceConstant.ASSETS_LIST_PAGE_SIZE);
+        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, PageSizeConstant.ASSETS_LIST_PAGE_SIZE);
 
         if (sort.substring(2).equals("SKU")) {
             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
@@ -429,8 +430,8 @@ public class AssetsServiceImpl
                                .concat(imageName).concat(".").concat(extension));
 
         if (!file.exists()) {
-            file = new File(
-                    ServiceConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator).concat("image_not_found.jpeg"));
+            file = new File(ImageDirectoryConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator)
+                                                                         .concat("image_not_found.jpeg"));
         }
 
         try {
@@ -459,7 +460,7 @@ public class AssetsServiceImpl
             UnauthorizedOperationException,
             DataNotFoundException {
 
-        if (!roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+        if (!roleDeterminer.determineRole(username).equals(RoleConstant.ROLE_ADMINISTRATOR)) {
             throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
         }
 
@@ -539,7 +540,7 @@ public class AssetsServiceImpl
             BadRequestException,
             DataNotFoundException {
 
-        if (!roleDeterminer.determineRole(username).equals(ServiceConstant.ROLE_ADMINISTRATOR)) {
+        if (!roleDeterminer.determineRole(username).equals(RoleConstant.ROLE_ADMINISTRATOR)) {
             throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
         }
 
@@ -607,16 +608,6 @@ public class AssetsServiceImpl
     }
 
     @Override
-    public List< AssetModel > findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-            final String sku, final String name, final String brand, final String type, final String location
-    ) {
-
-        return assetRepository
-                .findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-                        sku, name, brand, type, location);
-    }
-
-    @Override
     public long countAllByDeletedIsFalseAndStockGreaterThan(final long stock) {
 
         return assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(stock);
@@ -648,7 +639,7 @@ public class AssetsServiceImpl
                 sku.append(String.format("-%05d", lastTypeCode));
                 sku.append(String.format("-%05d", 1));
             } else {
-                sku = new StringBuilder(ServiceConstant.PREFIX_SKU);
+                sku = new StringBuilder(PrefixConstant.PREFIX_SKU);
 
                 lastUniqueIdentifier = lastUniqueIdentifierRepository
                         .findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku));
@@ -684,25 +675,27 @@ public class AssetsServiceImpl
 
         boolean rootDirectoryCreated;
 
-        if (!Files.exists(Paths.get(ServiceConstant.ASSET_IMAGE_DIRECTORY))) {
-            rootDirectoryCreated = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY).mkdir();
+        if (!Files.exists(Paths.get(ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY))) {
+            rootDirectoryCreated = new File(ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY).mkdir();
         } else {
             rootDirectoryCreated = true;
         }
 
         if (rootDirectoryCreated) {
-            final Path saveDirectory = Paths
-                    .get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()));
+            final Path saveDirectory = Paths.get(ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
+                                                                                             .concat(savedAsset
+                                                                                                             .getSku()));
 
             if (addAssetOperation) {
                 if (!Files.exists(saveDirectory)) {
-                    new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()))
-                            .mkdir();
+                    new File(ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
+                                                                         .concat(savedAsset.getSku())).mkdir();
                 }
             } else {
                 if (Files.exists(saveDirectory)) {
                     final File assetImageFolder = new File(
-                            ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()));
+                            ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
+                                                                        .concat(savedAsset.getSku()));
                     final File[] images = assetImageFolder.listFiles();
 
                     if (images != null) {
@@ -712,12 +705,13 @@ public class AssetsServiceImpl
                         assetImageFolder.delete();
                     }
                 }
-                new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()))
+                new File(
+                        ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(savedAsset.getSku()))
                         .mkdir();
             }
 
-            String imageDirectory = ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
-                                                                         .concat(savedAsset.getSku());
+            String imageDirectory = ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator)
+                                                                                .concat(savedAsset.getSku());
             savedAsset.setImageDirectory(imageDirectory);
 
             saveImages(imagesGiven, savedAsset.getSku());
@@ -733,20 +727,19 @@ public class AssetsServiceImpl
             try {
                 for (int i = 0; i < imagesGiven.size(); i++) {
                     final Path saveDirectory = Paths
-                            .get(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku));
+                            .get(ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku));
 
                     if (!Files.exists(saveDirectory)) {
-                        new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)).mkdir();
+                        new File(ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku))
+                                .mkdir();
                     }
-                    File image = new File(ServiceConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)
-                                                                               .concat(File.separator).concat(sku)
-                                                                               .concat("-")
-                                                                               .concat(String.valueOf(i + 1))
-                                                                               .concat(".").concat(imageHelper
-                                                                                                           .getExtensionFromFileName(
-                                                                                                                   imagesGiven
-                                                                                                                           .get(i)
-                                                                                                                           .getOriginalFilename())));
+                    File image = new File(
+                            ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY.concat(File.separator).concat(sku)
+                                                                        .concat(File.separator).concat(sku).concat("-")
+                                                                        .concat(String.valueOf(i + 1)).concat(".")
+                                                                        .concat(imageHelper.getExtensionFromFileName(
+                                                                                imagesGiven.get(i)
+                                                                                           .getOriginalFilename())));
 
                     imagesGiven.get(i).transferTo(image);
                 }

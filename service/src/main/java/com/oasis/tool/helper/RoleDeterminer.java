@@ -1,10 +1,10 @@
-package com.oasis;
+package com.oasis.tool.helper;
 
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
-import com.oasis.service.ServiceConstant;
+import com.oasis.tool.constant.RoleConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +31,7 @@ public class RoleDeterminer {
                 .existsAdminModelByDeletedIsFalseAndUsernameEquals(username);
 
         if (administratorWithUsernameExists) {
-            return ServiceConstant.ROLE_ADMINISTRATOR;
+            return RoleConstant.ROLE_ADMINISTRATOR;
         } else {
             boolean employeeWithUsernameExists = employeeRepository
                     .existsEmployeeModelByDeletedIsFalseAndUsername(username);
@@ -41,9 +41,9 @@ public class RoleDeterminer {
                         .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(username);
 
                 if (supervisionWithUsernameAsSupervisorExists) {
-                    return ServiceConstant.ROLE_SUPERIOR;
+                    return RoleConstant.ROLE_SUPERIOR;
                 } else {
-                    return ServiceConstant.ROLE_EMPLOYEE;
+                    return RoleConstant.ROLE_EMPLOYEE;
                 }
             } else {
                 throw new DataNotFoundException(DATA_NOT_FOUND);

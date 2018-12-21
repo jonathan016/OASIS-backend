@@ -86,7 +86,7 @@ public interface RequestsServiceApi {
             final String username, final Pageable pageable
     );
 
-    Page<RequestModel> findAllByUsernameAndStatusOrderByUpdatedDateDesc(
+    Page< RequestModel > findAllByUsernameAndStatusOrderByUpdatedDateDesc(
             final String username, final String status, final Pageable pageable
     );
 

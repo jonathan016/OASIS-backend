@@ -1,6 +1,6 @@
 package com.oasis.configuration;
 
-import com.oasis.service.ServiceConstant;
+import com.oasis.tool.constant.ImageDirectoryConstant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -20,7 +20,8 @@ public class ResourceHandlerConfiguration
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-        registry.addResourceHandler(pathPatterns).addResourceLocations("file:" + ServiceConstant.ASSET_IMAGE_DIRECTORY);
+        registry.addResourceHandler(pathPatterns)
+                .addResourceLocations("file:" + ImageDirectoryConstant.ASSET_IMAGE_DIRECTORY);
     }
 
 }

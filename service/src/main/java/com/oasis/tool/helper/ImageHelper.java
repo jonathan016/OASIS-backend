@@ -1,4 +1,4 @@
-package com.oasis.service;
+package com.oasis.tool.helper;
 
 import org.springframework.stereotype.Component;
 
@@ -20,4 +20,5 @@ public class ImageHelper {
 
         return String.valueOf(extensionBuilder);
     }
+
 }

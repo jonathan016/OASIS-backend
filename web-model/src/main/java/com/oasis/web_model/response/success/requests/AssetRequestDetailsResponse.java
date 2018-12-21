@@ -21,7 +21,7 @@ public class AssetRequestDetailsResponse {
         private String sku;
         private String name;
         private long quantity;
-        private List<String> images;
+        private List< String > images;
 
     }
 

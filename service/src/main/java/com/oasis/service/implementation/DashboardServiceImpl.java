@@ -1,6 +1,5 @@
 package com.oasis.service.implementation;
 
-import com.oasis.RoleDeterminer;
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.BaseEntity;
@@ -8,12 +7,17 @@ import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
-import com.oasis.service.ImageHelper;
-import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.AssetsServiceApi;
 import com.oasis.service.api.DashboardServiceApi;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.service.api.RequestsServiceApi;
+import com.oasis.tool.constant.PageSizeConstant;
+import com.oasis.tool.constant.RoleConstant;
+import com.oasis.tool.constant.ServiceConstant;
+import com.oasis.tool.constant.StatusConstant;
+import com.oasis.tool.helper.ImageHelper;
+import com.oasis.tool.helper.RoleDeterminer;
+import com.oasis.tool.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.PageRequest;
@@ -53,7 +57,7 @@ public class DashboardServiceImpl
             DataNotFoundException,
             BadRequestException {
 
-        if (!username.matches("([a-z0-9]+\\.?)*[a-z0-9]+")) {
+        if (!username.matches(Regex.REGEX_USERNAME)) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
             long requestedRequestsCount = 0;
@@ -62,18 +66,18 @@ public class DashboardServiceImpl
                     .countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
 
             switch (roleDeterminer.determineRole(username)) {
-                case ServiceConstant.ROLE_ADMINISTRATOR:
-                    requestedRequestsCount += getRequestsCount("Others", username, ServiceConstant.STATUS_REQUESTED, 1);
-                    acceptedRequestsCount += getRequestsCount("Others", username, ServiceConstant.STATUS_ACCEPTED, 1);
+                case RoleConstant.ROLE_ADMINISTRATOR:
+                    requestedRequestsCount += getRequestsCount("Others", username, StatusConstant.STATUS_REQUESTED, 1);
+                    acceptedRequestsCount += getRequestsCount("Others", username, StatusConstant.STATUS_ACCEPTED, 1);
                     break;
-                case ServiceConstant.ROLE_SUPERIOR:
-                    requestedRequestsCount += getRequestsCount("Others", username, ServiceConstant.STATUS_REQUESTED, 1);
-                    acceptedRequestsCount += getRequestsCount("Username", username, ServiceConstant.STATUS_ACCEPTED, 1);
+                case RoleConstant.ROLE_SUPERIOR:
+                    requestedRequestsCount += getRequestsCount("Others", username, StatusConstant.STATUS_REQUESTED, 1);
+                    acceptedRequestsCount += getRequestsCount("Username", username, StatusConstant.STATUS_ACCEPTED, 1);
                     break;
-                case ServiceConstant.ROLE_EMPLOYEE:
+                case RoleConstant.ROLE_EMPLOYEE:
                     requestedRequestsCount += getRequestsCount(
-                            "Username", username, ServiceConstant.STATUS_REQUESTED, 1);
-                    acceptedRequestsCount += getRequestsCount("Username", username, ServiceConstant.STATUS_ACCEPTED, 1);
+                            "Username", username, StatusConstant.STATUS_REQUESTED, 1);
+                    acceptedRequestsCount += getRequestsCount("Username", username, StatusConstant.STATUS_ACCEPTED, 1);
                     break;
             }
 
@@ -94,16 +98,16 @@ public class DashboardServiceImpl
             BadRequestException,
             DataNotFoundException {
 
-        if (!username.matches("([a-z0-9]+\\.?)*[a-z0-9]+")) {
+        if (!username.matches(Regex.REGEX_USERNAME)) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
             if (!tab.equals(ServiceConstant.TAB_OTHERS) && !tab.equals(ServiceConstant.TAB_MY)) {
                 throw new BadRequestException(INCORRECT_PARAMETER);
             } else {
                 if (tab.equals(ServiceConstant.TAB_OTHERS)) {
-                    return getOthersRequestListData(username, ServiceConstant.STATUS_REQUESTED, page);
+                    return getOthersRequestListData(username, StatusConstant.STATUS_REQUESTED, page);
                 } else {
-                    return getMyRequestsListData(username, ServiceConstant.STATUS_REQUESTED, page);
+                    return getMyRequestsListData(username, StatusConstant.STATUS_REQUESTED, page);
                 }
             }
         }
@@ -204,7 +208,7 @@ public class DashboardServiceImpl
                 final long requestsCount = requestsServiceApi.countAllByUsername(username);
                 final boolean noRequests = (requestsCount == 0);
                 final long totalPages = (long) Math.ceil((double) getRequestsCount("Username", username, status, page) /
-                                                         ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
+                                                         PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
                 final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
 
                 if (noRequests || pageIndexOutOfBounds) {
@@ -212,18 +216,18 @@ public class DashboardServiceImpl
                 } else {
                     final int zeroBasedIndexPage = page - 1;
                     final Pageable pageable = PageRequest
-                            .of(zeroBasedIndexPage, ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
+                            .of(zeroBasedIndexPage, PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
 
-                    requests.addAll(
-                            requestsServiceApi.findAllByUsernameOrderByUpdatedDateDesc(username, pageable).getContent());
+                    requests.addAll(requestsServiceApi.findAllByUsernameOrderByUpdatedDateDesc(username, pageable)
+                                                      .getContent());
                 }
             } else {
-                final boolean statusIsRequested = status.equals(ServiceConstant.STATUS_REQUESTED);
-                final boolean statusIsAccepted = status.equals(ServiceConstant.STATUS_ACCEPTED);
-                final boolean statusIsRejected = status.equals(ServiceConstant.STATUS_REJECTED);
-                final boolean statusIsCancelled = status.equals(ServiceConstant.STATUS_CANCELLED);
-                final boolean statusIsDelivered = status.equals(ServiceConstant.STATUS_DELIVERED);
-                final boolean statusIsReturned = status.equals(ServiceConstant.STATUS_RETURNED);
+                final boolean statusIsRequested = status.equals(StatusConstant.STATUS_REQUESTED);
+                final boolean statusIsAccepted = status.equals(StatusConstant.STATUS_ACCEPTED);
+                final boolean statusIsRejected = status.equals(StatusConstant.STATUS_REJECTED);
+                final boolean statusIsCancelled = status.equals(StatusConstant.STATUS_CANCELLED);
+                final boolean statusIsDelivered = status.equals(StatusConstant.STATUS_DELIVERED);
+                final boolean statusIsReturned = status.equals(StatusConstant.STATUS_RETURNED);
 
                 final boolean incorrectStatusValue =
                         !statusIsRequested && !statusIsAccepted && !statusIsRejected && !statusIsCancelled &&
@@ -236,7 +240,7 @@ public class DashboardServiceImpl
                     final boolean noRequests = (requestsCount == 0);
                     final long totalPages = (long) Math
                             .ceil((double) getRequestsCount("Username", username, status, page) /
-                                  ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
+                                  PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
                     final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
 
                     if (noRequests || pageIndexOutOfBounds) {
@@ -244,7 +248,7 @@ public class DashboardServiceImpl
                     } else {
                         final int zeroBasedIndexPage = page - 1;
                         final Pageable pageable = PageRequest
-                                .of(zeroBasedIndexPage, ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
+                                .of(zeroBasedIndexPage, PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
                         requests.addAll(requestsServiceApi
                                                 .findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status,
                                                                                                   pageable
@@ -316,7 +320,7 @@ public class DashboardServiceImpl
 
         final List< RequestModel > requests = getOthersRequestList(username, status);
         final long totalPages = (long) Math
-                .ceil((double) requests.size() / ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
+                .ceil((double) requests.size() / PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
         final boolean noRequests = requests.isEmpty();
         final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));
 
@@ -326,7 +330,7 @@ public class DashboardServiceImpl
 
         PagedListHolder< RequestModel > pagedListHolder = new PagedListHolder<>(new ArrayList<>(requests));
         pagedListHolder.setPage(page - 1);
-        pagedListHolder.setPageSize(ServiceConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
+        pagedListHolder.setPageSize(PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
 
         return new ArrayList<>(pagedListHolder.getPageList());
     }

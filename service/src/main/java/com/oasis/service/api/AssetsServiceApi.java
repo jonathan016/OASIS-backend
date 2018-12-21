@@ -74,10 +74,6 @@ public interface AssetsServiceApi {
 
     void save(final AssetModel asset);
 
-    List< AssetModel > findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-            final String sku, final String name, final String brand, final String type, final String location
-    );
-
     long countAllByDeletedIsFalseAndStockGreaterThan(final long stock);
 
 }

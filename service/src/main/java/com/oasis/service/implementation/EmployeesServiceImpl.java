@@ -1,6 +1,5 @@
 package com.oasis.service.implementation;
 
-import com.oasis.RoleDeterminer;
 import com.oasis.exception.*;
 import com.oasis.model.entity.AdminModel;
 import com.oasis.model.entity.EmployeeModel;
@@ -9,10 +8,12 @@ import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
-import com.oasis.service.ImageHelper;
-import com.oasis.service.ServiceConstant;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.service.api.RequestsServiceApi;
+import com.oasis.tool.constant.*;
+import com.oasis.tool.helper.ImageHelper;
+import com.oasis.tool.helper.RoleDeterminer;
+import com.oasis.tool.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +97,7 @@ public class EmployeesServiceImpl
         final boolean useParameterSort = (sort != null);
 
         if (useParameterSort) {
-            final boolean properSortFormatGiven = sort.matches("^[AD]$");
+            final boolean properSortFormatGiven = sort.matches(Regex.REGEX_EMPLOYEE_SORT);
 
             if (!properSortFormatGiven) {
                 throw new BadRequestException(INCORRECT_PARAMETER);
@@ -115,7 +116,7 @@ public class EmployeesServiceImpl
 
         if (viewAllEmployees) {
             employeesCount = employeeRepository.countAllByDeletedIsFalseAndUsernameIsNot(username);
-            availablePages = (long) Math.ceil((float) employeesCount / ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE);
+            availablePages = (long) Math.ceil((float) employeesCount / PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
 
             noEmployees = (employeesCount == 0);
             pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
@@ -129,7 +130,7 @@ public class EmployeesServiceImpl
             employeesCount = employeeRepository
                     .countAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCase(
                             query, query);
-            availablePages = (long) Math.ceil((double) employeesCount / ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE);
+            availablePages = (long) Math.ceil((double) employeesCount / PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
 
             noEmployees = (employeesCount == 0);
             pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
@@ -270,8 +271,8 @@ public class EmployeesServiceImpl
         final boolean correctExtensionForPhoto = file.getName().endsWith(extension);
 
         if (!correctExtensionForPhoto || photoNameIsImageNotFound) {
-            file = new File(
-                    ServiceConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator).concat("image_not_found.jpeg"));
+            file = new File(ImageDirectoryConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator)
+                                                                         .concat("image_not_found.jpeg"));
         }
 
         final byte[] photo;
@@ -297,7 +298,7 @@ public class EmployeesServiceImpl
 
         final SupervisionModel supervision = supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(username);
         final boolean employeeIsAdministrator = roleDeterminer.determineRole(username)
-                                                              .equals(ServiceConstant.ROLE_ADMINISTRATOR);
+                                                              .equals(RoleConstant.ROLE_ADMINISTRATOR);
 
         final boolean noSupervisionForEmployeeWithUsername = (supervision == null);
 
@@ -332,7 +333,7 @@ public class EmployeesServiceImpl
             BadRequestException {
 
         final boolean validAdministrator = roleDeterminer.determineRole(username)
-                                                         .equals(ServiceConstant.ROLE_ADMINISTRATOR);
+                                                         .equals(RoleConstant.ROLE_ADMINISTRATOR);
         if (!validAdministrator) {
             throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
         }
@@ -340,7 +341,7 @@ public class EmployeesServiceImpl
         EmployeeModel savedEmployee;
 
         if (addEmployeeOperation) {
-            final boolean properNameFormatGiven = employee.getName().matches("^([A-Za-z]+ ?)*[A-Za-z]+$");
+            final boolean properNameFormatGiven = employee.getName().matches(Regex.REGEX_EMPLOYEE_NAME);
 
             if (!properNameFormatGiven) {
                 throw new BadRequestException(INCORRECT_PARAMETER);
@@ -436,7 +437,7 @@ public class EmployeesServiceImpl
             final String dobString
     ) {
 
-        StringBuilder password = new StringBuilder(ServiceConstant.PREFIX_DEFAULT_PASSWORD);
+        StringBuilder password = new StringBuilder(PrefixConstant.PREFIX_DEFAULT_PASSWORD);
 
         final String dobWithoutDash = dobString.replace("-", "");
 
@@ -535,8 +536,8 @@ public class EmployeesServiceImpl
 
         final boolean rootDirectoryCreated;
 
-        if (!Files.exists(Paths.get(ServiceConstant.EMPLOYEE_PHOTO_DIRECTORY))) {
-            rootDirectoryCreated = new File(ServiceConstant.EMPLOYEE_PHOTO_DIRECTORY).mkdir();
+        if (!Files.exists(Paths.get(ImageDirectoryConstant.EMPLOYEE_PHOTO_DIRECTORY))) {
+            rootDirectoryCreated = new File(ImageDirectoryConstant.EMPLOYEE_PHOTO_DIRECTORY).mkdir();
         } else {
             rootDirectoryCreated = true;
         }
@@ -550,13 +551,14 @@ public class EmployeesServiceImpl
             if (photoGiven == null) {
                 savedEmployee.setPhoto("");
             } else {
-                final String photoLocation = ServiceConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator)
-                                                                                     .concat(savedEmployee
-                                                                                                     .getUsername())
-                                                                                     .concat(".").concat(imageHelper
-                                                                                                                 .getExtensionFromFileName(
-                                                                                                                         photoGiven
-                                                                                                                                 .getOriginalFilename()));
+                final String photoLocation = ImageDirectoryConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator)
+                                                                                            .concat(savedEmployee
+                                                                                                            .getUsername())
+                                                                                            .concat(".")
+                                                                                            .concat(imageHelper
+                                                                                                            .getExtensionFromFileName(
+                                                                                                                    photoGiven
+                                                                                                                            .getOriginalFilename()));
 
                 savedEmployee.setPhoto(photoLocation);
 
@@ -602,9 +604,11 @@ public class EmployeesServiceImpl
         if (photoGiven != null) {
             try {
                 File photo = new File(
-                        ServiceConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator).concat(username).concat(".")
-                                                                .concat(imageHelper.getExtensionFromFileName(
-                                                                        photoGiven.getOriginalFilename())));
+                        ImageDirectoryConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator).concat(username)
+                                                                       .concat(".").concat(imageHelper
+                                                                                                   .getExtensionFromFileName(
+                                                                                                           photoGiven
+                                                                                                                   .getOriginalFilename())));
 
                 photoGiven.transferTo(photo);
             } catch (IOException ioException) {
@@ -681,12 +685,12 @@ public class EmployeesServiceImpl
         }
 
         final boolean validAdministrator = roleDeterminer.determineRole(adminUsername)
-                                                         .equals(ServiceConstant.ROLE_ADMINISTRATOR);
+                                                         .equals(RoleConstant.ROLE_ADMINISTRATOR);
         final boolean selfDeletionAttempt = employeeUsername.equals(adminUsername);
         final boolean employeeWithEmployeeUsernameStillSupervises = supervisionRepository
                 .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername);
         final boolean allDeliveredAssetsHaveBeenReturned = requestsServiceApi
-                .findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_DELIVERED).isEmpty();
+                .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_DELIVERED).isEmpty();
 
         if (!validAdministrator || selfDeletionAttempt || employeeWithEmployeeUsernameStillSupervises ||
             !allDeliveredAssetsHaveBeenReturned) {
@@ -707,9 +711,9 @@ public class EmployeesServiceImpl
         List< RequestModel > requests = new ArrayList<>();
 
         final List< RequestModel > acceptedRequests = requestsServiceApi
-                .findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_ACCEPTED);
+                .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_ACCEPTED);
         final List< RequestModel > requestedRequests = requestsServiceApi
-                .findAllByUsernameAndStatus(employeeUsername, ServiceConstant.STATUS_REQUESTED);
+                .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_REQUESTED);
 
         requests.addAll(acceptedRequests);
         requests.addAll(requestedRequests);
@@ -718,7 +722,7 @@ public class EmployeesServiceImpl
 
         if (acceptedOrRequestedRequestsExist) {
             for (RequestModel request : requests) {
-                request.setStatus(ServiceConstant.STATUS_CANCELLED);
+                request.setStatus(StatusConstant.STATUS_CANCELLED);
                 request.setUpdatedDate(new Date());
                 request.setUpdatedBy(adminUsername);
 
@@ -765,7 +769,7 @@ public class EmployeesServiceImpl
         }
 
         final boolean validAdministrator = roleDeterminer.determineRole(adminUsername)
-                                                         .equals(ServiceConstant.ROLE_ADMINISTRATOR);
+                                                         .equals(RoleConstant.ROLE_ADMINISTRATOR);
         final boolean selfSupervisorChangeOnDeletionAttempt = oldSupervisorUsername.equals(adminUsername);
 
         if (!validAdministrator || selfSupervisorChangeOnDeletionAttempt) {
@@ -918,7 +922,7 @@ public class EmployeesServiceImpl
         Set< EmployeeModel > sortedEmployees = new LinkedHashSet<>();
 
         final int zeroBasedIndexPage = page - 1;
-        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE);
+        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
 
         if (sort.equals(ServiceConstant.ASCENDING)) {
             sortedEmployees
@@ -940,7 +944,7 @@ public class EmployeesServiceImpl
         Set< EmployeeModel > sortedEmployees = new LinkedHashSet<>();
 
         final int zeroBasedIndexPage = page - 1;
-        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, ServiceConstant.EMPLOYEES_LIST_PAGE_SIZE);
+        final Pageable pageable = PageRequest.of(zeroBasedIndexPage, PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
 
         if (sort.equals(ServiceConstant.ASCENDING)) {
             sortedEmployees.addAll(employeeRepository
