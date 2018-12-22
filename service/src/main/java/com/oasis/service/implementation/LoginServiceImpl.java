@@ -31,16 +31,15 @@ public class LoginServiceImpl
 
     @Override
     public Map< String, String > getLoginData(
-            final String username, final String password
+            final String username
     )
             throws
             DataNotFoundException,
-            BadRequestException,
-            UserNotAuthenticatedException {
+            BadRequestException {
 
         Map< String, String > loginData = new HashMap<>();
 
-        loginData.put("username", getUsernameIfEmployeeWithCredentialExists(username, password));
+        loginData.put("username", getUsernameIfEmployeeWithCredentialExists(username));
         loginData.put("name", getFirstNameFromUsername(username));
         loginData.put("role", getRoleFromUsername(username));
 
@@ -48,11 +47,10 @@ public class LoginServiceImpl
     }
 
     private String getUsernameIfEmployeeWithCredentialExists(
-            final String username, final String password
+            final String username
     )
             throws
             DataNotFoundException,
-            UserNotAuthenticatedException,
             BadRequestException {
 
         if (username == null) {
@@ -63,29 +61,22 @@ public class LoginServiceImpl
 
             if (!validUsernameWithSuffix && !validUsernameWithoutSuffix) {
                 throw new DataNotFoundException(DATA_NOT_FOUND);
-            }
-
-            final EmployeeModel employee;
-
-            if (validUsernameWithSuffix) {
-                employee = employeesServiceApi
-                        .findByDeletedIsFalseAndUsername(username.toLowerCase().substring(0, username.indexOf('@')));
             } else {
-                employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username.toLowerCase());
-            }
+                final EmployeeModel employee;
 
-            if (employee == null) {
-                throw new DataNotFoundException(DATA_NOT_FOUND);
-            } else {
-                final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+                if (validUsernameWithSuffix) {
+                    employee = employeesServiceApi
+                            .findByDeletedIsFalseAndUsername(username.toLowerCase().substring(0, username.indexOf('@')));
+                } else {
+                    employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username.toLowerCase());
+                }
 
-                final boolean passwordMatch = encoder.matches(password, employee.getPassword());
-                if (!passwordMatch) {
-                    throw new UserNotAuthenticatedException(INVALID_PASSWORD);
+                if (employee == null) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                } else {
+                    return employee.getUsername();
                 }
             }
-
-            return employee.getUsername();
         }
     }
 

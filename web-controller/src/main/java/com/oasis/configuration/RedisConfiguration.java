@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 @EnableCaching
-@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 60 * 60 * 30)
 public class RedisConfiguration {
 
     @Bean

@@ -9,7 +9,7 @@ import java.util.Map;
 public interface LoginServiceApi {
 
     Map< String, String > getLoginData(
-            final String username, final String password
+            final String username
     )
             throws
             DataNotFoundException,

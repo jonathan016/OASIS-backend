@@ -7,13 +7,15 @@ import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.response_mapper.LoginResponseMapper;
 import com.oasis.service.api.LoginServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
-import com.oasis.web_model.request.login.LoginRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpSession;
+import java.security.Principal;
 import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -30,11 +32,10 @@ public class LoginController {
     @Autowired
     private FailedResponseMapper failedResponseMapper;
 
-    @PostMapping(value = APIMappingValue.API_LOGIN, produces = APPLICATION_JSON_VALUE,
-                 consumes = APPLICATION_JSON_VALUE)
+    @PostMapping(value = APIMappingValue.API_LOGIN, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity getLoginData(
-            @RequestBody
-            final LoginRequest request
+            @AuthenticationPrincipal
+            final Principal principal
     ) {
 
         final Map< String, String > loginData;
@@ -43,7 +44,7 @@ public class LoginController {
         final String role;
 
         try {
-            loginData = loginServiceApi.getLoginData(request.getUsername(), request.getPassword());
+            loginData = loginServiceApi.getLoginData(principal.getName());
 
             username = loginData.get("username");
             name = loginData.get("name");
@@ -72,6 +73,16 @@ public class LoginController {
                 loginResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), username, name, role),
                 HttpStatus.OK
         );
+    }
+
+    @GetMapping(value = APIMappingValue.API_LOGOUT)
+    public ResponseEntity logout(
+            HttpSession session
+    ) {
+
+        session.invalidate();
+
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
