@@ -17,7 +17,7 @@
     <mvc:cors>
         <mvc:mapping path="/**"
                      allowed-origins="*"
-                     allowed-headers="Content-Type, Access-Control-Allow-Credentials, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Authorization, X-Requested-With, requestId, Correlation-Id"
+                     allowed-headers="Content-Type, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Authorization, X-Requested-With, requestId, Correlation-Id"
                      allowed-methods="GET, OPTIONS, POST, DELETE"/>
     </mvc:cors>
 </beans>
