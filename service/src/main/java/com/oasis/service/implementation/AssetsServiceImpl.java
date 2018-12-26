@@ -155,25 +155,25 @@ public class AssetsServiceImpl
         if (sort.substring(2).equals("SKU")) {
             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                 sortedAvailableAssets.addAll(assetRepository
-                        .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuAsc(
-                                ServiceConstant.ZERO, query, query, pageable)
+                        .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrDeletedIsFalseAndStockGreaterThanAndNameContainsIgnoreCaseOrderBySkuAsc(
+                                ServiceConstant.ZERO, query, ServiceConstant.ZERO, query, pageable)
                         .getContent());
             } else {
                 sortedAvailableAssets.addAll(assetRepository
-                        .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderBySkuDesc(
-                                ServiceConstant.ZERO, query, query, pageable)
+                        .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrDeletedIsFalseAndStockGreaterThanAndNameContainsIgnoreCaseOrderBySkuDesc(
+                                ServiceConstant.ZERO, query, ServiceConstant.ZERO, query, pageable)
                         .getContent());
             }
         } else {
             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                 sortedAvailableAssets.addAll(assetRepository
-                        .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameAsc(
-                                ServiceConstant.ZERO, query, query, pageable)
+                        .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrDeletedIsFalseAndStockGreaterThanAndNameContainsIgnoreCaseOrderByNameAsc(
+                                ServiceConstant.ZERO, query, ServiceConstant.ZERO, query, pageable)
                         .getContent());
             } else {
                 sortedAvailableAssets.addAll(assetRepository
-                        .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCaseOrderByNameDesc(
-                                ServiceConstant.ZERO, query, query, pageable)
+                        .findAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrDeletedIsFalseAndStockGreaterThanAndNameContainsIgnoreCaseOrderByNameDesc(
+                                ServiceConstant.ZERO, query, ServiceConstant.ZERO, query, pageable)
                         .getContent());
             }
         }
@@ -192,8 +192,8 @@ public class AssetsServiceImpl
             return assetRepository.countAllByDeletedIsFalseAndStockGreaterThan(ServiceConstant.ZERO);
         } else {
             return assetRepository
-                    .countAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrNameContainsIgnoreCase(
-                            ServiceConstant.ZERO, query, query);
+                    .countAllByDeletedIsFalseAndStockGreaterThanAndSkuContainsIgnoreCaseOrDeletedIsFalseAndStockGreaterThanAndNameContainsIgnoreCase(
+                            ServiceConstant.ZERO, query, ServiceConstant.ZERO, query);
         }
     }
 

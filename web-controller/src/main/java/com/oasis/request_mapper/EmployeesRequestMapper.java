@@ -78,7 +78,7 @@ public class EmployeesRequestMapper {
         employee.setUsername(request.getUsername());
         employee.setName(request.getName());
         try {
-            employee.setDob(new SimpleDateFormat("dd/MM/yyyy").parse(request.getDob()));
+            employee.setDob(new SimpleDateFormat("dd-MM-yyyy").parse(request.getDob()));
         } catch (ParseException parseException) {
             logger.error("Failed to parse given DOB as ParseException occurred with message: " +
                          parseException.getMessage());
