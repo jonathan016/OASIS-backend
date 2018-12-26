@@ -40,10 +40,10 @@ public interface EmployeesServiceApi {
     );
 
     List< String > getEmployeesUsernamesForSupervisorSelection(
-            final String username
+            final String adminUsername, final String username
     )
             throws
-            BadRequestException;
+            BadRequestException, DataNotFoundException;
 
     byte[] getEmployeePhoto(
             final String username, final String photoName, final String extension

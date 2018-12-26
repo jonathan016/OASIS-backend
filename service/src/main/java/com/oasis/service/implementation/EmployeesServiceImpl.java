@@ -61,18 +61,18 @@ public class EmployeesServiceImpl
     /*-------------Employees List Methods-------------*/
     @Override
     @Cacheable(value = "employeesListData", unless = "#result.size() == 0")
-    public Map< String, List< ? > > getEmployeesListData(
+    public Map<String, List<?>> getEmployeesListData(
             final String username, final String query, final int page, final String sort
     )
             throws
             BadRequestException,
             DataNotFoundException {
 
-        Map< String, List< ? > > employeesListData = new HashMap<>();
+        Map<String, List<?>> employeesListData = new HashMap<>();
 
-        final List< EmployeeModel > employees = getEmployeesList(username, query, page, sort);
-        final List< EmployeeModel > supervisors = getSupervisorsList(employees);
-        final List< String > employeePhotos = getEmployeesPhotos(employees);
+        final List<EmployeeModel> employees = getEmployeesList(username, query, page, sort);
+        final List<EmployeeModel> supervisors = getSupervisorsList(employees);
+        final List<String> employeePhotos = getEmployeesPhotos(employees);
 
         employeesListData.put("employees", employees);
         employeesListData.put("supervisors", supervisors);
@@ -82,7 +82,7 @@ public class EmployeesServiceImpl
     }
 
     @Override
-    public List< EmployeeModel > getEmployeesList(
+    public List<EmployeeModel> getEmployeesList(
             final String username, final String query, final int page, String sort
     )
             throws
@@ -107,7 +107,7 @@ public class EmployeesServiceImpl
                 sort = "A";
             }
 
-            final Set< EmployeeModel > employees;
+            final Set<EmployeeModel> employees;
             final long employeesCount = getEmployeesCount(username, query);
             final long availablePages = (long) Math.ceil((double) employeesCount / PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
 
@@ -177,7 +177,7 @@ public class EmployeesServiceImpl
 
             if (photo.exists() && Files.exists(photo.toPath())) {
                 return "http://localhost:8085/oasis/api/employees/" + username + "/" +
-                       username.concat("?extension=").concat(imageHelper.getExtensionFromFileName(photo.getName()));
+                        username.concat("?extension=").concat(imageHelper.getExtensionFromFileName(photo.getName()));
             }
         }
 
@@ -186,30 +186,37 @@ public class EmployeesServiceImpl
 
     @Override
     @SuppressWarnings("UnnecessaryContinue")
-    public List< String > getEmployeesUsernamesForSupervisorSelection(
-            final String username
+    public List<String> getEmployeesUsernamesForSupervisorSelection(
+            final String adminUsername, final String username
     )
             throws
-            BadRequestException {
+            BadRequestException,
+            DataNotFoundException {
 
         final boolean emptyUsernameGiven = username.isEmpty();
 
         if (emptyUsernameGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
+        } else if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username)) {
+            throw new DataNotFoundException(DATA_NOT_FOUND);
         } else {
-            Set< String > possibleSupervisorsUsernames = new LinkedHashSet<>();
-            final List< EmployeeModel > employees = employeeRepository
+            Set<String> possibleSupervisorsUsernames = new LinkedHashSet<>();
+            final List<EmployeeModel> employees = employeeRepository
                     .findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
 
             final boolean addEmployeeOperation = username.equals("-1");
 
             if (addEmployeeOperation) {
                 for (final EmployeeModel possibleSupervisor : employees) {
-                    possibleSupervisorsUsernames.add(possibleSupervisor.getUsername());
+                    if (!possibleSupervisor.getUsername().equals(adminUsername)) {
+                        possibleSupervisorsUsernames.add(possibleSupervisor.getUsername());
+                    } else {
+                        possibleSupervisorsUsernames.add(adminUsername.concat(" (Default)"));
+                    }
                 }
             } else {
-                List< String > supervisedEmployeesUsernames = new ArrayList<>();
-                final List< SupervisionModel > supervisions = supervisionRepository
+                List<String> supervisedEmployeesUsernames = new ArrayList<>();
+                final List<SupervisionModel> supervisions = supervisionRepository
                         .findAllByDeletedIsFalseAndSupervisorUsernameEquals(username);
 
                 for (final SupervisionModel supervision : supervisions) {
@@ -227,7 +234,11 @@ public class EmployeesServiceImpl
                                 currentCandidateUsername, supervisedEmployeesUsernames);
 
                         if (safeFromCyclicSupervising) {
-                            possibleSupervisorsUsernames.add(currentCandidateUsername);
+                            if (!possibleSupervisor.getUsername().equals(adminUsername)) {
+                                possibleSupervisorsUsernames.add(currentCandidateUsername);
+                            } else {
+                                possibleSupervisorsUsernames.add(adminUsername.concat(" (Default)"));
+                            }
                         }
                     }
                 }
@@ -285,7 +296,7 @@ public class EmployeesServiceImpl
 
         final SupervisionModel supervision = supervisionRepository.findByDeletedIsFalseAndEmployeeUsernameEquals(username);
         final boolean employeeIsAdministrator = roleDeterminer.determineRole(username)
-                                                              .equals(RoleConstant.ROLE_ADMINISTRATOR);
+                .equals(RoleConstant.ROLE_ADMINISTRATOR);
 
         final boolean noSupervisionForEmployeeWithUsername = (supervision == null);
 
@@ -392,13 +403,15 @@ public class EmployeesServiceImpl
             final boolean addEmployeeOperation
     ) {
 
-        try {
-            if (!photoGiven.getOriginalFilename().matches(Regex.REGEX_JPEG_FILE_NAME) &&
-                    !photoGiven.getOriginalFilename().matches(Regex.REGEX_PNG_FILE_NAME)) {
+        if (photoGiven != null) {
+            try {
+                if (!photoGiven.getOriginalFilename().matches(Regex.REGEX_JPEG_FILE_NAME) &&
+                        !photoGiven.getOriginalFilename().matches(Regex.REGEX_PNG_FILE_NAME)) {
+                    return false;
+                }
+            } catch (NullPointerException exception) {
                 return false;
             }
-        } catch (NullPointerException exception) {
-            return false;
         }
 
         if (employee == null) {
@@ -430,9 +443,21 @@ public class EmployeesServiceImpl
                 return false;
             } else if (!employee.getLocation().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
                 return false;
-            } else {
-                return true;
+            } else if (employee.getDob() != null) {
+                Calendar calendar = Calendar.getInstance();
+
+                calendar.setTime(new Date());
+                final int currYear = calendar.get(Calendar.YEAR);
+
+                calendar.setTime(employee.getDob());
+                final int dobYear = calendar.get(Calendar.YEAR);
+
+                if (currYear - dobYear < 16 || dobYear - currYear > 65) {
+                    return false;
+                }
             }
+
+            return true;
         }
     }
 
@@ -589,13 +614,13 @@ public class EmployeesServiceImpl
                 savedEmployee.setPhoto("");
             } else {
                 final String photoLocation = ImageDirectoryConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator)
-                                                                                            .concat(savedEmployee
-                                                                                                            .getUsername())
-                                                                                            .concat(".")
-                                                                                            .concat(imageHelper
-                                                                                                            .getExtensionFromFileName(
-                                                                                                                    photoGiven
-                                                                                                                            .getOriginalFilename()));
+                        .concat(savedEmployee
+                                .getUsername())
+                        .concat(".")
+                        .concat(imageHelper
+                                .getExtensionFromFileName(
+                                        photoGiven
+                                                .getOriginalFilename()));
 
                 savedEmployee.setPhoto(photoLocation);
 
@@ -642,10 +667,10 @@ public class EmployeesServiceImpl
             try {
                 File photo = new File(
                         ImageDirectoryConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator).concat(username)
-                                                                       .concat(".").concat(imageHelper
-                                                                                                   .getExtensionFromFileName(
-                                                                                                           photoGiven
-                                                                                                                   .getOriginalFilename())));
+                                .concat(".").concat(imageHelper
+                                .getExtensionFromFileName(
+                                        photoGiven
+                                                .getOriginalFilename())));
 
                 photoGiven.transferTo(photo);
             } catch (IOException ioException) {
@@ -705,7 +730,7 @@ public class EmployeesServiceImpl
 
     /*-------------Delete Employee Methods-------------*/
     @Override
-    @CacheEvict(value = { "employeesList", "employeeDetailData" }, allEntries = true)
+    @CacheEvict(value = {"employeesList", "employeeDetailData"}, allEntries = true)
     public void deleteEmployee(
             final String adminUsername, final String employeeUsername
     )
@@ -742,11 +767,11 @@ public class EmployeesServiceImpl
                 if (targetEmployeeDoesNotExist || supervisionOfTargetEmployeeDoesNotExist) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else {
-                    List< RequestModel > requests = new ArrayList<>();
+                    List<RequestModel> requests = new ArrayList<>();
 
-                    final List< RequestModel > acceptedRequests = requestsServiceApi
+                    final List<RequestModel> acceptedRequests = requestsServiceApi
                             .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_ACCEPTED);
-                    final List< RequestModel > requestedRequests = requestsServiceApi
+                    final List<RequestModel> requestedRequests = requestsServiceApi
                             .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_REQUESTED);
 
                     requests.addAll(acceptedRequests);
@@ -788,7 +813,7 @@ public class EmployeesServiceImpl
     }
 
     @Override
-    @CacheEvict(value = { "employeesList", "employeeDetailData" }, allEntries = true)
+    @CacheEvict(value = {"employeesList", "employeeDetailData"}, allEntries = true)
     public void changeSupervisorOnPreviousSupervisorDeletion(
             final String adminUsername, final String oldSupervisorUsername, final String newSupervisorUsername
     )
@@ -819,7 +844,7 @@ public class EmployeesServiceImpl
                 if (!employeeWithOldSupervisorUsernameExists || !employeeWithNewSupervisorUsernameExists) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else {
-                    List< SupervisionModel > supervisions = supervisionRepository
+                    List<SupervisionModel> supervisions = supervisionRepository
                             .findAllByDeletedIsFalseAndSupervisorUsernameEquals(oldSupervisorUsername);
 
                     final boolean employeeWithOldSupervisorUsernameDoesNotSupervise = supervisions.isEmpty();
@@ -839,7 +864,7 @@ public class EmployeesServiceImpl
     @SuppressWarnings("PointlessBooleanExpression")
     private void demotePreviousSupervisorFromAdminIfNecessary(
             final String adminUsername, final String oldSupervisorUsername, final String newSupervisorUsername,
-            final List< SupervisionModel > supervisions
+            final List<SupervisionModel> supervisions
     ) {
 
         boolean hadSupervisingEmployees = false;
@@ -897,12 +922,12 @@ public class EmployeesServiceImpl
 
         return supervisionRepository
                 .existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameEqualsAndEmployeeUsernameEquals(supervisorUsername,
-                                                                                                employeeUsername
+                        employeeUsername
                 );
     }
 
     @Override
-    public List< SupervisionModel > findAllByDeletedIsFalseAndSupervisorUsername(final String supervisorUsername) {
+    public List<SupervisionModel> findAllByDeletedIsFalseAndSupervisorUsername(final String supervisorUsername) {
 
         return supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsernameEquals(supervisorUsername);
     }
@@ -913,11 +938,11 @@ public class EmployeesServiceImpl
         return supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(supervisorUsername);
     }
 
-    private List< EmployeeModel > getSupervisorsList(
-            final List< EmployeeModel > employees
+    private List<EmployeeModel> getSupervisorsList(
+            final List<EmployeeModel> employees
     ) {
 
-        List< EmployeeModel > supervisors = new ArrayList<>();
+        List<EmployeeModel> supervisors = new ArrayList<>();
 
         for (final EmployeeModel employee : employees) {
 
@@ -939,11 +964,11 @@ public class EmployeesServiceImpl
         return supervisors;
     }
 
-    private List< String > getEmployeesPhotos(
-            final List< EmployeeModel > employees
+    private List<String> getEmployeesPhotos(
+            final List<EmployeeModel> employees
     ) {
 
-        List< String > photos = new ArrayList<>();
+        List<String> photos = new ArrayList<>();
 
         for (final EmployeeModel employee : employees) {
             photos.add(getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto()));
@@ -952,11 +977,11 @@ public class EmployeesServiceImpl
         return photos;
     }
 
-    private Set< EmployeeModel > getSortedEmployees(
+    private Set<EmployeeModel> getSortedEmployees(
             final String username, final int page, final String sort
     ) {
 
-        Set< EmployeeModel > sortedEmployees = new LinkedHashSet<>();
+        Set<EmployeeModel> sortedEmployees = new LinkedHashSet<>();
 
         final int zeroBasedIndexPage = page - 1;
         final Pageable pageable = PageRequest.of(zeroBasedIndexPage, PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
@@ -964,40 +989,40 @@ public class EmployeesServiceImpl
         if (sort.equals(ServiceConstant.ASCENDING)) {
             sortedEmployees
                     .addAll(employeeRepository.findAllByDeletedIsFalseAndUsernameIsNotOrderByNameAsc(username, pageable)
-                                              .getContent());
+                            .getContent());
         } else {
             sortedEmployees.addAll(employeeRepository
-                                           .findAllByDeletedIsFalseAndUsernameIsNotOrderByNameDesc(username, pageable)
-                                           .getContent());
+                    .findAllByDeletedIsFalseAndUsernameIsNotOrderByNameDesc(username, pageable)
+                    .getContent());
         }
 
         return sortedEmployees;
     }
 
-    private Set< EmployeeModel > getSortedEmployeesFromQuery(
+    private Set<EmployeeModel> getSortedEmployeesFromQuery(
             final int page, final String query, final String sort
     ) {
 
-        Set< EmployeeModel > sortedEmployees = new LinkedHashSet<>();
+        Set<EmployeeModel> sortedEmployees = new LinkedHashSet<>();
 
         final int zeroBasedIndexPage = page - 1;
         final Pageable pageable = PageRequest.of(zeroBasedIndexPage, PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
 
         if (sort.equals(ServiceConstant.ASCENDING)) {
             sortedEmployees.addAll(employeeRepository
-                                           .findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
-                                                   query, query, pageable).getContent());
+                    .findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameAsc(
+                            query, query, pageable).getContent());
         } else {
             sortedEmployees.addAll(employeeRepository
-                                           .findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
-                                                   query, query, pageable).getContent());
+                    .findAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCaseOrderByNameDesc(
+                            query, query, pageable).getContent());
         }
 
         return sortedEmployees;
     }
 
     private boolean isSafeFromCyclicSupervising(
-            final String targetUsername, final List< String > usernames
+            final String targetUsername, final List<String> usernames
     ) {
 
         if (usernames.size() - 1 >= 1) {

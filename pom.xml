@@ -29,7 +29,7 @@
         <spring-core.version>5.1.3.RELEASE</spring-core.version>
         <javax-servlet-api.version>3.0.1</javax-servlet-api.version>
 
-        <spring-data-mongodb.version>2.1.0.RELEASE</spring-data-mongodb.version>
+        <spring-data-mongodb.version>2.1.3.RELEASE</spring-data-mongodb.version>
         <spring-data-redis.version>1.7.10.RELEASE</spring-data-redis.version>
 
         <jackson-databind.version>2.9.8</jackson-databind.version>

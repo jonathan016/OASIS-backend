@@ -127,18 +127,25 @@ public class EmployeesController {
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesUsernamesForSupervisorSelection(
             @RequestParam(value = "username")
-            final String username
+            final String username,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final List< String > usernames;
 
         try {
-            usernames = employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(username);
+            usernames = employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(user.getUsername(), username);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
                                                                                  badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
+        } catch (DataNotFoundException dataNotFoundException) {
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
+            ), HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<>(usernames, HttpStatus.OK);
