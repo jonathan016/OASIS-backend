@@ -2,14 +2,17 @@ package com.oasis.web_model.request.assets;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SaveAssetRequest {
 
-    private String username;
     private SaveAssetRequest.Asset asset;
 
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class Asset {
 

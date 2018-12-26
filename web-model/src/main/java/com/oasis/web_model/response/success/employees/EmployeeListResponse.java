@@ -7,10 +7,11 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeListResponse {
 
-    private List< Employee > employees;
+    private List< EmployeeListResponse.Employee > employees;
 
     @Data
     @NoArgsConstructor
@@ -22,7 +23,7 @@ public class EmployeeListResponse {
         private String photo;
         private String jobTitle;
         private String location;
-        private Supervisor supervisor;
+        private EmployeeListResponse.Employee.Supervisor supervisor;
 
         @Data
         @NoArgsConstructor

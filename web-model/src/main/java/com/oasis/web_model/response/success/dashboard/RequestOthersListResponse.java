@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class RequestOthersListResponse {
 
@@ -17,9 +18,9 @@ public class RequestOthersListResponse {
     @AllArgsConstructor
     public static class RequestListObject {
 
-        private Request request;
-        private Employee employee;
-        private Asset asset;
+        private RequestListObject.Request request;
+        private RequestListObject.Employee employee;
+        private RequestListObject.Asset asset;
 
         @Data
         @NoArgsConstructor
