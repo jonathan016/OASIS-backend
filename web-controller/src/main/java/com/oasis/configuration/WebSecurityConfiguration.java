@@ -1,6 +1,5 @@
 package com.oasis.configuration;
 
-import com.google.common.collect.ImmutableList;
 import com.oasis.security.OasisAccessDeniedHandler;
 import com.oasis.security.OasisAuthenticationFailureHandler;
 import com.oasis.security.OasisAuthenticationProvider;
@@ -21,6 +20,8 @@ import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 import static com.oasis.tool.constant.RoleConstant.*;
 import static com.oasis.web_model.constant.APIMappingValue.*;
@@ -94,12 +95,12 @@ public class WebSecurityConfiguration
 
         final CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(ImmutableList.of("http://localhost", "*"));
-        configuration.setAllowedMethods(ImmutableList.of("GET", "POST", "OPTIONS", "DELETE"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost", "*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "DELETE"));
         configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders(ImmutableList.of("Content-Type", "Access-Control-Allow-Origin", "x-auth-token",
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Access-Control-Allow-Origin", "x-auth-token",
                 "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "requestId", "Correlation-Id"));
-        configuration.setExposedHeaders(ImmutableList.of("Content-Type", "Access-Control-Allow-Origin", "x-auth-token",
+        configuration.setExposedHeaders(Arrays.asList("Content-Type", "Access-Control-Allow-Origin", "x-auth-token",
                 "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "requestId", "Correlation-Id"));
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

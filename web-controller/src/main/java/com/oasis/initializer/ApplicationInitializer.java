@@ -11,7 +11,6 @@ public class ApplicationInitializer
 
         return new Class[]{
                 DatabaseConfiguration.class,
-                HttpSessionConfiguration.class,
                 MultipartResolverConfiguration.class,
                 RedisConfiguration.class,
                 ResourceHandlerConfiguration.class,
