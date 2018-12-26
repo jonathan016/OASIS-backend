@@ -8,20 +8,18 @@ import org.springframework.stereotype.Repository;
 public interface LastUniqueIdentifierRepository
         extends MongoRepository< LastUniqueIdentifierModel, String > {
 
-    LastUniqueIdentifierModel findByBrand(String brand);
+    LastUniqueIdentifierModel findByBrandEquals(String brand);
 
-    boolean existsLastUniqueIdentifierModelByBrand(String brand);
+    boolean existsLastUniqueIdentifierModelByBrandEquals(String brand);
 
-    boolean existsLastUniqueIdentifierModelByBrandAndType(
+    boolean existsLastUniqueIdentifierModelByBrandEqualsAndTypeEquals(
             String brand, String type
     );
 
-    LastUniqueIdentifierModel findByBrandAndType(
+    LastUniqueIdentifierModel findByBrandEqualsAndTypeEquals(
             String brand, String type
     );
 
     LastUniqueIdentifierModel findFirstBySkuContainsOrderBySkuDesc(String sku);
-
-    boolean existsLastUniqueIdentifierModelBySku(String sku);
 
 }

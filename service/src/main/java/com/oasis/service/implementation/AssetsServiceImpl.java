@@ -448,7 +448,7 @@ public class AssetsServiceImpl
             if (addAssetOperation) {
                 savedAsset = asset;
 
-                if (assetRepository.existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(savedAsset.getName(),
+                if (assetRepository.existsAssetModelByDeletedIsFalseAndNameEqualsAndBrandEqualsAndTypeEquals(savedAsset.getName(),
                         savedAsset.getBrand(), savedAsset.getType())) {
                     throw new DuplicateDataException(DUPLICATE_DATA_FOUND);
                 } else {
@@ -638,8 +638,8 @@ public class AssetsServiceImpl
         StringBuilder sku;
         LastUniqueIdentifierModel lastUniqueIdentifier;
 
-        if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrandAndType(brand, type)) {
-            lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrandAndType(brand, type);
+        if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrandEqualsAndTypeEquals(brand, type)) {
+            lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrandEqualsAndTypeEquals(brand, type);
 
             int lastProductIdCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(12, 15));
             lastProductIdCode++;
@@ -647,8 +647,8 @@ public class AssetsServiceImpl
             sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 11));
             sku.append(String.format("-%03d", lastProductIdCode));
         } else {
-            if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrand(brand)) {
-                lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrand(brand);
+            if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrandEquals(brand)) {
+                lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrandEquals(brand);
 
                 int lastTypeCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(8, 11));
                 lastTypeCode++;

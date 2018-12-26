@@ -7,6 +7,8 @@ import com.oasis.model.entity.AssetModel;
 import com.oasis.web_model.request.assets.SaveAssetRequest;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,6 +18,8 @@ import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER
 @Component
 public class AssetsRequestMapper {
 
+    private Logger logger = LoggerFactory.getLogger(EmployeesRequestMapper.class);
+
     public boolean isAddAssetOperationFromRawData(final String rawAssetData)
             throws
             BadRequestException {
@@ -24,7 +28,9 @@ public class AssetsRequestMapper {
 
         try {
             asset = new ObjectMapper().readTree(rawAssetData).path("asset");
-        } catch (IOException e) {
+        } catch (IOException exception) {
+            logger.error("Failed to read attribute 'asset' from passed JSON data as IOException occurred with message: "
+                    + exception.getMessage());
             throw new BadRequestException(INCORRECT_PARAMETER);
         }
 
@@ -58,7 +64,9 @@ public class AssetsRequestMapper {
                 );
             }
 
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException exception) {
+            logger.error("Failed to process data as IOException or NumberFormatException occurred with message: " +
+                    exception.getMessage());
             return null;
         }
 

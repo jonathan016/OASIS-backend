@@ -34,11 +34,11 @@ public class RoleDeterminer {
             return RoleConstant.ROLE_ADMINISTRATOR;
         } else {
             boolean employeeWithUsernameExists = employeeRepository
-                    .existsEmployeeModelByDeletedIsFalseAndUsername(username);
+                    .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username);
 
             if (employeeWithUsernameExists) {
                 boolean supervisionWithUsernameAsSupervisorExists = supervisionRepository
-                        .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(username);
+                        .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(username);
 
                 if (supervisionWithUsernameAsSupervisorExists) {
                     return RoleConstant.ROLE_SUPERIOR;

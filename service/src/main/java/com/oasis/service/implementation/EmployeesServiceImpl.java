@@ -154,7 +154,7 @@ public class EmployeesServiceImpl
             throws
             DataNotFoundException {
 
-        final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
+        final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsernameEquals(username);
 
         final boolean employeeWithUsernameExists = (employee != null);
 
@@ -210,7 +210,7 @@ public class EmployeesServiceImpl
             } else {
                 List< String > supervisedEmployeesUsernames = new ArrayList<>();
                 final List< SupervisionModel > supervisions = supervisionRepository
-                        .findAllByDeletedIsFalseAndSupervisorUsername(username);
+                        .findAllByDeletedIsFalseAndSupervisorUsernameEquals(username);
 
                 for (final SupervisionModel supervision : supervisions) {
                     supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
@@ -243,13 +243,13 @@ public class EmployeesServiceImpl
     ) {
 
         final boolean employeeWithUsernameExists = employeeRepository
-                .existsEmployeeModelByDeletedIsFalseAndUsername(username);
+                .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username);
 
         if (!employeeWithUsernameExists) {
             logger.info("Failed to load employee photo as username does not refer any employee in database");
             return new byte[0];
         } else {
-            final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
+            final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsernameEquals(username);
 
             File file = new File(employee.getPhoto());
 
@@ -283,7 +283,7 @@ public class EmployeesServiceImpl
             throws
             DataNotFoundException {
 
-        final SupervisionModel supervision = supervisionRepository.findByDeletedIsFalseAndEmployeeUsername(username);
+        final SupervisionModel supervision = supervisionRepository.findByDeletedIsFalseAndEmployeeUsernameEquals(username);
         final boolean employeeIsAdministrator = roleDeterminer.determineRole(username)
                                                               .equals(RoleConstant.ROLE_ADMINISTRATOR);
 
@@ -298,7 +298,7 @@ public class EmployeesServiceImpl
                 return null;
             }
 
-            return employeeRepository.findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
+            return employeeRepository.findByDeletedIsFalseAndUsernameEquals(supervision.getSupervisorUsername());
         }
     }
 
@@ -337,7 +337,7 @@ public class EmployeesServiceImpl
                     savedEmployee = employee;
 
                     final boolean potentialDuplicateEmployeeData = employeeRepository
-                            .existsByDeletedIsFalseAndNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
+                            .existsByDeletedIsFalseAndNameEqualsAndDobEqualsAndPhoneEqualsAndJobTitleEqualsAndDivisionEqualsAndLocationEquals(
                                     savedEmployee.getName(), savedEmployee.getDob(), savedEmployee.getPhone(),
                                     savedEmployee.getJobTitle(), savedEmployee.getDivision(), savedEmployee.getLocation()
                             );
@@ -356,7 +356,7 @@ public class EmployeesServiceImpl
                     }
                 }
             } else {
-                savedEmployee = employeeRepository.findByDeletedIsFalseAndUsername(employee.getUsername());
+                savedEmployee = employeeRepository.findByDeletedIsFalseAndUsernameEquals(employee.getUsername());
 
                 if (savedEmployee == null) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
@@ -495,7 +495,7 @@ public class EmployeesServiceImpl
             DataNotFoundException {
 
         final boolean employeeWithSupervisorUsernameExists = employeeRepository
-                .existsEmployeeModelByDeletedIsFalseAndUsername(supervisorUsername);
+                .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(supervisorUsername);
 
         if (!employeeWithSupervisorUsernameExists) {
             throw new DataNotFoundException(DATA_NOT_FOUND);
@@ -503,7 +503,7 @@ public class EmployeesServiceImpl
             createSupervision(employeeUsername, supervisorUsername, adminUsername);
 
             final SupervisionModel createdSupervision = supervisionRepository
-                    .findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
+                    .findByDeletedIsFalseAndEmployeeUsernameEquals(employeeUsername);
 
             return createdSupervision.get_id();
         }
@@ -518,13 +518,13 @@ public class EmployeesServiceImpl
             UnauthorizedOperationException,
             BadRequestException {
 
-        final EmployeeModel supervisor = employeeRepository.findByDeletedIsFalseAndUsername(supervisorUsername);
+        final EmployeeModel supervisor = employeeRepository.findByDeletedIsFalseAndUsernameEquals(supervisorUsername);
 
         if (supervisor == null) {
             throw new DataNotFoundException(DATA_NOT_FOUND);
         } else {
             final SupervisionModel supervision = supervisionRepository
-                    .findByDeletedIsFalseAndEmployeeUsername(savedEmployee.getUsername());
+                    .findByDeletedIsFalseAndEmployeeUsernameEquals(savedEmployee.getUsername());
 
             if (supervisorUsername.equals(supervision.getSupervisorUsername())) {
                 throw new BadRequestException(INCORRECT_PARAMETER);
@@ -539,7 +539,7 @@ public class EmployeesServiceImpl
                     supervisionRepository.save(supervision);
 
                     if (supervisionRepository
-                            .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername)) {
+                            .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(employeeUsername)) {
                         AdminModel promotedAdmin;
 
                         final boolean adminWithUsernameAndIsDeletedExists = adminRepository
@@ -626,7 +626,7 @@ public class EmployeesServiceImpl
     ) {
 
         final String supervisorOfSupervisorUsername = supervisionRepository
-                .findByDeletedIsFalseAndEmployeeUsername(supervisorUsername).getSupervisorUsername();
+                .findByDeletedIsFalseAndEmployeeUsernameEquals(supervisorUsername).getSupervisorUsername();
 
         final boolean isEmployeeSupervisorOfSupervisor = supervisorOfSupervisorUsername.equals(employeeUsername);
 
@@ -674,7 +674,7 @@ public class EmployeesServiceImpl
         if (emptyUsernameGiven || emptyOldPasswordGiven || emptyNewPasswordGiven || emptyNewPasswordConfirmationGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
+            EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsernameEquals(username);
 
             if (employee == null) {
                 throw new DataNotFoundException(DATA_NOT_FOUND);
@@ -724,7 +724,7 @@ public class EmployeesServiceImpl
                     .equals(RoleConstant.ROLE_ADMINISTRATOR);
             final boolean selfDeletionAttempt = employeeUsername.equals(adminUsername);
             final boolean employeeWithEmployeeUsernameStillSupervises = supervisionRepository
-                    .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername);
+                    .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(employeeUsername);
             final boolean allDeliveredAssetsHaveBeenReturned = requestsServiceApi
                     .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_DELIVERED).isEmpty();
 
@@ -732,9 +732,9 @@ public class EmployeesServiceImpl
                     !allDeliveredAssetsHaveBeenReturned) {
                 throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
             } else {
-                EmployeeModel targetEmployee = employeeRepository.findByDeletedIsFalseAndUsername(employeeUsername);
+                EmployeeModel targetEmployee = employeeRepository.findByDeletedIsFalseAndUsernameEquals(employeeUsername);
                 SupervisionModel supervisionOfTargetEmployee = supervisionRepository
-                        .findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
+                        .findByDeletedIsFalseAndEmployeeUsernameEquals(employeeUsername);
 
                 final boolean targetEmployeeDoesNotExist = (targetEmployee == null);
                 final boolean supervisionOfTargetEmployeeDoesNotExist = (supervisionOfTargetEmployee == null);
@@ -812,15 +812,15 @@ public class EmployeesServiceImpl
                 throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
             } else {
                 final boolean employeeWithOldSupervisorUsernameExists = employeeRepository
-                        .existsEmployeeModelByDeletedIsFalseAndUsername(oldSupervisorUsername);
+                        .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(oldSupervisorUsername);
                 final boolean employeeWithNewSupervisorUsernameExists = employeeRepository
-                        .existsEmployeeModelByDeletedIsFalseAndUsername(newSupervisorUsername);
+                        .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(newSupervisorUsername);
 
                 if (!employeeWithOldSupervisorUsernameExists || !employeeWithNewSupervisorUsernameExists) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else {
                     List< SupervisionModel > supervisions = supervisionRepository
-                            .findAllByDeletedIsFalseAndSupervisorUsername(oldSupervisorUsername);
+                            .findAllByDeletedIsFalseAndSupervisorUsernameEquals(oldSupervisorUsername);
 
                     final boolean employeeWithOldSupervisorUsernameDoesNotSupervise = supervisions.isEmpty();
 
@@ -847,7 +847,7 @@ public class EmployeesServiceImpl
         for (SupervisionModel supervision : supervisions) {
             final boolean correctAssumptionOfNotHavingSupervisingEmployees = (hadSupervisingEmployees == false);
             final boolean supervisedEmployeeFromSupervisionSupervises = supervisionRepository
-                    .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(supervision.getEmployeeUsername());
+                    .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(supervision.getEmployeeUsername());
 
             if (correctAssumptionOfNotHavingSupervisingEmployees && supervisedEmployeeFromSupervisionSupervises) {
                 hadSupervisingEmployees = true;
@@ -869,7 +869,7 @@ public class EmployeesServiceImpl
     @Override
     public EmployeeModel findByDeletedIsFalseAndUsername(final String username) {
 
-        return employeeRepository.findByDeletedIsFalseAndUsername(username);
+        return employeeRepository.findByDeletedIsFalseAndUsernameEquals(username);
     }
 
     @Override
@@ -881,7 +881,7 @@ public class EmployeesServiceImpl
     @Override
     public boolean existsEmployeeModelByDeletedIsFalseAndUsername(final String username) {
 
-        return employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsername(username);
+        return employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username);
     }
 
     @Override
@@ -896,7 +896,7 @@ public class EmployeesServiceImpl
     ) {
 
         return supervisionRepository
-                .existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameAndEmployeeUsername(supervisorUsername,
+                .existsSupervisionModelByDeletedIsFalseAndSupervisorUsernameEqualsAndEmployeeUsernameEquals(supervisorUsername,
                                                                                                 employeeUsername
                 );
     }
@@ -904,13 +904,13 @@ public class EmployeesServiceImpl
     @Override
     public List< SupervisionModel > findAllByDeletedIsFalseAndSupervisorUsername(final String supervisorUsername) {
 
-        return supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsername(supervisorUsername);
+        return supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsernameEquals(supervisorUsername);
     }
 
     @Override
     public boolean existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(final String supervisorUsername) {
 
-        return supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(supervisorUsername);
+        return supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(supervisorUsername);
     }
 
     private List< EmployeeModel > getSupervisorsList(
@@ -922,13 +922,13 @@ public class EmployeesServiceImpl
         for (final EmployeeModel employee : employees) {
 
             final SupervisionModel supervision = supervisionRepository
-                    .findByDeletedIsFalseAndEmployeeUsername(employee.getUsername());
+                    .findByDeletedIsFalseAndEmployeeUsernameEquals(employee.getUsername());
 
             final boolean supervisionForCurrentEmployeeExists = (supervision != null);
 
             if (supervisionForCurrentEmployeeExists) {
                 final EmployeeModel supervisor = employeeRepository
-                        .findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
+                        .findByDeletedIsFalseAndUsernameEquals(supervision.getSupervisorUsername());
 
                 supervisors.add(supervisor);
             } else {    // For top administrator, who does not have any supervisor at all

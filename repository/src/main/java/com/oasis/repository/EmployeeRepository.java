@@ -29,7 +29,7 @@ public interface EmployeeRepository
             String username, Pageable pageable
     );
 
-    EmployeeModel findByDeletedIsFalseAndUsername(String username);
+    EmployeeModel findByDeletedIsFalseAndUsernameEquals(String username);
 
     long countAllByUsernameStartsWith(String username);
 
@@ -41,11 +41,11 @@ public interface EmployeeRepository
             String username, String name, Pageable pageable
     );
 
-    boolean existsByDeletedIsFalseAndNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
+    boolean existsByDeletedIsFalseAndNameEqualsAndDobEqualsAndPhoneEqualsAndJobTitleEqualsAndDivisionEqualsAndLocationEquals(
             String name, Date dob, String phone, String jobTitle, String division, String location
     );
 
-    boolean existsEmployeeModelByDeletedIsFalseAndUsername(String username);
+    boolean existsEmployeeModelByDeletedIsFalseAndUsernameEquals(String username);
 
     boolean existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(String username);
 

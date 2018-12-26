@@ -12,117 +12,73 @@ import java.util.List;
 public interface RequestRepository
         extends MongoRepository< RequestModel, String > {
 
-    List< RequestModel > findAllByUsernameAndStatus(
+    List< RequestModel > findAllByUsernameEqualsAndStatusEquals(
             String username, String status
     );
 
-    boolean existsRequestModelsBySku(String sku);
+    boolean existsRequestModelsBySkuEquals(String sku);
 
-    List< RequestModel > findAllByUsernameAndStatusContainsOrderByStatusAsc(
+    List< RequestModel > findAllByUsernameEqualsAndStatusContainsOrderByStatusAsc(
             String username, String status
     );
 
-    List< RequestModel > findAllByUsernameAndStatusContainsOrderByStatusDesc(
+    List< RequestModel > findAllByUsernameEqualsAndStatusContainsOrderByStatusDesc(
             String username, String status
     );
 
-    List< RequestModel > findAllByUsernameAndStatusOrderByUpdatedDateAsc(
+    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateAsc(
             String username, String status
     );
 
-    List< RequestModel > findAllByUsernameAndStatusOrderByUpdatedDateDesc(
+    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateDesc(
             String username, String status
     );
 
-    Page< RequestModel > findAllByUsernameAndStatusContainsOrderByUpdatedDateAsc(
+    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateAsc(
             String username, String status, Pageable pageable
     );
 
-    Page< RequestModel > findAllByUsernameAndStatusContainsOrderByUpdatedDateDesc(
+    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateDesc(
             String username, String status, Pageable pageable
     );
 
-    Page< RequestModel > findAllByUsernameAndStatusOrderByUpdatedDateAsc(
-            String username, String status, Pageable pageable
-    );
-
-    Page< RequestModel > findAllByUsernameAndStatusOrderByUpdatedDateDesc(
-            String username, String status, Pageable pageable
-    );
-
-    long countAllByUsernameAndStatus(
+    long countAllByUsernameEqualsAndStatusEquals(
             String username, String status
     );
 
-    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(
-            String username, String status, String sku
-    );
-
-    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
-            String username1, String status, String username2, String sku
-    );
-
-    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
-            String username, String status, String sku
-    );
-
-    List< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
-            String username1, String status, String username2, String sku
-    );
-
-    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByStatusAsc(
-            String username, String status, String sku, Pageable pageable
-    );
-
-    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByStatusDesc(
-            String username1, String status, String username2, String sku, Pageable pageable
-    );
-
-    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCaseOrderByUpdatedDateAsc(
-            String username, String status, String sku, Pageable pageable
-    );
-
-    Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsOrUsernameEqualsAndSkuContainsIgnoreCaseOrderByUpdatedDateDesc(
-            String username1, String status, String username2, String sku, Pageable pageable
-    );
-
-    long countAllByUsernameEqualsAndStatusEqualsOrSkuContainsIgnoreCase(
-            String username, String status, String sku
-    );
-
-    List< RequestModel > findAllByUsernameOrderByStatusAsc(
+    List< RequestModel > findAllByUsernameEqualsOrderByStatusAsc(
             String username
     );
 
-    List< RequestModel > findAllByUsernameOrderByStatusDesc(
+    List< RequestModel > findAllByUsernameEqualsOrderByStatusDesc(
             String username
     );
 
-    List< RequestModel > findAllByUsernameOrderByUpdatedDateAsc(
+    List< RequestModel > findAllByUsernameEqualsOrderByUpdatedDateAsc(
             String username
     );
 
-    List< RequestModel > findAllByUsernameOrderByUpdatedDateDesc(
+    List< RequestModel > findAllByUsernameEqualsOrderByUpdatedDateDesc(
             String username
     );
 
-    Page< RequestModel > findAllByUsernameOrderByStatusAsc(
+    Page< RequestModel > findAllByUsernameEqualsOrderByStatusAsc(
             String username, Pageable pageable
     );
 
-    Page< RequestModel > findAllByUsernameOrderByStatusDesc(
+    Page< RequestModel > findAllByUsernameEqualsOrderByStatusDesc(
             String username, Pageable pageable
     );
 
-    Page< RequestModel > findAllByUsernameOrderByUpdatedDateAsc(
+    Page< RequestModel > findAllByUsernameEqualsOrderByUpdatedDateAsc(
             String username, Pageable pageable
     );
 
-    Page< RequestModel > findAllByUsernameOrderByUpdatedDateDesc(
+    Page< RequestModel > findAllByUsernameEqualsOrderByUpdatedDateDesc(
             String username, Pageable pageable
     );
 
-    long countAllByUsername(
+    long countAllByUsernameEquals(
             String username
     );
 

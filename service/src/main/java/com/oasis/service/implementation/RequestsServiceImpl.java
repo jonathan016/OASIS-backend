@@ -120,7 +120,7 @@ public class RequestsServiceImpl
 
                 if (viewAllRequestsRegardlessOfStatus) {
                     if (viewAllRequests) {
-                        return requestRepository.countAllByUsername(username);
+                        return requestRepository.countAllByUsernameEquals(username);
                     } else {
                         long requestCount = 0;
 
@@ -136,7 +136,7 @@ public class RequestsServiceImpl
                     }
                 } else {
                     if (viewAllRequests) {
-                        return requestRepository.countAllByUsernameAndStatus(username, status);
+                        return requestRepository.countAllByUsernameEqualsAndStatusEquals(username, status);
                     } else {
                         long requestCount = 0;
 
@@ -635,13 +635,13 @@ public class RequestsServiceImpl
     @Override
     public boolean existsRequestModelsBySku(final String sku) {
 
-        return requestRepository.existsRequestModelsBySku(sku);
+        return requestRepository.existsRequestModelsBySkuEquals(sku);
     }
 
     @Override
     public List< RequestModel > findAllByUsernameAndStatus(final String username, final String status) {
 
-        return requestRepository.findAllByUsernameAndStatus(username, status);
+        return requestRepository.findAllByUsernameEqualsAndStatusEquals(username, status);
     }
 
     @Override
@@ -653,19 +653,19 @@ public class RequestsServiceImpl
     @Override
     public long countAllByUsername(final String username) {
 
-        return requestRepository.countAllByUsername(username);
+        return requestRepository.countAllByUsernameEquals(username);
     }
 
     @Override
     public long countAllByUsernameAndStatus(final String username, final String status) {
 
-        return requestRepository.countAllByUsernameAndStatus(username, status);
+        return requestRepository.countAllByUsernameEqualsAndStatusEquals(username, status);
     }
 
     @Override
     public List< RequestModel > findAllByUsernameOrderByUpdatedDateDesc(final String username) {
 
-        return requestRepository.findAllByUsernameOrderByUpdatedDateDesc(username);
+        return requestRepository.findAllByUsernameEqualsOrderByUpdatedDateDesc(username);
     }
 
     @Override
@@ -673,7 +673,7 @@ public class RequestsServiceImpl
             final String username, final String status
     ) {
 
-        return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status);
+        return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateDesc(username, status);
     }
 
     @Override
@@ -681,7 +681,7 @@ public class RequestsServiceImpl
             final String username, final Pageable pageable
     ) {
 
-        return requestRepository.findAllByUsernameOrderByUpdatedDateDesc(username, pageable);
+        return requestRepository.findAllByUsernameEqualsOrderByUpdatedDateDesc(username, pageable);
     }
 
     @Override
@@ -689,7 +689,7 @@ public class RequestsServiceImpl
             final String username, final String status, final Pageable pageable
     ) {
 
-        return requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(username, status, pageable);
+        return requestRepository.findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateDesc(username, status, pageable);
     }
 
     private List< EmployeeModel > getEmployeesDataFromRequest(
@@ -782,7 +782,7 @@ public class RequestsServiceImpl
             List< RequestModel > requests = new ArrayList<>();
 
             if (viewAllRequestsRegardlessOfStatus) {
-                final long requestsCount = requestRepository.countAllByUsername(username);
+                final long requestsCount = requestRepository.countAllByUsernameEquals(username);
                 final boolean noRequests = (requestsCount == 0);
                 final long totalPages = (long) Math
                         .ceil((double) getRequestsCount("Username", username, query, status, page, sort) /
@@ -801,21 +801,21 @@ public class RequestsServiceImpl
                     if (viewAllRequests) {
                         if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                             if (sort.substring(2).equals("status")) {
-                                requests.addAll(requestRepository.findAllByUsernameOrderByStatusAsc(username, pageable)
+                                requests.addAll(requestRepository.findAllByUsernameEqualsOrderByStatusAsc(username, pageable)
                                                                  .getContent());
                             } else {
                                 requests.addAll(
-                                        requestRepository.findAllByUsernameOrderByUpdatedDateAsc(username, pageable)
+                                        requestRepository.findAllByUsernameEqualsOrderByUpdatedDateAsc(username, pageable)
                                                          .getContent());
 
                             }
                         } else {
                             if (sort.substring(2).equals("status")) {
-                                requests.addAll(requestRepository.findAllByUsernameOrderByStatusDesc(username, pageable)
+                                requests.addAll(requestRepository.findAllByUsernameEqualsOrderByStatusDesc(username, pageable)
                                                                  .getContent());
                             } else {
                                 requests.addAll(
-                                        requestRepository.findAllByUsernameOrderByUpdatedDateDesc(username, pageable)
+                                        requestRepository.findAllByUsernameEqualsOrderByUpdatedDateDesc(username, pageable)
                                                          .getContent());
 
                             }
@@ -863,7 +863,7 @@ public class RequestsServiceImpl
                 if (incorrectStatusValue) {
                     throw new BadRequestException(INCORRECT_PARAMETER);
                 } else {
-                    final long requestsCount = requestRepository.countAllByUsernameAndStatus(username, status);
+                    final long requestsCount = requestRepository.countAllByUsernameEqualsAndStatusEquals(username, status);
                     final boolean noRequests = (requestsCount == 0);
                     final long totalPages = (long) Math
                             .ceil((double) getRequestsCount("Username", username, query, status, page, sort) /
@@ -883,13 +883,13 @@ public class RequestsServiceImpl
                             if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                                 if (sort.substring(2).equals("status")) {
                                     requests.addAll(requestRepository
-                                                            .findAllByUsernameAndStatusOrderByUpdatedDateAsc(username,
+                                                            .findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateAsc(username,
                                                                                                              status,
                                                                                                              pageable
                                                             ).getContent());
                                 } else {
                                     requests.addAll(requestRepository
-                                                            .findAllByUsernameAndStatusOrderByUpdatedDateAsc(username,
+                                                            .findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateAsc(username,
                                                                                                              status,
                                                                                                              pageable
                                                             ).getContent());
@@ -898,13 +898,13 @@ public class RequestsServiceImpl
                             } else {
                                 if (sort.substring(2).equals("status")) {
                                     requests.addAll(requestRepository
-                                                            .findAllByUsernameAndStatusOrderByUpdatedDateDesc(username,
+                                                            .findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateDesc(username,
                                                                                                               status,
                                                                                                               pageable
                                                             ).getContent());
                                 } else {
                                     requests.addAll(requestRepository
-                                                            .findAllByUsernameAndStatusOrderByUpdatedDateDesc(username,
+                                                            .findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateDesc(username,
                                                                                                               status,
                                                                                                               pageable
                                                             ).getContent());
@@ -997,20 +997,20 @@ public class RequestsServiceImpl
                         if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                             if (sort.substring(2).equals("status")) {
                                 requests.addAll(requestRepository
-                                                        .findAllByUsernameOrderByStatusAsc(supervisedEmployeeUsername));
+                                                        .findAllByUsernameEqualsOrderByStatusAsc(supervisedEmployeeUsername));
                             } else {
                                 if (sort.substring(2).equals("updatedDate")) {
-                                    requests.addAll(requestRepository.findAllByUsernameOrderByUpdatedDateAsc(
+                                    requests.addAll(requestRepository.findAllByUsernameEqualsOrderByUpdatedDateAsc(
                                             supervisedEmployeeUsername));
                                 }
                             }
                         } else {
                             if (sort.substring(2).equals("status")) {
-                                requests.addAll(requestRepository.findAllByUsernameOrderByStatusDesc(
+                                requests.addAll(requestRepository.findAllByUsernameEqualsOrderByStatusDesc(
                                         supervisedEmployeeUsername));
                             } else {
                                 if (sort.substring(2).equals("updatedDate")) {
-                                    requests.addAll(requestRepository.findAllByUsernameOrderByUpdatedDateDesc(
+                                    requests.addAll(requestRepository.findAllByUsernameEqualsOrderByUpdatedDateDesc(
                                             supervisedEmployeeUsername));
                                 }
                             }
@@ -1047,18 +1047,18 @@ public class RequestsServiceImpl
                     if (viewAllRequests) {
                         if (sort.substring(0, 1).equals(ServiceConstant.ASCENDING)) {
                             if (sort.substring(2).equals("status")) {
-                                requests.addAll(requestRepository.findAllByUsernameAndStatusContainsOrderByStatusAsc(
+                                requests.addAll(requestRepository.findAllByUsernameEqualsAndStatusContainsOrderByStatusAsc(
                                         supervisedEmployeeUsername, status));
                             } else {
-                                requests.addAll(requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateAsc(
+                                requests.addAll(requestRepository.findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateAsc(
                                         supervisedEmployeeUsername, status));
                             }
                         } else {
                             if (sort.substring(2).equals("status")) {
-                                requests.addAll(requestRepository.findAllByUsernameAndStatusContainsOrderByStatusDesc(
+                                requests.addAll(requestRepository.findAllByUsernameEqualsAndStatusContainsOrderByStatusDesc(
                                         supervisedEmployeeUsername, status));
                             } else {
-                                requests.addAll(requestRepository.findAllByUsernameAndStatusOrderByUpdatedDateDesc(
+                                requests.addAll(requestRepository.findAllByUsernameEqualsAndStatusEqualsOrderByUpdatedDateDesc(
                                         supervisedEmployeeUsername, status));
                             }
                         }

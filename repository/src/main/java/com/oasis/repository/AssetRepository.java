@@ -56,11 +56,7 @@ public interface AssetRepository
             long stockLimit, String sku, String name, Pageable pageable
     );
 
-    List< AssetModel > findAllByDeletedIsFalseAndSkuContainsOrDeletedIsFalseAndNameContainsIgnoreCaseOrDeletedIsFalseAndBrandContainsIgnoreCaseOrDeletedIsFalseAndTypeContainsIgnoreCaseOrDeletedIsFalseAndLocationContainsIgnoreCase(
-            String sku, String name, String brand, String type, String location
-    );
-
-    boolean existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(
+    boolean existsAssetModelByDeletedIsFalseAndNameEqualsAndBrandEqualsAndTypeEquals(
             String name, String brand, String type
     );
 
