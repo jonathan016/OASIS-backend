@@ -24,6 +24,8 @@ public class OasisAuthenticationImpl
         implements OasisAuthenticationApi {
 
     @Autowired
+    private BCryptPasswordEncoder encoder;
+    @Autowired
     private RoleDeterminer roleDeterminer;
     @Autowired
     private EmployeesServiceApi employeesServiceApi;
@@ -35,7 +37,6 @@ public class OasisAuthenticationImpl
 
             final EmployeeModel employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username);
 
-            final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             if (encoder.matches(password, employee.getPassword())) {
                 try {
                     final String role = roleDeterminer.determineRole(username);

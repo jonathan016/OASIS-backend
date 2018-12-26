@@ -2,21 +2,20 @@ package com.oasis.service.implementation;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.service.api.LoginServiceApi;
 import com.oasis.tool.helper.RoleDeterminer;
 import com.oasis.tool.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
 
 @Service
 @Transactional
@@ -30,17 +29,18 @@ public class LoginServiceImpl
     private EmployeesServiceApi employeesServiceApi;
 
     @Override
-    public Map< String, String > getLoginData(
+    public Map<String, String> getLoginData(
             final String username
     )
             throws
             DataNotFoundException,
             BadRequestException {
 
-        Map< String, String > loginData = new HashMap<>();
+        Map<String, String> loginData = new HashMap<>();
 
         loginData.put("username", getUsernameIfEmployeeWithCredentialExists(username));
         loginData.put("name", getFirstNameFromUsername(username));
+        loginData.put("photo", getPhotoURLFromUsername(username));
         loginData.put("role", getRoleFromUsername(username));
 
         return loginData;
@@ -109,6 +109,24 @@ public class LoginServiceImpl
         final String role = roleDeterminer.determineRole(username);
 
         return role;
+    }
+
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    private String getPhotoURLFromUsername(
+            final String username
+    ) {
+
+        final EmployeeModel employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username);
+
+        final String photoURL;
+
+        if (employee != null) {
+            photoURL = employeesServiceApi.getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto());
+        } else {
+            photoURL = employeesServiceApi.getEmployeeDetailPhoto(null, null);
+        }
+
+        return photoURL;
     }
 
 }

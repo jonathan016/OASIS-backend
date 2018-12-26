@@ -14,12 +14,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.UNAUTHORIZED_OPERATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-/**
- * The Entry Point will not redirect to any sort of Login - it will return the 401
- */
 @Component
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
+@SuppressWarnings({"SpringJavaAutowiredFieldsWarningInspection", "Duplicates"})
 public final class OasisRestAuthenticationEntryPoint
         implements AuthenticationEntryPoint {
 
@@ -40,6 +38,7 @@ public final class OasisRestAuthenticationEntryPoint
                 UNAUTHORIZED_OPERATION.getErrorMessage()
         ), HttpStatus.UNAUTHORIZED));
 
+        response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.getWriter().write(String.valueOf(objectMapper.readTree(value).path("body")));
     }

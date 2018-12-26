@@ -46,6 +46,8 @@ public class EmployeesServiceImpl
     @Autowired
     private ImageHelper imageHelper;
     @Autowired
+    private BCryptPasswordEncoder encoder;
+    @Autowired
     private RoleDeterminer roleDeterminer;
     @Autowired
     private AdminRepository adminRepository;
@@ -443,8 +445,6 @@ public class EmployeesServiceImpl
 
         password.append(dobWithoutDash);
 
-        final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
         final String encodedPassword = encoder.encode(String.valueOf(password));
 
         password.replace(0, password.length(), encodedPassword);
@@ -643,7 +643,6 @@ public class EmployeesServiceImpl
         if (employee == null) {
             throw new DataNotFoundException(DATA_NOT_FOUND);
         } else {
-            final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             final boolean passwordsMatch = encoder.matches(oldPassword, employee.getPassword());
 
             if (!passwordsMatch) {

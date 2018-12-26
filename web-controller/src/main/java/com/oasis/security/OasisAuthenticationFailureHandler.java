@@ -5,8 +5,8 @@ import com.oasis.response_mapper.FailedResponseMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,16 +17,16 @@ import static com.oasis.exception.helper.ErrorCodeAndMessage.UNAUTHORIZED_OPERAT
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Component
-@SuppressWarnings({"SpringJavaAutowiredFieldsWarningInspection", "Duplicates"})
-public class OasisAccessDeniedHandler
-        implements AccessDeniedHandler {
+@SuppressWarnings({ "SpringJavaAutowiredFieldsWarningInspection", "Duplicates" })
+public class OasisAuthenticationFailureHandler
+        implements AuthenticationFailureHandler {
 
     @Autowired
     private FailedResponseMapper failedResponseMapper;
 
     @Override
-    public void handle(
-            HttpServletRequest request, HttpServletResponse response, AccessDeniedException exception
+    public void onAuthenticationFailure(
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException exception
     )
             throws
             IOException {
@@ -39,8 +39,8 @@ public class OasisAccessDeniedHandler
 
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(APPLICATION_JSON_VALUE);
         response.getWriter().write(String.valueOf(objectMapper.readTree(value).path("body")));
-
     }
 
 }

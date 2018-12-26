@@ -19,10 +19,4 @@ public class HttpSessionConfiguration {
         return new LettuceConnectionFactory();
     }
 
-    @Bean
-    public HttpSessionStrategy httpSessionStrategy() {
-
-        return new HeaderHttpSessionStrategy();
-    }
-
 }

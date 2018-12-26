@@ -1,11 +1,12 @@
 package com.oasis.configuration;
 
+import com.google.common.collect.ImmutableList;
 import com.oasis.security.OasisAccessDeniedHandler;
+import com.oasis.security.OasisAuthenticationFailureHandler;
 import com.oasis.security.OasisAuthenticationProvider;
 import com.oasis.security.OasisRestAuthenticationEntryPoint;
-import com.oasis.tool.constant.RoleConstant;
-import com.oasis.web_model.constant.APIMappingValue;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,6 +14,15 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.savedrequest.NullRequestCache;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import static com.oasis.tool.constant.RoleConstant.*;
+import static com.oasis.web_model.constant.APIMappingValue.*;
 
 @Configuration
 @EnableWebSecurity
@@ -25,6 +35,8 @@ public class WebSecurityConfiguration
     private OasisAccessDeniedHandler oasisAccessDeniedHandler;
     @Autowired
     private OasisAuthenticationProvider oasisAuthenticationProvider;
+    @Autowired
+    private OasisAuthenticationFailureHandler oasisAuthenticationFailureHandler;
     @Autowired
     private OasisRestAuthenticationEntryPoint oasisRestAuthenticationEntryPoint;
 
@@ -44,35 +56,61 @@ public class WebSecurityConfiguration
             throws
             Exception {
 
-        http.cors().and().csrf().disable().anonymous().and().httpBasic().and().authorizeRequests()
-                .antMatchers(HttpMethod.POST, APIMappingValue.API_LOGIN).permitAll()
-                .antMatchers(HttpMethod.POST, APIMappingValue.API_LOGOUT).authenticated()
-                .antMatchers(HttpMethod.GET, APIMappingValue.API_DASHBOARD + "/**").authenticated()
-                .antMatchers(HttpMethod.GET, APIMappingValue.API_ASSET + APIMappingValue.API_LIST).authenticated()
-                .antMatchers(HttpMethod.POST, APIMappingValue.API_ASSET + APIMappingValue.API_SAVE)
-                .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
-                .antMatchers(HttpMethod.DELETE, APIMappingValue.API_ASSET + APIMappingValue.API_DELETE)
-                .hasRole(RoleConstant.ROLE_ADMINISTRATOR).antMatchers(HttpMethod.GET, APIMappingValue.API_ASSET + "/**")
-                .authenticated().antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_LIST)
-                .authenticated().antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_SAVE)
-                .hasRole(RoleConstant.ROLE_ADMINISTRATOR).antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE +
-                APIMappingValue.API_CHANGE_SUPERVISOR_ON_DELETE)
-                .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
-                .antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_USERNAMES)
-                .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
-                .antMatchers(HttpMethod.DELETE, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_DELETE)
-                .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
-                .antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_PASSWORD_CHANGE)
-                .authenticated().antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + "/**").authenticated()
-                .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_LIST).authenticated()
-                .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_MY_REQUESTS).authenticated()
-                .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_MY_REQUESTS)
-                .hasAnyRole(new String[]{RoleConstant.ROLE_ADMINISTRATOR, RoleConstant.ROLE_SUPERIOR})
-                .antMatchers(HttpMethod.POST, APIMappingValue.API_REQUEST + APIMappingValue.API_SAVE)
-                .hasAnyAuthority(new String[]{
-                        RoleConstant.ROLE_ADMINISTRATOR, RoleConstant.ROLE_SUPERIOR, RoleConstant.ROLE_EMPLOYEE
-                }).anyRequest().authenticated().and().exceptionHandling()
-                .authenticationEntryPoint(oasisRestAuthenticationEntryPoint).accessDeniedHandler(oasisAccessDeniedHandler);
+        http.cors().configurationSource(corsConfigurationSource()).and().csrf().disable().anonymous().and().httpBasic()
+                .and().authorizeRequests()
+                .antMatchers(HttpMethod.POST, API_LOGIN).permitAll()
+                .antMatchers(HttpMethod.POST, API_LOGOUT).authenticated()
+                .antMatchers(HttpMethod.GET, API_DASHBOARD.concat("/**")).authenticated()
+                .antMatchers(HttpMethod.GET, API_ASSET.concat(API_LIST)).authenticated()
+                .antMatchers(HttpMethod.POST, API_ASSET.concat(API_SAVE))
+                .hasAuthority(ROLE_ADMINISTRATOR)
+                .antMatchers(HttpMethod.DELETE, API_ASSET.concat(API_DELETE))
+                .hasAuthority(ROLE_ADMINISTRATOR).antMatchers(HttpMethod.GET, API_ASSET.concat("/**"))
+                .authenticated().antMatchers(HttpMethod.GET, API_EMPLOYEE.concat(API_LIST))
+                .authenticated().antMatchers(HttpMethod.POST, API_EMPLOYEE.concat(API_SAVE))
+                .hasAuthority(ROLE_ADMINISTRATOR).antMatchers(HttpMethod.POST, API_EMPLOYEE.concat(API_CHANGE_SUPERVISOR_ON_DELETE))
+                .hasAuthority(ROLE_ADMINISTRATOR)
+                .antMatchers(HttpMethod.GET, API_EMPLOYEE.concat(API_USERNAMES))
+                .hasAuthority(ROLE_ADMINISTRATOR)
+                .antMatchers(HttpMethod.DELETE, API_EMPLOYEE.concat(API_DELETE))
+                .hasAuthority(ROLE_ADMINISTRATOR)
+                .antMatchers(HttpMethod.POST, API_EMPLOYEE.concat(API_PASSWORD_CHANGE))
+                .authenticated().antMatchers(HttpMethod.GET, API_EMPLOYEE.concat("/**")).authenticated()
+                .antMatchers(HttpMethod.GET, API_REQUEST.concat(API_LIST)).authenticated()
+                .antMatchers(HttpMethod.GET, API_REQUEST.concat(API_MY_REQUESTS)).authenticated()
+                .antMatchers(HttpMethod.GET, API_REQUEST.concat(API_MY_REQUESTS))
+                .hasAnyAuthority(ROLE_ADMINISTRATOR, ROLE_SUPERIOR)
+                .antMatchers(HttpMethod.POST, API_REQUEST.concat(API_SAVE))
+                .hasAnyAuthority(ROLE_ADMINISTRATOR, ROLE_SUPERIOR, ROLE_EMPLOYEE).anyRequest().authenticated().and()
+                .sessionManagement().maximumSessions(1).and().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionAuthenticationFailureHandler(oasisAuthenticationFailureHandler).and().exceptionHandling()
+                .authenticationEntryPoint(oasisRestAuthenticationEntryPoint).accessDeniedHandler(oasisAccessDeniedHandler)
+                .and().requestCache().requestCache(new NullRequestCache());
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        final CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(ImmutableList.of("http://localhost", "*"));
+        configuration.setAllowedMethods(ImmutableList.of("GET", "POST", "OPTIONS", "DELETE"));
+        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(ImmutableList.of("Content-Type", "Access-Control-Allow-Origin", "X-Auth-Token",
+                "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "requestId", "Correlation-Id"));
+        configuration.setExposedHeaders(ImmutableList.of("Content-Type", "Access-Control-Allow-Origin", "X-Auth-Token",
+                "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "requestId", "Correlation-Id"));
+
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+
+        return new BCryptPasswordEncoder();
     }
 
 }

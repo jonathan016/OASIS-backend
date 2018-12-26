@@ -41,6 +41,7 @@ public class LoginController {
         final Map< String, String > loginData;
         final String username;
         final String name;
+        final String photo;
         final String role;
 
         try {
@@ -48,6 +49,7 @@ public class LoginController {
 
             username = loginData.get("username");
             name = loginData.get("name");
+            photo = loginData.get("photo");
             role = loginData.get("role");
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
@@ -70,7 +72,7 @@ public class LoginController {
         }
 
         return new ResponseEntity<>(
-                loginResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), username, name, role),
+                loginResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), username, name, photo, role),
                 HttpStatus.OK
         );
     }
