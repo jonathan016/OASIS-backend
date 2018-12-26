@@ -16,17 +16,17 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 @Configuration
 @EnableWebSecurity
-@ComponentScan("com.oasis.configuration")
+@ComponentScan(basePackages = "com.oasis")
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class WebSecurityConfiguration
         extends WebSecurityConfigurerAdapter {
 
     @Autowired
+    private OasisAccessDeniedHandler oasisAccessDeniedHandler;
+    @Autowired
     private OasisAuthenticationProvider oasisAuthenticationProvider;
     @Autowired
     private OasisRestAuthenticationEntryPoint oasisRestAuthenticationEntryPoint;
-    @Autowired
-    private OasisAccessDeniedHandler oasisAccessDeniedHandler;
 
     public WebSecurityConfiguration() {
 
@@ -45,34 +45,34 @@ public class WebSecurityConfiguration
             Exception {
 
         http.cors().and().csrf().disable().anonymous().and().httpBasic().and().authorizeRequests()
-            .antMatchers(HttpMethod.POST, APIMappingValue.API_LOGIN).permitAll()
-            .antMatchers(HttpMethod.POST, APIMappingValue.API_LOGOUT).authenticated()
-            .antMatchers(HttpMethod.GET, APIMappingValue.API_DASHBOARD + "/**").authenticated()
-            .antMatchers(HttpMethod.GET, APIMappingValue.API_ASSET + APIMappingValue.API_LIST).authenticated()
-            .antMatchers(HttpMethod.POST, APIMappingValue.API_ASSET + APIMappingValue.API_SAVE)
-            .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
-            .antMatchers(HttpMethod.DELETE, APIMappingValue.API_ASSET + APIMappingValue.API_DELETE)
-            .hasRole(RoleConstant.ROLE_ADMINISTRATOR).antMatchers(HttpMethod.GET, APIMappingValue.API_ASSET + "/**")
-            .authenticated().antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_LIST)
-            .authenticated().antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_SAVE)
-            .hasRole(RoleConstant.ROLE_ADMINISTRATOR).antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE +
-                                                                                   APIMappingValue.API_CHANGE_SUPERVISOR_ON_DELETE)
-            .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
-            .antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_USERNAMES)
-            .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
-            .antMatchers(HttpMethod.DELETE, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_DELETE)
-            .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
-            .antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_PASSWORD_CHANGE)
-            .authenticated().antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + "/**").authenticated()
-            .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_LIST).authenticated()
-            .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_MY_REQUESTS).authenticated()
-            .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_MY_REQUESTS)
-            .hasAnyRole(new String[]{ RoleConstant.ROLE_ADMINISTRATOR, RoleConstant.ROLE_SUPERIOR })
-            .antMatchers(HttpMethod.POST, APIMappingValue.API_REQUEST + APIMappingValue.API_SAVE)
-            .hasAnyAuthority(new String[]{
-                    RoleConstant.ROLE_ADMINISTRATOR, RoleConstant.ROLE_SUPERIOR, RoleConstant.ROLE_EMPLOYEE
-            }).anyRequest().authenticated().and().exceptionHandling()
-            .authenticationEntryPoint(oasisRestAuthenticationEntryPoint).accessDeniedHandler(oasisAccessDeniedHandler);
+                .antMatchers(HttpMethod.POST, APIMappingValue.API_LOGIN).permitAll()
+                .antMatchers(HttpMethod.POST, APIMappingValue.API_LOGOUT).authenticated()
+                .antMatchers(HttpMethod.GET, APIMappingValue.API_DASHBOARD + "/**").authenticated()
+                .antMatchers(HttpMethod.GET, APIMappingValue.API_ASSET + APIMappingValue.API_LIST).authenticated()
+                .antMatchers(HttpMethod.POST, APIMappingValue.API_ASSET + APIMappingValue.API_SAVE)
+                .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
+                .antMatchers(HttpMethod.DELETE, APIMappingValue.API_ASSET + APIMappingValue.API_DELETE)
+                .hasRole(RoleConstant.ROLE_ADMINISTRATOR).antMatchers(HttpMethod.GET, APIMappingValue.API_ASSET + "/**")
+                .authenticated().antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_LIST)
+                .authenticated().antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_SAVE)
+                .hasRole(RoleConstant.ROLE_ADMINISTRATOR).antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE +
+                APIMappingValue.API_CHANGE_SUPERVISOR_ON_DELETE)
+                .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
+                .antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_USERNAMES)
+                .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
+                .antMatchers(HttpMethod.DELETE, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_DELETE)
+                .hasRole(RoleConstant.ROLE_ADMINISTRATOR)
+                .antMatchers(HttpMethod.POST, APIMappingValue.API_EMPLOYEE + APIMappingValue.API_PASSWORD_CHANGE)
+                .authenticated().antMatchers(HttpMethod.GET, APIMappingValue.API_EMPLOYEE + "/**").authenticated()
+                .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_LIST).authenticated()
+                .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_MY_REQUESTS).authenticated()
+                .antMatchers(HttpMethod.GET, APIMappingValue.API_REQUEST + APIMappingValue.API_MY_REQUESTS)
+                .hasAnyRole(new String[]{RoleConstant.ROLE_ADMINISTRATOR, RoleConstant.ROLE_SUPERIOR})
+                .antMatchers(HttpMethod.POST, APIMappingValue.API_REQUEST + APIMappingValue.API_SAVE)
+                .hasAnyAuthority(new String[]{
+                        RoleConstant.ROLE_ADMINISTRATOR, RoleConstant.ROLE_SUPERIOR, RoleConstant.ROLE_EMPLOYEE
+                }).anyRequest().authenticated().and().exceptionHandling()
+                .authenticationEntryPoint(oasisRestAuthenticationEntryPoint).accessDeniedHandler(oasisAccessDeniedHandler);
     }
 
 }

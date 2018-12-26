@@ -3,16 +3,18 @@ package com.oasis.configuration;
 import com.mongodb.MongoClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-@EnableWebMvc
 @Configuration
 @PropertySource("classpath:environment.properties")
+@EnableMongoRepositories(basePackages = "com.oasis.repository")
+@ComponentScan(basePackages = {"com.oasis", "com.oasis.repository"})
 public class DatabaseConfiguration {
 
     @Value("${mongodb.host}")
