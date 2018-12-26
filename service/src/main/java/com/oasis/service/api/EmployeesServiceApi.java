@@ -26,7 +26,7 @@ public interface EmployeesServiceApi {
             DataNotFoundException;
 
     long getEmployeesCount(
-            final String username, final String query, String sort
+            final String username, final String query
     );
 
     EmployeeModel getEmployeeDetailData(

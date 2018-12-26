@@ -68,7 +68,7 @@ public class EmployeesController {
             employees = (List< EmployeeModel >) employeesListData.get("employees");
             supervisors = (List< EmployeeModel >) employeesListData.get("supervisors");
             employeePhotos = (List< String >) employeesListData.get("employeePhotos");
-            totalRecords = employeesServiceApi.getEmployeesCount(user.getUsername(), query, sort);
+            totalRecords = employeesServiceApi.getEmployeesCount(user.getUsername(), query);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
@@ -125,15 +125,15 @@ public class EmployeesController {
 
     @GetMapping(value = APIMappingValue.API_USERNAMES, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity getEmployeesUsernames(
-            @AuthenticationPrincipal
-            final User user
+    public ResponseEntity getEmployeesUsernamesForSupervisorSelection(
+            @RequestParam(value = "username")
+            final String username
     ) {
 
         final List< String > usernames;
 
         try {
-            usernames = employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(user.getUsername());
+            usernames = employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(username);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),

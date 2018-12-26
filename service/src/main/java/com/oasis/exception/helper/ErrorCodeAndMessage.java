@@ -20,6 +20,4 @@ public class ErrorCodeAndMessage {
                                                                        "Duplicate data in database found"
     );
 
-    public static final BaseError SAME_DATA_ON_UPDATE = new BaseError("SAME_DATA_ON_UPDATE", "SAME_DATA_ON_UPDATE");
-
 }

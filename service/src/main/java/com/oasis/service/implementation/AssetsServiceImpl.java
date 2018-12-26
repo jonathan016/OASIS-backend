@@ -448,10 +448,8 @@ public class AssetsServiceImpl
             if (addAssetOperation) {
                 savedAsset = asset;
 
-                if (assetRepository
-                        .existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(savedAsset.getName(), savedAsset.getBrand(),
-                                savedAsset.getType()
-                        )) {
+                if (assetRepository.existsAssetModelByDeletedIsFalseAndNameAndBrandAndType(savedAsset.getName(),
+                        savedAsset.getBrand(), savedAsset.getType())) {
                     throw new DuplicateDataException(DUPLICATE_DATA_FOUND);
                 } else {
                     savedAsset.setSku(generateSkuCode(username, asset.getBrand(), asset.getType()));
@@ -465,7 +463,7 @@ public class AssetsServiceImpl
                 if (savedAsset == null) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else if (savedAsset.equals(asset)) {
-                    throw new UnauthorizedOperationException(SAME_DATA_ON_UPDATE);
+                    throw new BadRequestException(INCORRECT_PARAMETER);
                 } else {
                     final boolean nameChanged = !savedAsset.getName().equals(asset.getName());
                     final boolean brandChanged = !savedAsset.getBrand().equals(asset.getBrand());
@@ -478,20 +476,17 @@ public class AssetsServiceImpl
                         query.addCriteria(Criteria.where(AssetFieldName.SKU).is(asset.getSku()));
                         Update update;
 
-                        if (asset.getStock() < savedAsset.getStock()) {
-                            update = new Update().inc(AssetFieldName.STOCK, 0 - (savedAsset.getStock() - asset.getStock()))
-                                    .set("price", asset.getPrice()).set("expendable", asset.isExpendable())
-                                    .set("location", asset.getLocation());
-                        } else {
-                            update = new Update().inc(AssetFieldName.STOCK, asset.getStock()).set("price", asset.getPrice())
-                                    .set("expendable", asset.isExpendable()).set("location", asset.getLocation());
-                        }
+                        update = new Update().inc(AssetFieldName.STOCK, asset.getStock() - savedAsset.getStock())
+                                .set("price", asset.getPrice()).set("expendable", asset.isExpendable())
+                                .set("location", asset.getLocation());
 
                         savedAsset = mongoOperations.findAndModify(query, update, FindAndModifyOptions.options()
                                         .returnNew(true), AssetModel.class, CollectionName.ASSET_COLLECTION_NAME);
 
                         if (savedAsset == null) {
                             throw new DataNotFoundException(DATA_NOT_FOUND);
+                        } else if (savedAsset.getStock() < 1) {
+                            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
                         }
                     }
                 }
@@ -535,17 +530,17 @@ public class AssetsServiceImpl
                 return false;
             } else if (asset.getType() == null) {
                 return false;
-            } else if (!asset.getName().matches(Regex.REGEX_ASSET_STRINGS)) {
+            } else if (!asset.getName().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
                 return false;
-            } else if (!asset.getLocation().matches(Regex.REGEX_ASSET_STRINGS)) {
+            } else if (!asset.getLocation().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
                 return false;
             } else if (asset.getPrice() < 100) {
                 return false;
             } else if (asset.getStock() < 1) {
                 return false;
-            } else if (!asset.getBrand().matches(Regex.REGEX_ASSET_STRINGS)) {
+            } else if (!asset.getBrand().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
                 return false;
-            } else if (!asset.getType().matches(Regex.REGEX_ASSET_STRINGS)) {
+            } else if (!asset.getType().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
                 return false;
             } else {
                 return true;
@@ -564,7 +559,7 @@ public class AssetsServiceImpl
             BadRequestException,
             DataNotFoundException {
 
-        if (skus.isEmpty()) {
+        if (skus.isEmpty() || skus.contains(null)) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
             List<AssetModel> selectedAssets = new ArrayList<>();

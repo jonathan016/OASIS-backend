@@ -89,14 +89,6 @@ public class EmployeesRequestMapper {
         employee.setLocation(request.getLocation());
 
         return employee;
-
-        //        MapperFactory employeeDataFactory = new DefaultMapperFactory.Builder().build();
-        //        employeeDataFactory.classMap(SaveEmployeeRequest.Employee.class, EmployeeModel.class)
-        //                        .exclude("supervisorUsername")
-        //                        .register();
-        //
-        //        return employeeDataFactory.getMapperFacade(SaveEmployeeRequest.Employee.class, EmployeeModel.class)
-        // .map(request);
     }
 
     public String getSupervisorUsernameFromRawData(final String rawEmployeeData) {
@@ -110,7 +102,7 @@ public class EmployeesRequestMapper {
             logger.error(
                     "Failed to read attribute 'supervisorUsername' from passed JSON data as IOException occurred with" +
                     " message: " + ioException.getMessage());
-            return "";
+            return null;
         }
 
         return supervisorUsername;

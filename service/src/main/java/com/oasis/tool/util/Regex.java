@@ -20,6 +20,8 @@ public class Regex {
 
     public static final String REGEX_PNG_FILE_NAME = "^.+\\.[pP][nN][gG]$";
 
-    public static final String REGEX_ASSET_STRINGS = "^[A-Za-z0-9]+(( )?(.+)?[A-Za-z0-9]+)*$";
+    public static final String REGEX_UNIVERSAL_STRINGS = "^[A-Za-z0-9]+(( )?(.+)?[A-Za-z0-9]+)*$";
+
+    public static final String REGEX_EMPLOYEE_PHONE = "^(\\+62|0){1}([0-9]){10,12}$";
 
 }

@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
@@ -95,62 +94,45 @@ public class EmployeesServiceImpl
 
         if (emptyQueryGiven || emptySortGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
-        }
-
-        final boolean useParameterSort = (sort != null);
-
-        if (useParameterSort) {
-            final boolean properSortFormatGiven = sort.matches(Regex.REGEX_EMPLOYEE_SORT);
-
-            if (!properSortFormatGiven) {
-                throw new BadRequestException(INCORRECT_PARAMETER);
-            }
         } else {
-            sort = "A";
-        }
+            final boolean useParameterSort = (sort != null);
 
-        final Set< EmployeeModel > employees;
-        final long employeesCount;
-        final long availablePages;
-        final boolean noEmployees;
-        final boolean pageIndexOutOfBounds;
+            if (useParameterSort) {
+                final boolean properSortFormatGiven = sort.matches(Regex.REGEX_EMPLOYEE_SORT);
 
-        final boolean viewAllEmployees = (query == null);
+                if (!properSortFormatGiven) {
+                    throw new BadRequestException(INCORRECT_PARAMETER);
+                }
+            } else {
+                sort = "A";
+            }
 
-        if (viewAllEmployees) {
-            employeesCount = employeeRepository.countAllByDeletedIsFalseAndUsernameIsNot(username);
-            availablePages = (long) Math.ceil((float) employeesCount / PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
+            final Set< EmployeeModel > employees;
+            final long employeesCount = getEmployeesCount(username, query);
+            final long availablePages = (long) Math.ceil((double) employeesCount / PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
 
-            noEmployees = (employeesCount == 0);
-            pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
+            final boolean noEmployees = (employeesCount == 0);
+            final boolean pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
 
             if (noEmployees || pageIndexOutOfBounds) {
                 throw new DataNotFoundException(DATA_NOT_FOUND);
+            } else {
+                final boolean viewAllEmployees = (query == null);
+
+                if (viewAllEmployees) {
+                    employees = new LinkedHashSet<>(getSortedEmployees(username, page, sort));
+                } else {
+                    employees = new LinkedHashSet<>(getSortedEmployeesFromQuery(page, query, sort));
+                }
+
+                return new ArrayList<>(employees);
             }
-
-            employees = new LinkedHashSet<>(getSortedEmployees(username, page, sort));
-        } else {
-            employeesCount = employeeRepository
-                    .countAllByDeletedIsFalseAndUsernameContainsIgnoreCaseOrDeletedIsFalseAndNameContainsIgnoreCase(
-                            query, query);
-            availablePages = (long) Math.ceil((double) employeesCount / PageSizeConstant.EMPLOYEES_LIST_PAGE_SIZE);
-
-            noEmployees = (employeesCount == 0);
-            pageIndexOutOfBounds = ((page < 1) || (page > availablePages));
-
-            if (noEmployees || pageIndexOutOfBounds) {
-                throw new DataNotFoundException(DATA_NOT_FOUND);
-            }
-
-            employees = new LinkedHashSet<>(getSortedEmployeesFromQuery(page, query, sort));
         }
-
-        return new ArrayList<>(employees);
     }
 
     @Override
     public long getEmployeesCount(
-            final String username, final String query, String sort
+            final String username, final String query
     ) {
 
         final boolean viewAllEmployees = (query == null);
@@ -178,9 +160,9 @@ public class EmployeesServiceImpl
 
         if (!employeeWithUsernameExists) {
             throw new DataNotFoundException(DATA_NOT_FOUND);
+        } else {
+            return employee;
         }
-
-        return employee;
     }
 
     @Override
@@ -203,6 +185,7 @@ public class EmployeesServiceImpl
     }
 
     @Override
+    @SuppressWarnings("UnnecessaryContinue")
     public List< String > getEmployeesUsernamesForSupervisorSelection(
             final String username
     )
@@ -213,44 +196,45 @@ public class EmployeesServiceImpl
 
         if (emptyUsernameGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
-        }
-
-        Set< String > possibleSupervisorsUsernames = new LinkedHashSet<>();
-        final List< EmployeeModel > employees = employeeRepository
-                .findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
-
-        final boolean createEmployeeOperation = username.equals("-1");
-
-        if (createEmployeeOperation) {
-            for (final EmployeeModel possibleSupervisor : employees) {
-                possibleSupervisorsUsernames.add(possibleSupervisor.getUsername());
-            }
         } else {
-            List< String > supervisedEmployeesUsernames = new ArrayList<>();
-            final List< SupervisionModel > supervisions = supervisionRepository
-                    .findAllByDeletedIsFalseAndSupervisorUsername(username);
+            Set< String > possibleSupervisorsUsernames = new LinkedHashSet<>();
+            final List< EmployeeModel > employees = employeeRepository
+                    .findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
 
-            for (final SupervisionModel supervision : supervisions) {
-                supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
-            }
+            final boolean addEmployeeOperation = username.equals("-1");
 
-            for (final EmployeeModel possibleSupervisor : employees) {
-                final String currentCandidateUsername = possibleSupervisor.getUsername();
+            if (addEmployeeOperation) {
+                for (final EmployeeModel possibleSupervisor : employees) {
+                    possibleSupervisorsUsernames.add(possibleSupervisor.getUsername());
+                }
+            } else {
+                List< String > supervisedEmployeesUsernames = new ArrayList<>();
+                final List< SupervisionModel > supervisions = supervisionRepository
+                        .findAllByDeletedIsFalseAndSupervisorUsername(username);
 
-                if (username.equals(currentCandidateUsername)) {
-                    continue;
+                for (final SupervisionModel supervision : supervisions) {
+                    supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
                 }
 
-                boolean safeFromCyclicSupervising = isSafeFromCyclicSupervising(
-                        currentCandidateUsername, supervisedEmployeesUsernames);
+                for (final EmployeeModel possibleSupervisor : employees) {
+                    final String currentCandidateUsername = possibleSupervisor.getUsername();
+                    final boolean selfUsername = username.equals(currentCandidateUsername);
 
-                if (safeFromCyclicSupervising) {
-                    possibleSupervisorsUsernames.add(currentCandidateUsername);
+                    if (selfUsername) {
+                        continue;
+                    } else {
+                        final boolean safeFromCyclicSupervising = isSafeFromCyclicSupervising(
+                                currentCandidateUsername, supervisedEmployeesUsernames);
+
+                        if (safeFromCyclicSupervising) {
+                            possibleSupervisorsUsernames.add(currentCandidateUsername);
+                        }
+                    }
                 }
             }
+
+            return new ArrayList<>(possibleSupervisorsUsernames);
         }
-
-        return new ArrayList<>(possibleSupervisorsUsernames);
     }
 
     @Override
@@ -264,31 +248,31 @@ public class EmployeesServiceImpl
         if (!employeeWithUsernameExists) {
             logger.info("Failed to load employee photo as username does not refer any employee in database");
             return new byte[0];
+        } else {
+            final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
+
+            File file = new File(employee.getPhoto());
+
+            final boolean photoNameIsImageNotFound = photoName.equals("image_not_found");
+            final boolean correctExtensionForPhoto = file.getName().endsWith(extension);
+
+            if (!correctExtensionForPhoto || photoNameIsImageNotFound) {
+                file = new File(ImageDirectoryConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator)
+                        .concat("image_not_found.jpeg"));
+            }
+
+            final byte[] photo;
+
+            try {
+                photo = Files.readAllBytes(file.toPath());
+            } catch (IOException | NullPointerException exception) {
+                logger.error("Failed to read photo as IOException or NullPointerException occurred with message " +
+                        exception.getMessage());
+                return new byte[0];
+            }
+
+            return photo;
         }
-
-        final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
-
-        File file = new File(employee.getPhoto());
-
-        final boolean photoNameIsImageNotFound = photoName.equals("image_not_found");
-        final boolean correctExtensionForPhoto = file.getName().endsWith(extension);
-
-        if (!correctExtensionForPhoto || photoNameIsImageNotFound) {
-            file = new File(ImageDirectoryConstant.STATIC_IMAGE_DIRECTORY.concat(File.separator)
-                                                                         .concat("image_not_found.jpeg"));
-        }
-
-        final byte[] photo;
-
-        try {
-            photo = Files.readAllBytes(file.toPath());
-        } catch (IOException | NullPointerException exception) {
-            logger.error("Failed to read photo as IOException or NullPointerException occurred with message " +
-                         exception.getMessage());
-            return new byte[0];
-        }
-
-        return photo;
     }
 
     @Override
@@ -307,15 +291,15 @@ public class EmployeesServiceImpl
 
         if (noSupervisionForEmployeeWithUsername && !employeeIsAdministrator) {
             throw new DataNotFoundException(DATA_NOT_FOUND);
+        } else {
+            final boolean employeeIsTopAdministrator = noSupervisionForEmployeeWithUsername && employeeIsAdministrator;
+
+            if (employeeIsTopAdministrator) {
+                return null;
+            }
+
+            return employeeRepository.findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
         }
-
-        final boolean employeeIsTopAdministrator = noSupervisionForEmployeeWithUsername && employeeIsAdministrator;
-
-        if (employeeIsTopAdministrator) {
-            return null;
-        }
-
-        return employeeRepository.findByDeletedIsFalseAndUsername(supervision.getSupervisorUsername());
     }
 
     /*-------------Save Employee Methods-------------*/
@@ -327,7 +311,7 @@ public class EmployeesServiceImpl
     })
     public String saveEmployee(
             final MultipartFile photoGiven, final String username, final EmployeeModel employee,
-            final String supervisorUsername, final boolean addEmployeeOperation
+            String supervisorUsername, final boolean addEmployeeOperation
     )
             throws
             UnauthorizedOperationException,
@@ -335,70 +319,121 @@ public class EmployeesServiceImpl
             DuplicateDataException,
             BadRequestException {
 
-        final boolean validAdministrator = roleDeterminer.determineRole(username)
-                                                         .equals(RoleConstant.ROLE_ADMINISTRATOR);
-        if (!validAdministrator) {
-            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-        }
-
-        EmployeeModel savedEmployee;
-
-        if (addEmployeeOperation) {
-            final boolean properNameFormatGiven = employee.getName().matches(Regex.REGEX_EMPLOYEE_NAME);
-
-            if (!properNameFormatGiven) {
-                throw new BadRequestException(INCORRECT_PARAMETER);
-            }
-
-            savedEmployee = employee;
-
-            final boolean potentialDuplicateEmployeeData = employeeRepository
-                    .existsByDeletedIsFalseAndNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
-                            savedEmployee.getName(), savedEmployee.getDob(), savedEmployee.getPhone(),
-                            savedEmployee.getJobTitle(), savedEmployee.getDivision(), savedEmployee.getLocation()
-                    );
-
-            if (potentialDuplicateEmployeeData == true) {
-                throw new DuplicateDataException(DUPLICATE_DATA_FOUND);
-            } else {
-                final String dobString = new SimpleDateFormat("dd-MM-yyyy").format(savedEmployee.getDob());
-
-                savedEmployee.setUsername(generateUsername(savedEmployee.getName().toLowerCase()));
-                savedEmployee.setPassword(generateDefaultPassword(dobString));
-                savedEmployee.setSupervisionId(getSupervisionId(employee.getUsername(), supervisorUsername, username));
-                savedEmployee.setDeleted(false);
-                savedEmployee.setCreatedBy(username);
-                savedEmployee.setCreatedDate(new Date());
-            }
+        if (!isSaveEmployeeParametersProper(photoGiven, employee, addEmployeeOperation)) {
+            throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            savedEmployee = employeeRepository.findByDeletedIsFalseAndUsername(employee.getUsername());
-
-            if (savedEmployee == null) {
-                throw new DataNotFoundException(DATA_NOT_FOUND);
+            if (supervisorUsername == null) {
+                supervisorUsername = username;
             }
 
-            if (savedEmployee.equals(employee)) {
-                throw new UnauthorizedOperationException(SAME_DATA_ON_UPDATE);
+            EmployeeModel savedEmployee;
+
+            if (addEmployeeOperation) {
+                final boolean properNameFormatGiven = employee.getName().matches(Regex.REGEX_EMPLOYEE_NAME);
+
+                if (!properNameFormatGiven) {
+                    throw new BadRequestException(INCORRECT_PARAMETER);
+                } else {
+                    savedEmployee = employee;
+
+                    final boolean potentialDuplicateEmployeeData = employeeRepository
+                            .existsByDeletedIsFalseAndNameAndDobAndPhoneAndJobTitleAndDivisionAndLocation(
+                                    savedEmployee.getName(), savedEmployee.getDob(), savedEmployee.getPhone(),
+                                    savedEmployee.getJobTitle(), savedEmployee.getDivision(), savedEmployee.getLocation()
+                            );
+
+                    if (potentialDuplicateEmployeeData == true) {
+                        throw new DuplicateDataException(DUPLICATE_DATA_FOUND);
+                    } else {
+                        final String dobString = new SimpleDateFormat("dd-MM-yyyy").format(savedEmployee.getDob());
+
+                        savedEmployee.setUsername(generateUsername(savedEmployee.getName().toLowerCase()));
+                        savedEmployee.setPassword(generateDefaultPassword(dobString));
+                        savedEmployee.setSupervisionId(getSupervisionId(employee.getUsername(), supervisorUsername, username));
+                        savedEmployee.setDeleted(false);
+                        savedEmployee.setCreatedBy(username);
+                        savedEmployee.setCreatedDate(new Date());
+                    }
+                }
+            } else {
+                savedEmployee = employeeRepository.findByDeletedIsFalseAndUsername(employee.getUsername());
+
+                if (savedEmployee == null) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                } else if (savedEmployee.equals(employee)) {
+                    throw new BadRequestException(INCORRECT_PARAMETER);
+                } else {
+                    savedEmployee.setName(employee.getName());
+                    savedEmployee.setDob(employee.getDob());
+                    savedEmployee.setPhone(employee.getPhone());
+                    savedEmployee.setJobTitle(employee.getJobTitle());
+                    savedEmployee.setDivision(employee.getDivision());
+                    savedEmployee.setLocation(employee.getLocation());
+
+                    updateSupervisorDataOnEmployeeUpdate(username, savedEmployee, employee.getUsername(), supervisorUsername);
+                }
             }
 
-            savedEmployee.setName(employee.getName());
-            savedEmployee.setDob(employee.getDob());
-            savedEmployee.setPhone(employee.getPhone());
-            savedEmployee.setJobTitle(employee.getJobTitle());
-            savedEmployee.setDivision(employee.getDivision());
-            savedEmployee.setLocation(employee.getLocation());
+            validateAndSavePhoto(photoGiven, addEmployeeOperation, savedEmployee);
 
-            updateSupervisorDataOnEmployeeUpdate(username, savedEmployee, employee.getUsername(), supervisorUsername);
+            savedEmployee.setUpdatedDate(new Date());
+            savedEmployee.setUpdatedBy(username);
+
+            employeeRepository.save(savedEmployee);
+
+            return savedEmployee.getUsername();
+        }
+    }
+
+    @SuppressWarnings({"ConstantConditions", "RedundantIfStatement"})
+    private boolean isSaveEmployeeParametersProper(
+            final MultipartFile photoGiven,
+            final EmployeeModel employee,
+            final boolean addEmployeeOperation
+    ) {
+
+        try {
+            if (!photoGiven.getOriginalFilename().matches(Regex.REGEX_JPEG_FILE_NAME) &&
+                    !photoGiven.getOriginalFilename().matches(Regex.REGEX_PNG_FILE_NAME)) {
+                return false;
+            }
+        } catch (NullPointerException exception) {
+            return false;
         }
 
-        validateAndSavePhoto(photoGiven, addEmployeeOperation, savedEmployee);
-
-        savedEmployee.setUpdatedDate(new Date());
-        savedEmployee.setUpdatedBy(username);
-
-        employeeRepository.save(savedEmployee);
-
-        return savedEmployee.getUsername();
+        if (employee == null) {
+            return false;
+        } else {
+            if (!addEmployeeOperation && employee.getUsername() == null) {
+                return false;
+            } else if (employee.getName() == null) {
+                return false;
+            } else if (employee.getDob() == null) {
+                return false;
+            } else if (employee.getPhone() == null) {
+                return false;
+            } else if (employee.getJobTitle() == null) {
+                return false;
+            } else if (employee.getDivision() == null) {
+                return false;
+            } else if (employee.getLocation() == null) {
+                return false;
+            } else if (!addEmployeeOperation && employee.getSupervisionId() == null) {
+                return false;
+            } else if (!employee.getName().matches(Regex.REGEX_EMPLOYEE_NAME)) {
+                return false;
+            } else if (!employee.getPhone().matches(Regex.REGEX_EMPLOYEE_PHONE)) {
+                return false;
+            } else if (!employee.getJobTitle().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
+                return false;
+            } else if (!employee.getDivision().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
+                return false;
+            } else if (!employee.getLocation().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
     }
 
     private String generateUsername(
@@ -464,14 +499,14 @@ public class EmployeesServiceImpl
 
         if (!employeeWithSupervisorUsernameExists) {
             throw new DataNotFoundException(DATA_NOT_FOUND);
+        } else {
+            createSupervision(employeeUsername, supervisorUsername, adminUsername);
+
+            final SupervisionModel createdSupervision = supervisionRepository
+                    .findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
+
+            return createdSupervision.get_id();
         }
-
-        createSupervision(employeeUsername, supervisorUsername, adminUsername);
-
-        final SupervisionModel createdSupervision = supervisionRepository
-                .findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
-
-        return createdSupervision.get_id();
     }
 
     private void updateSupervisorDataOnEmployeeUpdate(
@@ -480,7 +515,8 @@ public class EmployeesServiceImpl
     )
             throws
             DataNotFoundException,
-            UnauthorizedOperationException {
+            UnauthorizedOperationException,
+            BadRequestException {
 
         final EmployeeModel supervisor = employeeRepository.findByDeletedIsFalseAndUsername(supervisorUsername);
 
@@ -491,40 +527,40 @@ public class EmployeesServiceImpl
                     .findByDeletedIsFalseAndEmployeeUsername(savedEmployee.getUsername());
 
             if (supervisorUsername.equals(supervision.getSupervisorUsername())) {
-                throw new UnauthorizedOperationException(SAME_DATA_ON_UPDATE);
+                throw new BadRequestException(INCORRECT_PARAMETER);
             } else {
                 if (hasCyclicSupervising(employeeUsername, supervisorUsername)) {
                     throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-                }
+                } else {
+                    supervision.setSupervisorUsername(supervisor.getUsername());
+                    supervision.setUpdatedDate(new Date());
+                    supervision.setUpdatedBy(username);
 
-                supervision.setSupervisorUsername(supervisor.getUsername());
-                supervision.setUpdatedDate(new Date());
-                supervision.setUpdatedBy(username);
+                    supervisionRepository.save(supervision);
 
-                supervisionRepository.save(supervision);
+                    if (supervisionRepository
+                            .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername)) {
+                        AdminModel promotedAdmin;
 
-                if (supervisionRepository
-                        .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername)) {
-                    AdminModel promotedAdmin;
+                        final boolean adminWithUsernameAndIsDeletedExists = adminRepository
+                                .existsAdminModelByDeletedIsTrueAndUsernameEquals(supervisor.getUsername());
 
-                    final boolean adminWithUsernameAndIsDeletedExists = adminRepository
-                            .existsAdminModelByDeletedIsTrueAndUsernameEquals(supervisor.getUsername());
+                        if (adminWithUsernameAndIsDeletedExists) {
+                            promotedAdmin = adminRepository.findByDeletedIsTrueAndUsernameEquals(supervisor.getUsername());
+                        } else {
+                            promotedAdmin = new AdminModel();
 
-                    if (adminWithUsernameAndIsDeletedExists) {
-                        promotedAdmin = adminRepository.findByDeletedIsTrueAndUsernameEquals(supervisor.getUsername());
-                    } else {
-                        promotedAdmin = new AdminModel();
+                            promotedAdmin.setUsername(supervisor.getUsername());
+                            promotedAdmin.setPassword(supervisor.getPassword());
+                            promotedAdmin.setCreatedDate(new Date());
+                            promotedAdmin.setCreatedBy(username);
+                        }
+                        promotedAdmin.setDeleted(false);
+                        promotedAdmin.setUpdatedDate(new Date());
+                        promotedAdmin.setUpdatedBy(username);
 
-                        promotedAdmin.setUsername(supervisor.getUsername());
-                        promotedAdmin.setPassword(supervisor.getPassword());
-                        promotedAdmin.setCreatedDate(new Date());
-                        promotedAdmin.setCreatedBy(username);
+                        adminRepository.save(promotedAdmin);
                     }
-                    promotedAdmin.setDeleted(false);
-                    promotedAdmin.setUpdatedDate(new Date());
-                    promotedAdmin.setUpdatedBy(username);
-
-                    adminRepository.save(promotedAdmin);
                 }
             }
         }
@@ -637,30 +673,31 @@ public class EmployeesServiceImpl
 
         if (emptyUsernameGiven || emptyOldPasswordGiven || emptyNewPasswordGiven || emptyNewPasswordConfirmationGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
-        }
-
-        EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
-
-        if (employee == null) {
-            throw new DataNotFoundException(DATA_NOT_FOUND);
         } else {
-            final boolean passwordsMatch = encoder.matches(oldPassword, employee.getPassword());
+            EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsername(username);
 
-            if (!passwordsMatch) {
-                throw new UserNotAuthenticatedException(INVALID_PASSWORD);
+            if (employee == null) {
+                throw new DataNotFoundException(DATA_NOT_FOUND);
             } else {
-                final boolean unchangedPassword = oldPassword.equals(newPassword);
-                final boolean newPasswordConfirmed = newPassword.equals(newPasswordConfirmation);
+                final boolean passwordsMatch = encoder.matches(oldPassword, employee.getPassword());
 
-                if (unchangedPassword || !newPasswordConfirmed) {
-                    throw new BadRequestException(INCORRECT_PARAMETER);
+                if (!passwordsMatch) {
+                    throw new UserNotAuthenticatedException(INVALID_PASSWORD);
                 } else {
-                    employee.setPassword(encoder.encode(newPassword));
+                    final boolean unchangedPassword = oldPassword.equals(newPassword);
+                    final boolean newPasswordConfirmed = newPassword.equals(newPasswordConfirmation);
+                    final boolean sufficientNewPasswordLength = newPassword.length() > 6;
 
-                    employee.setUpdatedBy(username);
-                    employee.setUpdatedDate(new Date());
+                    if (unchangedPassword || !newPasswordConfirmed || !sufficientNewPasswordLength) {
+                        throw new BadRequestException(INCORRECT_PARAMETER);
+                    } else {
+                        employee.setPassword(encoder.encode(newPassword));
 
-                    employeeRepository.save(employee);
+                        employee.setUpdatedBy(username);
+                        employee.setUpdatedDate(new Date());
+
+                        employeeRepository.save(employee);
+                    }
                 }
             }
         }
@@ -682,72 +719,72 @@ public class EmployeesServiceImpl
 
         if (emptyAdministratorUsernameGiven || emptyEmployeeUsernameGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
-        }
+        } else {
+            final boolean validAdministrator = roleDeterminer.determineRole(adminUsername)
+                    .equals(RoleConstant.ROLE_ADMINISTRATOR);
+            final boolean selfDeletionAttempt = employeeUsername.equals(adminUsername);
+            final boolean employeeWithEmployeeUsernameStillSupervises = supervisionRepository
+                    .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername);
+            final boolean allDeliveredAssetsHaveBeenReturned = requestsServiceApi
+                    .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_DELIVERED).isEmpty();
 
-        final boolean validAdministrator = roleDeterminer.determineRole(adminUsername)
-                                                         .equals(RoleConstant.ROLE_ADMINISTRATOR);
-        final boolean selfDeletionAttempt = employeeUsername.equals(adminUsername);
-        final boolean employeeWithEmployeeUsernameStillSupervises = supervisionRepository
-                .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsername(employeeUsername);
-        final boolean allDeliveredAssetsHaveBeenReturned = requestsServiceApi
-                .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_DELIVERED).isEmpty();
+            if (!validAdministrator || selfDeletionAttempt || employeeWithEmployeeUsernameStillSupervises ||
+                    !allDeliveredAssetsHaveBeenReturned) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            } else {
+                EmployeeModel targetEmployee = employeeRepository.findByDeletedIsFalseAndUsername(employeeUsername);
+                SupervisionModel supervisionOfTargetEmployee = supervisionRepository
+                        .findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
 
-        if (!validAdministrator || selfDeletionAttempt || employeeWithEmployeeUsernameStillSupervises ||
-            !allDeliveredAssetsHaveBeenReturned) {
-            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-        }
+                final boolean targetEmployeeDoesNotExist = (targetEmployee == null);
+                final boolean supervisionOfTargetEmployeeDoesNotExist = (supervisionOfTargetEmployee == null);
 
-        EmployeeModel targetEmployee = employeeRepository.findByDeletedIsFalseAndUsername(employeeUsername);
-        SupervisionModel supervisionOfTargetEmployee = supervisionRepository
-                .findByDeletedIsFalseAndEmployeeUsername(employeeUsername);
+                if (targetEmployeeDoesNotExist || supervisionOfTargetEmployeeDoesNotExist) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                } else {
+                    List< RequestModel > requests = new ArrayList<>();
 
-        final boolean targetEmployeeDoesNotExist = (targetEmployee == null);
-        final boolean supervisionOfTargetEmployeeDoesNotExist = (supervisionOfTargetEmployee == null);
+                    final List< RequestModel > acceptedRequests = requestsServiceApi
+                            .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_ACCEPTED);
+                    final List< RequestModel > requestedRequests = requestsServiceApi
+                            .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_REQUESTED);
 
-        if (targetEmployeeDoesNotExist || supervisionOfTargetEmployeeDoesNotExist) {
-            throw new DataNotFoundException(DATA_NOT_FOUND);
-        }
+                    requests.addAll(acceptedRequests);
+                    requests.addAll(requestedRequests);
 
-        List< RequestModel > requests = new ArrayList<>();
+                    final boolean acceptedOrRequestedRequestsExist = !requests.isEmpty();
 
-        final List< RequestModel > acceptedRequests = requestsServiceApi
-                .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_ACCEPTED);
-        final List< RequestModel > requestedRequests = requestsServiceApi
-                .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_REQUESTED);
+                    if (acceptedOrRequestedRequestsExist) {
+                        for (RequestModel request : requests) {
+                            request.setStatus(StatusConstant.STATUS_CANCELLED);
+                            request.setUpdatedDate(new Date());
+                            request.setUpdatedBy(adminUsername);
 
-        requests.addAll(acceptedRequests);
-        requests.addAll(requestedRequests);
+                            requestsServiceApi.save(request);
+                        }
+                    }
 
-        final boolean acceptedOrRequestedRequestsExist = !requests.isEmpty();
+                    final boolean employeeWithEmployeeUsernameIsAdministrator = adminRepository
+                            .existsAdminModelByDeletedIsFalseAndUsernameEquals(employeeUsername);
 
-        if (acceptedOrRequestedRequestsExist) {
-            for (RequestModel request : requests) {
-                request.setStatus(StatusConstant.STATUS_CANCELLED);
-                request.setUpdatedDate(new Date());
-                request.setUpdatedBy(adminUsername);
+                    if (employeeWithEmployeeUsernameIsAdministrator) {
+                        AdminModel administrator = adminRepository.findByDeletedIsFalseAndUsernameEquals(employeeUsername);
 
-                requestsServiceApi.save(request);
+                        administrator.setDeleted(true);
+
+                        adminRepository.save(administrator);
+                    }
+
+                    targetEmployee.setDeleted(true);
+
+                    employeeRepository.save(targetEmployee);
+
+                    supervisionOfTargetEmployee.setDeleted(true);
+
+                    supervisionRepository.save(supervisionOfTargetEmployee);
+                }
             }
         }
-
-        final boolean employeeWithEmployeeUsernameIsAdministrator = adminRepository
-                .existsAdminModelByDeletedIsFalseAndUsernameEquals(employeeUsername);
-
-        if (employeeWithEmployeeUsernameIsAdministrator) {
-            AdminModel administrator = adminRepository.findByDeletedIsFalseAndUsernameEquals(employeeUsername);
-
-            administrator.setDeleted(true);
-
-            adminRepository.save(administrator);
-        }
-
-        targetEmployee.setDeleted(true);
-
-        employeeRepository.save(targetEmployee);
-
-        supervisionOfTargetEmployee.setDeleted(true);
-
-        supervisionRepository.save(supervisionOfTargetEmployee);
     }
 
     @Override
@@ -766,36 +803,36 @@ public class EmployeesServiceImpl
 
         if (noAdministratorUsernameGiven || noOldSupervisorUsernameGiven || noNewSupervisorUsernameGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
-        }
-
-        final boolean validAdministrator = roleDeterminer.determineRole(adminUsername)
-                                                         .equals(RoleConstant.ROLE_ADMINISTRATOR);
-        final boolean selfSupervisorChangeOnDeletionAttempt = oldSupervisorUsername.equals(adminUsername);
-
-        if (!validAdministrator || selfSupervisorChangeOnDeletionAttempt) {
-            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
-        }
-
-        final boolean employeeWithOldSupervisorUsernameExists = employeeRepository
-                .existsEmployeeModelByDeletedIsFalseAndUsername(oldSupervisorUsername);
-        final boolean employeeWithNewSupervisorUsernameExists = employeeRepository
-                .existsEmployeeModelByDeletedIsFalseAndUsername(newSupervisorUsername);
-
-        if (!employeeWithOldSupervisorUsernameExists || !employeeWithNewSupervisorUsernameExists) {
-            throw new DataNotFoundException(DATA_NOT_FOUND);
-        }
-
-        List< SupervisionModel > supervisions = supervisionRepository
-                .findAllByDeletedIsFalseAndSupervisorUsername(oldSupervisorUsername);
-
-        final boolean employeeWithOldSupervisorUsernameDoesNotSupervise = supervisions.isEmpty();
-
-        if (employeeWithOldSupervisorUsernameDoesNotSupervise) {
-            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
         } else {
-            demotePreviousSupervisorFromAdminIfNecessary(adminUsername, oldSupervisorUsername, newSupervisorUsername,
-                                                         supervisions
-            );
+            final boolean validAdministrator = roleDeterminer.determineRole(adminUsername)
+                    .equals(RoleConstant.ROLE_ADMINISTRATOR);
+            final boolean selfSupervisorChangeOnDeletionAttempt = oldSupervisorUsername.equals(adminUsername);
+
+            if (!validAdministrator || selfSupervisorChangeOnDeletionAttempt) {
+                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+            } else {
+                final boolean employeeWithOldSupervisorUsernameExists = employeeRepository
+                        .existsEmployeeModelByDeletedIsFalseAndUsername(oldSupervisorUsername);
+                final boolean employeeWithNewSupervisorUsernameExists = employeeRepository
+                        .existsEmployeeModelByDeletedIsFalseAndUsername(newSupervisorUsername);
+
+                if (!employeeWithOldSupervisorUsernameExists || !employeeWithNewSupervisorUsernameExists) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                } else {
+                    List< SupervisionModel > supervisions = supervisionRepository
+                            .findAllByDeletedIsFalseAndSupervisorUsername(oldSupervisorUsername);
+
+                    final boolean employeeWithOldSupervisorUsernameDoesNotSupervise = supervisions.isEmpty();
+
+                    if (employeeWithOldSupervisorUsernameDoesNotSupervise) {
+                        throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                    } else {
+                        demotePreviousSupervisorFromAdminIfNecessary(adminUsername, oldSupervisorUsername,
+                                newSupervisorUsername, supervisions
+                        );
+                    }
+                }
+            }
         }
     }
 
@@ -969,7 +1006,6 @@ public class EmployeesServiceImpl
             if (targetUsername.equals(middleUsername)) {
                 return false;
             }
-
             if (targetUsername.compareTo(middleUsername) < 0) {
                 return isSafeFromCyclicSupervising(
                         targetUsername, usernames.subList(0, usernames.indexOf(middleUsername) - 1));
