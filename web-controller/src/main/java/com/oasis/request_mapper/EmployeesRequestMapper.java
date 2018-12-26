@@ -20,11 +20,11 @@ public class EmployeesRequestMapper {
 
     private Logger logger = LoggerFactory.getLogger(EmployeesRequestMapper.class);
 
-    public boolean isCreateEmployeeOperation(final String rawEmployeeData)
+    public boolean isAddEmployeeOperation(final String rawEmployeeData)
             throws
             BadRequestException {
 
-        JsonNode employee;
+        final JsonNode employee;
 
         try {
             employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
@@ -42,30 +42,30 @@ public class EmployeesRequestMapper {
             final String rawEmployeeData, final boolean addEmployeeOperation
     ) {
 
-        SaveEmployeeRequest.Employee request;
+        final SaveEmployeeRequest.Employee request;
 
         try {
 
-            JsonNode employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
+            final JsonNode employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
 
             if (addEmployeeOperation) {
-                request = new SaveEmployeeRequest.Employee(null, employee.path("name").asText(),
-                                                           employee.path("dob").asText(),
-                                                           employee.path("phone").asText(),
-                                                           employee.path("jobTitle").asText(),
-                                                           employee.path("division").asText(),
-                                                           employee.path("location").asText(),
-                                                           employee.path("supervisorUsername").asText()
+                request = new SaveEmployeeRequest.Employee(null, employee.path("name").textValue(),
+                                                           employee.path("dob").textValue(),
+                                                           employee.path("phone").textValue(),
+                                                           employee.path("jobTitle").textValue(),
+                                                           employee.path("division").textValue(),
+                                                           employee.path("location").textValue(),
+                                                           employee.path("supervisorUsername").textValue()
                 );
             } else {
-                request = new SaveEmployeeRequest.Employee(employee.path("username").asText(),
-                                                           employee.path("name").asText(),
-                                                           employee.path("dob").asText(),
-                                                           employee.path("phone").asText(),
-                                                           employee.path("jobTitle").asText(),
-                                                           employee.path("division").asText(),
-                                                           employee.path("location").asText(),
-                                                           employee.path("supervisorUsername").asText()
+                request = new SaveEmployeeRequest.Employee(employee.path("username").textValue(),
+                                                           employee.path("name").textValue(),
+                                                           employee.path("dob").textValue(),
+                                                           employee.path("phone").textValue(),
+                                                           employee.path("jobTitle").textValue(),
+                                                           employee.path("division").textValue(),
+                                                           employee.path("location").textValue(),
+                                                           employee.path("supervisorUsername").textValue()
                 );
             }
 
@@ -78,10 +78,10 @@ public class EmployeesRequestMapper {
         employee.setUsername(request.getUsername());
         employee.setName(request.getName());
         try {
-            employee.setDob(new SimpleDateFormat("dd-MM-yyyy").parse(request.getDob()));
-        } catch (ParseException parseException) {
-            logger.error("Failed to parse given DOB as ParseException occurred with message: " +
-                         parseException.getMessage());
+            employee.setDob(new SimpleDateFormat("yyyy-MM-dd").parse(request.getDob()));
+        } catch (ParseException | NullPointerException exception) {
+            logger.error("Failed to parse given DOB as ParseException or NullPointerException occurred with message: " +
+                    exception.getMessage());
         }
         employee.setPhone(request.getPhone());
         employee.setJobTitle(request.getJobTitle());
@@ -93,11 +93,11 @@ public class EmployeesRequestMapper {
 
     public String getSupervisorUsernameFromRawData(final String rawEmployeeData) {
 
-        String supervisorUsername;
+        final String supervisorUsername;
 
         try {
             supervisorUsername = new ObjectMapper().readTree(rawEmployeeData).path("employee")
-                                                   .path("supervisorUsername").asText();
+                                                   .path("supervisorUsername").textValue();
         } catch (IOException ioException) {
             logger.error(
                     "Failed to read attribute 'supervisorUsername' from passed JSON data as IOException occurred with" +

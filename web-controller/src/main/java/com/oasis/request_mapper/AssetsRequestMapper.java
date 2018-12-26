@@ -24,7 +24,7 @@ public class AssetsRequestMapper {
             throws
             BadRequestException {
 
-        JsonNode asset;
+        final JsonNode asset;
 
         try {
             asset = new ObjectMapper().readTree(rawAssetData).path("asset");
@@ -41,29 +41,29 @@ public class AssetsRequestMapper {
             final String rawAssetData, final boolean addAssetOperation
     ) {
 
-        SaveAssetRequest.Asset request;
+        final SaveAssetRequest.Asset request;
 
         try {
 
             JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
 
             if (addAssetOperation) {
-                request = new SaveAssetRequest.Asset(null, asset.path("name").asText(), asset.path("location").asText(),
-                                                     asset.path("brand").asText(), asset.path("type").asText(),
-                                                     Long.valueOf(asset.path("quantity").asText()),
-                                                     Double.valueOf(asset.path("price").asText()),
+                request = new SaveAssetRequest.Asset(null, asset.path("name").textValue(),
+                                                     asset.path("location").textValue(),
+                                                     asset.path("brand").textValue(), asset.path("type").textValue(),
+                                                     Long.valueOf(asset.path("quantity").textValue()),
+                                                     Double.valueOf(asset.path("price").textValue()),
                                                      asset.path("expendable").asBoolean()
                 );
             } else {
-                request = new SaveAssetRequest.Asset(asset.path("sku").asText(), asset.path("name").asText(),
-                                                     asset.path("location").asText(), asset.path("brand").asText(),
-                                                     asset.path("type").asText(),
-                                                     Long.valueOf(asset.path("quantity").asText()),
-                                                     Double.valueOf(asset.path("price").asText()),
+                request = new SaveAssetRequest.Asset(asset.path("sku").textValue(), asset.path("name").textValue(),
+                                                     asset.path("location").textValue(), asset.path("brand").textValue(),
+                                                     asset.path("type").textValue(),
+                                                     Long.valueOf(asset.path("quantity").textValue()),
+                                                     Double.valueOf(asset.path("price").textValue()),
                                                      asset.path("expendable").asBoolean()
                 );
             }
-
         } catch (IOException | NumberFormatException exception) {
             logger.error("Failed to process data as IOException or NumberFormatException occurred with message: " +
                     exception.getMessage());

@@ -16,7 +16,7 @@ public class RequestsRequestMapper {
 
         List< RequestModel > requests = new ArrayList<>();
 
-        for (SaveRequestRequest.Request requestObject : request.getRequests()) {
+        for (final SaveRequestRequest.Request requestObject : request.getRequests()) {
             RequestModel requestModel = new RequestModel();
 
             requestModel.set_id(requestObject.get_id());

@@ -184,7 +184,7 @@ public class EmployeesController {
 
         try {
             adminUsername = user.getUsername();
-            addEmployeeOperation = employeesRequestMapper.isCreateEmployeeOperation(rawEmployeeData);
+            addEmployeeOperation = employeesRequestMapper.isAddEmployeeOperation(rawEmployeeData);
 
             username = employeesServiceApi.saveEmployee(photoGiven, adminUsername, employeesRequestMapper
                                                                 .getEmployeeModelFromRawData(rawEmployeeData,

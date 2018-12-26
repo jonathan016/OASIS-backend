@@ -197,8 +197,6 @@ public class EmployeesServiceImpl
 
         if (emptyUsernameGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
-        } else if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username)) {
-            throw new DataNotFoundException(DATA_NOT_FOUND);
         } else {
             Set<String> possibleSupervisorsUsernames = new LinkedHashSet<>();
             final List<EmployeeModel> employees = employeeRepository
@@ -215,29 +213,33 @@ public class EmployeesServiceImpl
                     }
                 }
             } else {
-                List<String> supervisedEmployeesUsernames = new ArrayList<>();
-                final List<SupervisionModel> supervisions = supervisionRepository
-                        .findAllByDeletedIsFalseAndSupervisorUsernameEquals(username);
+                if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username)) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                } else {
+                    List<String> supervisedEmployeesUsernames = new ArrayList<>();
+                    final List<SupervisionModel> supervisions = supervisionRepository
+                            .findAllByDeletedIsFalseAndSupervisorUsernameEquals(username);
 
-                for (final SupervisionModel supervision : supervisions) {
-                    supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
-                }
+                    for (final SupervisionModel supervision : supervisions) {
+                        supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
+                    }
 
-                for (final EmployeeModel possibleSupervisor : employees) {
-                    final String currentCandidateUsername = possibleSupervisor.getUsername();
-                    final boolean selfUsername = username.equals(currentCandidateUsername);
+                    for (final EmployeeModel possibleSupervisor : employees) {
+                        final String currentCandidateUsername = possibleSupervisor.getUsername();
+                        final boolean selfUsername = username.equals(currentCandidateUsername);
 
-                    if (selfUsername) {
-                        continue;
-                    } else {
-                        final boolean safeFromCyclicSupervising = isSafeFromCyclicSupervising(
-                                currentCandidateUsername, supervisedEmployeesUsernames);
+                        if (selfUsername) {
+                            continue;
+                        } else {
+                            final boolean safeFromCyclicSupervising = isSafeFromCyclicSupervising(
+                                    currentCandidateUsername, supervisedEmployeesUsernames);
 
-                        if (safeFromCyclicSupervising) {
-                            if (!possibleSupervisor.getUsername().equals(adminUsername)) {
-                                possibleSupervisorsUsernames.add(currentCandidateUsername);
-                            } else {
-                                possibleSupervisorsUsernames.add(adminUsername.concat(" (Default)"));
+                            if (safeFromCyclicSupervising) {
+                                if (!possibleSupervisor.getUsername().equals(adminUsername)) {
+                                    possibleSupervisorsUsernames.add(currentCandidateUsername);
+                                } else {
+                                    possibleSupervisorsUsernames.add(adminUsername.concat(" (Default)"));
+                                }
                             }
                         }
                     }
@@ -333,7 +335,7 @@ public class EmployeesServiceImpl
         if (!isSaveEmployeeParametersProper(photoGiven, employee, addEmployeeOperation)) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            if (supervisorUsername == null) {
+            if (supervisorUsername == null || supervisorUsername.isEmpty()) {
                 supervisorUsername = username;
             }
 
@@ -439,7 +441,7 @@ public class EmployeesServiceImpl
                 return false;
             } else if (!employee.getJobTitle().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
                 return false;
-            } else if (!employee.getDivision().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
+            } else if (!employee.getDivision().matches(Regex.REGEX_DIVISIONS)) {
                 return false;
             } else if (!employee.getLocation().matches(Regex.REGEX_UNIVERSAL_STRINGS)) {
                 return false;
@@ -452,7 +454,7 @@ public class EmployeesServiceImpl
                 calendar.setTime(employee.getDob());
                 final int dobYear = calendar.get(Calendar.YEAR);
 
-                if (currYear - dobYear < 16 || dobYear - currYear > 65) {
+                if (currYear - dobYear < 16 || currYear - dobYear > 65) {
                     return false;
                 }
             }
