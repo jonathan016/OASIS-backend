@@ -11,8 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SaveRequestRequest {
 
-    List< SaveRequestRequest.Request > requests;
-    private String username;
+    private List< SaveRequestRequest.Request > requests;
 
     @Data
     @NoArgsConstructor

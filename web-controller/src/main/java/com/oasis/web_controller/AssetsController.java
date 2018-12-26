@@ -15,10 +15,15 @@ import com.oasis.web_model.request.assets.DeleteAssetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.http.MediaType.*;
@@ -48,7 +53,9 @@ public class AssetsController {
             @RequestParam(value = "page")
             final int page,
             @RequestParam(value = "sort", required = false)
-            final String sort
+            final String sort,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final List< AssetModel > availableAssets;
@@ -69,12 +76,14 @@ public class AssetsController {
             ), HttpStatus.NOT_FOUND);
         }
 
-        //TODO include parameter role
         return new ResponseEntity<>(assetsResponseMapper
                                             .produceViewFoundAssetSuccessResult(HttpStatus.OK.value(), availableAssets,
                                                                                 activeComponentManager
                                                                                         .getAssetsListActiveComponents(
-                                                                                                ""), page, totalRecords
+                                                                                                new ArrayList<>(
+                                                                                                        user.getAuthorities())
+                                                                                                        .get(0).getAuthority()
+                                                                                        ), page, totalRecords
                                             ), HttpStatus.OK);
     }
 
@@ -82,8 +91,10 @@ public class AssetsController {
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAssetDetailData(
             @PathVariable(value = "identifier")
-            final String sku
-    ) {
+            final String sku,
+            @AuthenticationPrincipal
+            final User user
+            ) {
 
         final AssetModel asset;
 
@@ -99,10 +110,10 @@ public class AssetsController {
         final List< String > imageURLs = assetsServiceApi
                 .getAssetDetailImages(asset.getSku(), asset.getImageDirectory());
 
-        //TODO include parameter role
         return new ResponseEntity<>(
                 assetsResponseMapper.produceViewAssetDetailSuccessResult(HttpStatus.OK.value(), activeComponentManager
-                        .getAssetDetailActiveComponents(""), asset, imageURLs), HttpStatus.OK);
+                        .getAssetDetailActiveComponents(new ArrayList<>(user.getAuthorities()).get(0).getAuthority()),
+                        asset, imageURLs), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_IMAGE_ASSET, produces = { IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE },
@@ -136,18 +147,20 @@ public class AssetsController {
     @PostMapping(value = APIMappingValue.API_SAVE, produces = APPLICATION_JSON_VALUE,
                  consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity saveAsset(
-            @RequestParam(value = "photos")
-            final List< MultipartFile > photos,
+            @RequestParam(value = "images")
+            final List< MultipartFile > images,
             @RequestParam(value = "data")
-            final String rawAssetData
+            final String rawAssetData,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         try {
-            final String username = assetsRequestMapper.getAdminUsernameFromRawData(rawAssetData);
+            final String username = user.getUsername();
             final boolean addAssetOperation = assetsRequestMapper.isAddAssetOperationFromRawData(rawAssetData);
             final AssetModel asset = assetsRequestMapper.getAssetModelFromRawData(rawAssetData, addAssetOperation);
 
-            assetsServiceApi.saveAsset(photos, username, asset, addAssetOperation);
+            assetsServiceApi.saveAsset(images, username, asset, addAssetOperation);
         } catch (DuplicateDataException duplicateDataException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.CONFLICT.value(),
                                                                                  duplicateDataException.getErrorCode(),
@@ -182,18 +195,13 @@ public class AssetsController {
                    consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity deleteAssets(
             @RequestBody
-            final DeleteAssetRequest request
+            final DeleteAssetRequest request,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         try {
-            assetsServiceApi.deleteAssets(request.getSkus(), request.getUsername());
-        } catch (UnauthorizedOperationException unauthorizedOperationException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorCode(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorMessage()
-            ), HttpStatus.UNAUTHORIZED);
+            assetsServiceApi.deleteAssets(request.getSkus(), user.getUsername());
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
                                                                                  dataNotFoundException.getErrorCode(),

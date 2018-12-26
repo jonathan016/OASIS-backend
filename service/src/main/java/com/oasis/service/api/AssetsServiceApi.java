@@ -51,14 +51,13 @@ public interface AssetsServiceApi {
             throws
             DuplicateDataException,
             UnauthorizedOperationException,
-            DataNotFoundException;
+            DataNotFoundException, BadRequestException;
 
     /*-------------Delete Asset(s) Method-------------*/
     void deleteAssets(
             final List< String > skus, final String username
     )
             throws
-            UnauthorizedOperationException,
             BadRequestException,
             DataNotFoundException;
 

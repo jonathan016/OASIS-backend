@@ -16,7 +16,7 @@ public interface RequestRepository
             String username, String status
     );
 
-    List< RequestModel > findAllBySku(String sku);
+    boolean existsRequestModelsBySku(String sku);
 
     List< RequestModel > findAllByUsernameAndStatusContainsOrderByStatusAsc(
             String username, String status

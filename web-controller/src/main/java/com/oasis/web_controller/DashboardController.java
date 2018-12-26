@@ -15,6 +15,8 @@ import com.oasis.web_model.constant.APIMappingValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,8 +45,8 @@ public class DashboardController {
     @GetMapping(value = APIMappingValue.API_STATUS, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getStatusSectionData(
-            @PathVariable
-            final String username
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final Map< String, Long > statuses;
@@ -53,7 +55,7 @@ public class DashboardController {
         final long availableAssetsCount;
 
         try {
-            statuses = dashboardServiceApi.getStatusSectionData(username);
+            statuses = dashboardServiceApi.getStatusSectionData(user.getUsername());
             requestedRequestsCount = statuses.get("requestedRequestsCount");
             acceptedRequestsCount = statuses.get("acceptedRequestsCount");
             availableAssetsCount = statuses.get("availableAssetsCount");
@@ -80,12 +82,12 @@ public class DashboardController {
     @GetMapping(value = APIMappingValue.API_REQUEST_UPDATE, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getRequestUpdateSectionData(
-            @PathVariable
-            final String username,
             @RequestParam(value = "tab")
             final String tab,
             @RequestParam(value = "page")
-            final int page
+            final int page,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final Map< String, List< ? > > requestsListData;
@@ -96,7 +98,7 @@ public class DashboardController {
         final long totalRecords;
 
         try {
-            requestsListData = dashboardServiceApi.getRequestUpdateSectionData(username, tab, page);
+            requestsListData = dashboardServiceApi.getRequestUpdateSectionData(user.getUsername(), tab, page);
 
             requests = (List< RequestModel >) requestsListData.get("requests");
             employees = (List< EmployeeModel >) requestsListData.get("employees");
@@ -104,11 +106,11 @@ public class DashboardController {
 
             if (tab.equals(ServiceConstant.TAB_OTHERS)) {
                 totalRecords = dashboardServiceApi
-                        .getRequestsCount("Others", username, StatusConstant.STATUS_REQUESTED, page);
+                        .getRequestsCount("Others", user.getUsername(), StatusConstant.STATUS_REQUESTED, page);
             } else {
                 modifiers.addAll((List< EmployeeModel >) requestsListData.get("modifiers"));
                 totalRecords = dashboardServiceApi
-                        .getRequestsCount("Username", username, StatusConstant.STATUS_REQUESTED, page);
+                        .getRequestsCount("Username", user.getUsername(), StatusConstant.STATUS_REQUESTED, page);
             }
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
@@ -129,7 +131,7 @@ public class DashboardController {
                                                                                             activeComponentManager
                                                                                                     .getRequestsListDataActiveComponents(
                                                                                                             tab,
-                                                                                                            username,
+                                                                                                            user.getUsername(),
                                                                                                             StatusConstant.STATUS_REQUESTED
                                                                                                     ), page,
                                                                                             totalRecords
@@ -140,7 +142,7 @@ public class DashboardController {
                                                                                         employees, modifiers, assets,
                                                                                         activeComponentManager
                                                                                                 .getRequestsListDataActiveComponents(
-                                                                                                        tab, username,
+                                                                                                        tab, user.getUsername(),
                                                                                                         StatusConstant.STATUS_REQUESTED
                                                                                                 ), page, totalRecords
                                                 ), HttpStatus.OK);

@@ -68,7 +68,7 @@ public interface RequestsServiceApi {
             BadRequestException,
             UnauthorizedOperationException;
 
-    List< RequestModel > findAllBySku(final String sku);
+    boolean existsRequestModelsBySku(final String sku);
 
     List< RequestModel > findAllByUsernameAndStatus(final String username, final String status);
 

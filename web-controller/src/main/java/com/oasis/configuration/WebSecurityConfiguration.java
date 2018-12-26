@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -96,15 +97,21 @@ public class WebSecurityConfiguration
         configuration.setAllowedOrigins(ImmutableList.of("http://localhost", "*"));
         configuration.setAllowedMethods(ImmutableList.of("GET", "POST", "OPTIONS", "DELETE"));
         configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders(ImmutableList.of("Content-Type", "Access-Control-Allow-Origin", "X-Auth-Token",
+        configuration.setAllowedHeaders(ImmutableList.of("Content-Type", "Access-Control-Allow-Origin", "x-auth-token",
                 "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "requestId", "Correlation-Id"));
-        configuration.setExposedHeaders(ImmutableList.of("Content-Type", "Access-Control-Allow-Origin", "X-Auth-Token",
+        configuration.setExposedHeaders(ImmutableList.of("Content-Type", "Access-Control-Allow-Origin", "x-auth-token",
                 "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "requestId", "Correlation-Id"));
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers(HttpMethod.GET, API_ASSET.concat(API_IMAGE_ASSET))
+                .antMatchers(HttpMethod.GET, API_EMPLOYEE.concat(API_PHOTO_EMPLOYEE));
     }
 
     @Bean

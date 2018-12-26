@@ -46,6 +46,7 @@ public class AssetModel
     @Field(AssetFieldName.DELETED)
     private boolean deleted;
 
+    @Override
     public boolean equals(Object object) {
 
         if (object instanceof AssetModel) {

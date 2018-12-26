@@ -153,7 +153,7 @@ public class RequestsServiceImpl
                 }
             } else {
                 if (type.equals("Others")) {
-                    return getOthersRequestList(username, query, status, page, sort).size();
+                    return getOthersRequestList(username, query, status, sort).size();
                 }
             }
 
@@ -461,7 +461,6 @@ public class RequestsServiceImpl
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 }
 
-                // TODO Check concurrency
                 Query query = new Query();
                 query.addCriteria(Criteria.where(AssetFieldName.SKU).is(savedRequest.getSku()));
                 Update update = new Update().inc(AssetFieldName.STOCK, 0 - savedRequest.getQuantity());
@@ -497,7 +496,6 @@ public class RequestsServiceImpl
             UnauthorizedOperationException {
 
         if (isRequestDeliveryOrReturnValid(username, savedRequest, newRequestStatus)) {
-            // TODO Check concurrency
             Query query = new Query();
             query.addCriteria(Criteria.where(AssetFieldName.SKU).is(savedRequest.getSku()));
             Update update = new Update().inc(AssetFieldName.STOCK, savedRequest.getQuantity());
@@ -635,9 +633,9 @@ public class RequestsServiceImpl
     }
 
     @Override
-    public List< RequestModel > findAllBySku(final String sku) {
+    public boolean existsRequestModelsBySku(final String sku) {
 
-        return requestRepository.findAllBySku(sku);
+        return requestRepository.existsRequestModelsBySku(sku);
     }
 
     @Override
@@ -955,7 +953,7 @@ public class RequestsServiceImpl
     }
 
     private List< RequestModel > getOthersRequestList(
-            final String username, final String query, final String status, final int page, String sort
+            final String username, final String query, final String status, String sort
     )
             throws
             BadRequestException {
@@ -988,7 +986,7 @@ public class RequestsServiceImpl
                 boolean usernameIsAdminOrSupervisor = administratorWithUsernameExists || supervisorIsValid;
 
                 if (usernameIsAdminOrSupervisor) {
-                    requests.addAll(getOthersRequestList(supervisedEmployeeUsername, query, status, page, sort));
+                    requests.addAll(getOthersRequestList(supervisedEmployeeUsername, query, status, sort));
                 }
 
                 final boolean viewAllRequestsRegardlessOfStatus = (status == null);
@@ -1103,7 +1101,11 @@ public class RequestsServiceImpl
                 }
             }
 
-            requests.sort(Comparator.comparing(BaseEntity::getUpdatedDate).reversed());
+            if (sort.equals("D-updatedDate")) {
+                requests.sort(Comparator.comparing(BaseEntity::getUpdatedDate).reversed());
+            } else if (sort.equals("A-updatedDate")) {
+                requests.sort(Comparator.comparing(BaseEntity::getUpdatedDate));
+            }
 
             return requests;
         }
@@ -1134,7 +1136,7 @@ public class RequestsServiceImpl
             DataNotFoundException,
             BadRequestException {
 
-        final List< RequestModel > requests = getOthersRequestList(username, query, status, page, sort);
+        final List< RequestModel > requests = getOthersRequestList(username, query, status, sort);
         final long totalPages = (long) Math.ceil((double) requests.size() / PageSizeConstant.REQUESTS_LIST_PAGE_SIZE);
         final boolean noRequests = requests.isEmpty();
         final boolean pageIndexOutOfBounds = ((page < 1) || (page > totalPages));

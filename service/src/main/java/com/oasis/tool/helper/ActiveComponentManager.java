@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
+@SuppressWarnings({"SpringJavaAutowiredFieldsWarningInspection", "Duplicates"})
 public class ActiveComponentManager {
 
     private Logger logger = LoggerFactory.getLogger(ActiveComponentManager.class);
@@ -24,20 +24,31 @@ public class ActiveComponentManager {
 
         Map< String, Boolean > activeComponents = new HashMap<>();
 
-        activeComponents.put("addBtn", true);
-        activeComponents.put("editBtn", true);
-        activeComponents.put("deleteBtn", true);
+        if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
+            activeComponents.put("addBtn", true);
+            activeComponents.put("editBtn", true);
+            activeComponents.put("deleteBtn", true);
+        } else {
+            activeComponents.put("addBtn", false);
+            activeComponents.put("editBtn", false);
+            activeComponents.put("deleteBtn", false);
+        }
         activeComponents.put("requestBtn", true);
 
         return activeComponents;
     }
 
-    public Map< String, Boolean > getAssetDetailActiveComponents(String role) {
+    public Map< String, Boolean > getAssetDetailActiveComponents(final String role) {
 
         Map< String, Boolean > activeComponents = new HashMap<>();
 
-        activeComponents.put("editBtn", true);
-        activeComponents.put("deleteBtn", true);
+        if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
+            activeComponents.put("editBtn", true);
+            activeComponents.put("deleteBtn", true);
+        } else {
+            activeComponents.put("editBtn", false);
+            activeComponents.put("deleteBtn", false);
+        }
         activeComponents.put("printBtn", true);
 
         return activeComponents;
@@ -73,12 +84,17 @@ public class ActiveComponentManager {
         return activeComponents;
     }
 
-    public Map< String, Boolean > getEmployeeDetailActiveComponents(String role) {
+    public Map< String, Boolean > getEmployeeDetailActiveComponents(final String role) {
 
         Map< String, Boolean > activeComponents = new HashMap<>();
 
-        activeComponents.put("editBtn", true);
-        activeComponents.put("deleteBtn", true);
+        if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
+            activeComponents.put("editBtn", true);
+            activeComponents.put("deleteBtn", true);
+        } else {
+            activeComponents.put("editBtn", false);
+            activeComponents.put("deleteBtn", false);
+        }
 
         return activeComponents;
     }

@@ -21,8 +21,8 @@ public class APIMappingValue {
     public static final String API_IMAGE_ASSET = "/{identifier:SKU-[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9]}/{image:.+}";
     public static final String API_PDF_ASSET = "/{identifier:SKU-[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9]}/pdf";
 
-    public static final String API_STATUS = "/status/{username:.+}";
-    public static final String API_REQUEST_UPDATE = "/request-update/{username:.+}";
+    public static final String API_STATUS = "/status";
+    public static final String API_REQUEST_UPDATE = "/request-update";
 
     public static final String API_CHANGE_SUPERVISOR_ON_DELETE = "/delete/change-supervisor";
     public static final String API_DATA_EMPLOYEE = "/{username:.+}";
@@ -30,8 +30,8 @@ public class APIMappingValue {
     public static final String API_USERNAMES = "/usernames";
     public static final String API_PASSWORD_CHANGE = "/change-password";
 
-    public static final String API_MY_REQUESTS = "/list/{username:.+}/my";
-    public static final String API_OTHERS_REQUESTS = "/list/{username:.+}/others";
+    public static final String API_MY_REQUESTS = "/list/my";
+    public static final String API_OTHERS_REQUESTS = "/list/others";
     public static final String API_REQUESTED_ASSETS = "/list/requested-assets";
 
 }

@@ -20,22 +20,6 @@ public class EmployeesRequestMapper {
 
     private Logger logger = LoggerFactory.getLogger(EmployeesRequestMapper.class);
 
-    public String getAdminUsernameFromRawData(final String rawEmployeeData) {
-
-        String adminUsername;
-
-        try {
-            adminUsername = new ObjectMapper().readTree(rawEmployeeData).path("username").asText();
-        } catch (IOException ioException) {
-            logger.error(
-                    "Failed to read attribute 'username' from passed JSON data as IOException occurred with message: " +
-                    ioException.getMessage());
-            return "";
-        }
-
-        return adminUsername;
-    }
-
     public boolean isCreateEmployeeOperation(final String rawEmployeeData)
             throws
             BadRequestException {

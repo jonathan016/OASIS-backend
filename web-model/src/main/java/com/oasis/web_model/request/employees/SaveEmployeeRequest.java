@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 public class SaveEmployeeRequest {
 
-    private String username;
     private SaveEmployeeRequest.Employee employee;
 
     @Data

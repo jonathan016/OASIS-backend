@@ -11,12 +11,10 @@ import java.util.List;
 public class RequestsRequestMapper {
 
     public List< RequestModel > getRequestsListFromRequest(
-            final SaveRequestRequest request
+            final String username, final SaveRequestRequest request
     ) {
 
         List< RequestModel > requests = new ArrayList<>();
-
-        String username = request.getUsername();
 
         for (SaveRequestRequest.Request requestObject : request.getRequests()) {
             RequestModel requestModel = new RequestModel();

@@ -17,6 +17,8 @@ import com.oasis.web_model.request.requests.SaveRequestRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,8 +49,6 @@ public class RequestsController {
     @GetMapping(value = APIMappingValue.API_MY_REQUESTS, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getMyRequestsListData(
-            @PathVariable(value = "username")
-            final String username,
             @RequestParam(value = "query", required = false)
             final String query,
             @RequestParam(value = "status", required = false)
@@ -56,7 +56,9 @@ public class RequestsController {
             @RequestParam(value = "page")
             final int page,
             @RequestParam(value = "sort", required = false)
-            final String sort
+            final String sort,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final Map< String, List< ? > > requestsListData;
@@ -67,13 +69,13 @@ public class RequestsController {
         final long totalRecords;
 
         try {
-            requestsListData = requestsServiceApi.getMyRequestsListData(username, query, status, page, sort);
+            requestsListData = requestsServiceApi.getMyRequestsListData(user.getUsername(), query, status, page, sort);
 
             requests = (List< RequestModel >) requestsListData.get("requests");
             employees = (List< EmployeeModel >) requestsListData.get("employees");
             modifiers = (List< EmployeeModel >) requestsListData.get("modifiers");
             assets = (List< AssetModel >) requestsListData.get("assets");
-            totalRecords = requestsServiceApi.getRequestsCount("Username", username, query, status, page, sort);
+            totalRecords = requestsServiceApi.getRequestsCount("Username", user.getUsername(), query, status, page, sort);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
@@ -91,7 +93,7 @@ public class RequestsController {
                                                                                     employees, modifiers, assets,
                                                                                     activeComponentManager
                                                                                             .getRequestsListDataActiveComponents(
-                                                                                                    "my", username,
+                                                                                                    "my", user.getUsername(),
                                                                                                     status
                                                                                             ), page, totalRecords
                                             ), HttpStatus.OK);
@@ -101,8 +103,6 @@ public class RequestsController {
     @GetMapping(value = APIMappingValue.API_OTHERS_REQUESTS, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getOthersRequestListData(
-            @PathVariable(value = "username")
-            final String username,
             @RequestParam(value = "query", required = false)
             final String query,
             @RequestParam(value = "status", required = false)
@@ -110,7 +110,9 @@ public class RequestsController {
             @RequestParam(value = "page")
             final int page,
             @RequestParam(value = "sort", required = false)
-            final String sort
+            final String sort,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final Map< String, List< ? > > othersRequestListData;
@@ -120,12 +122,12 @@ public class RequestsController {
         final long totalRecords;
 
         try {
-            othersRequestListData = requestsServiceApi.getOthersRequestListData(username, query, status, page, sort);
+            othersRequestListData = requestsServiceApi.getOthersRequestListData(user.getUsername(), query, status, page, sort);
 
             requests = (List< RequestModel >) othersRequestListData.get("requests");
             employees = (List< EmployeeModel >) othersRequestListData.get("employees");
             assets = (List< AssetModel >) othersRequestListData.get("assets");
-            totalRecords = requestsServiceApi.getRequestsCount("Others", username, query, status, page, sort);
+            totalRecords = requestsServiceApi.getRequestsCount("Others", user.getUsername(), query, status, page, sort);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
@@ -144,7 +146,8 @@ public class RequestsController {
                                                                                         activeComponentManager
                                                                                                 .getRequestsListDataActiveComponents(
                                                                                                         "others",
-                                                                                                        username, status
+                                                                                                        user.getUsername(),
+                                                                                                        status
                                                                                                 ), page, totalRecords
                                             ), HttpStatus.OK);
     }
@@ -189,13 +192,15 @@ public class RequestsController {
     @PostMapping(value = APIMappingValue.API_SAVE, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity saveRequest(
             @RequestBody
-            final SaveRequestRequest request
+            final SaveRequestRequest request,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
-        final List< RequestModel > requests = requestsRequestMapper.getRequestsListFromRequest(request);
+        final List< RequestModel > requests = requestsRequestMapper.getRequestsListFromRequest(user.getUsername(), request);
 
         try {
-            requestsServiceApi.saveRequests(request.getUsername(), requests);
+            requestsServiceApi.saveRequests(user.getUsername(), requests);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
                                                                                  dataNotFoundException.getErrorCode(),

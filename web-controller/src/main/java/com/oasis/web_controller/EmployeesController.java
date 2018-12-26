@@ -9,15 +9,17 @@ import com.oasis.service.api.EmployeesServiceApi;
 import com.oasis.tool.helper.ActiveComponentManager;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.employees.ChangePasswordRequest;
-import com.oasis.web_model.request.employees.DeleteEmployeeRequest;
 import com.oasis.web_model.request.employees.DeleteEmployeeSupervisorRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,14 +46,14 @@ public class EmployeesController {
     @GetMapping(value = APIMappingValue.API_LIST, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesList(
-            @RequestParam(value = "username")
-            final String username,
             @RequestParam(value = "query", required = false)
             final String query,
             @RequestParam(value = "page")
             final int page,
             @RequestParam(value = "sort", required = false)
-            final String sort
+            final String sort,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final Map< String, List< ? > > employeesListData;
@@ -61,12 +63,12 @@ public class EmployeesController {
         final long totalRecords;
 
         try {
-            employeesListData = employeesServiceApi.getEmployeesListData(username, query, page, sort);
+            employeesListData = employeesServiceApi.getEmployeesListData(user.getUsername(), query, page, sort);
 
             employees = (List< EmployeeModel >) employeesListData.get("employees");
             supervisors = (List< EmployeeModel >) employeesListData.get("supervisors");
             employeePhotos = (List< String >) employeesListData.get("employeePhotos");
-            totalRecords = employeesServiceApi.getEmployeesCount(username, query, sort);
+            totalRecords = employeesServiceApi.getEmployeesCount(user.getUsername(), query, sort);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
@@ -84,8 +86,8 @@ public class EmployeesController {
                                                                                     supervisors, employeePhotos,
                                                                                     activeComponentManager
                                                                                             .getEmployeesListActiveComponents(
-                                                                                                    username), page,
-                                                                                    totalRecords
+                                                                                                    user.getUsername()
+                                                                                            ), page, totalRecords
                                             ), HttpStatus.OK);
     }
 
@@ -93,7 +95,9 @@ public class EmployeesController {
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeeDetailData(
             @PathVariable
-            final String username
+            final String username,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final EmployeeModel employee;
@@ -111,27 +115,25 @@ public class EmployeesController {
 
         String photo = employeesServiceApi.getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto());
 
-        //TODO fill parameter role
-        return new ResponseEntity<>(employeesResponseMapper.produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(),
-                                                                                                 activeComponentManager
-                                                                                                         .getEmployeeDetailActiveComponents(
-                                                                                                                 ""),
-                                                                                                 employee, photo,
-                                                                                                 supervisor
+        return new ResponseEntity<>(employeesResponseMapper
+                .produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(),
+                        activeComponentManager.getEmployeeDetailActiveComponents(
+                                new ArrayList<>(user.getAuthorities()).get(0).getAuthority()),
+                        employee, photo, supervisor
         ), HttpStatus.OK);
     }
 
     @GetMapping(value = APIMappingValue.API_USERNAMES, produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesUsernames(
-            @RequestParam(value = "username")
-            final String username
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final List< String > usernames;
 
         try {
-            usernames = employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(username);
+            usernames = employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(user.getUsername());
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                                  badRequestException.getErrorCode(),
@@ -164,7 +166,9 @@ public class EmployeesController {
             @RequestParam(value = "photo", required = false)
                     MultipartFile photoGiven,
             @RequestParam(value = "data")
-            final String rawEmployeeData
+            final String rawEmployeeData,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         final String adminUsername;
@@ -172,7 +176,7 @@ public class EmployeesController {
         final String username;
 
         try {
-            adminUsername = employeesRequestMapper.getAdminUsernameFromRawData(rawEmployeeData);
+            adminUsername = user.getUsername();
             addEmployeeOperation = employeesRequestMapper.isCreateEmployeeOperation(rawEmployeeData);
 
             username = employeesServiceApi.saveEmployee(photoGiven, adminUsername, employeesRequestMapper
@@ -224,12 +228,14 @@ public class EmployeesController {
                  consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity changePassword(
             @RequestBody
-            final ChangePasswordRequest request
+            final ChangePasswordRequest request,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         try {
             employeesServiceApi
-                    .changePassword(request.getUsername(), request.getOldPassword(), request.getNewPassword(),
+                    .changePassword(user.getUsername(), request.getOldPassword(), request.getNewPassword(),
                                     request.getNewPasswordConfirmation()
                     );
         } catch (DataNotFoundException dataNotFoundException) {
@@ -257,14 +263,16 @@ public class EmployeesController {
     }
 
     @DeleteMapping(value = APIMappingValue.API_DELETE, produces = APPLICATION_JSON_VALUE,
-                   consumes = APPLICATION_JSON_VALUE)
+                   consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity deleteEmployee(
-            @RequestBody
-            final DeleteEmployeeRequest request
+            @RequestParam(value = "target")
+            final String employeeUsername,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         try {
-            employeesServiceApi.deleteEmployee(request.getAdminUsername(), request.getEmployeeUsername());
+            employeesServiceApi.deleteEmployee(user.getUsername(), employeeUsername);
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
                                                                                  unauthorizedOperationException
@@ -292,11 +300,13 @@ public class EmployeesController {
                  consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity changeSupervisorOnPreviousSupervisorDeletion(
             @RequestBody
-            final DeleteEmployeeSupervisorRequest request
+            final DeleteEmployeeSupervisorRequest request,
+            @AuthenticationPrincipal
+            final User user
     ) {
 
         try {
-            employeesServiceApi.changeSupervisorOnPreviousSupervisorDeletion(request.getAdminUsername(),
+            employeesServiceApi.changeSupervisorOnPreviousSupervisorDeletion(user.getUsername(),
                                                                              request.getOldSupervisorUsername(),
                                                                              request.getNewSupervisorUsername()
             );

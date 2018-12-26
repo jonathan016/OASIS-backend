@@ -16,19 +16,6 @@ import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER
 @Component
 public class AssetsRequestMapper {
 
-    public String getAdminUsernameFromRawData(final String rawAssetData) {
-
-        String adminUsername;
-
-        try {
-            adminUsername = new ObjectMapper().readTree(rawAssetData).path("username").asText();
-        } catch (IOException e) {
-            return "";
-        }
-
-        return adminUsername;
-    }
-
     public boolean isAddAssetOperationFromRawData(final String rawAssetData)
             throws
             BadRequestException {
@@ -57,14 +44,16 @@ public class AssetsRequestMapper {
             if (addAssetOperation) {
                 request = new SaveAssetRequest.Asset(null, asset.path("name").asText(), asset.path("location").asText(),
                                                      asset.path("brand").asText(), asset.path("type").asText(),
-                                                     asset.path("quantity").asLong(), asset.path("price").asDouble(),
+                                                     Long.valueOf(asset.path("quantity").asText()),
+                                                     Double.valueOf(asset.path("price").asText()),
                                                      asset.path("expendable").asBoolean()
                 );
             } else {
                 request = new SaveAssetRequest.Asset(asset.path("sku").asText(), asset.path("name").asText(),
                                                      asset.path("location").asText(), asset.path("brand").asText(),
-                                                     asset.path("type").asText(), asset.path("quantity").asLong(),
-                                                     asset.path("price").asDouble(),
+                                                     asset.path("type").asText(),
+                                                     Long.valueOf(asset.path("quantity").asText()),
+                                                     Double.valueOf(asset.path("price").asText()),
                                                      asset.path("expendable").asBoolean()
                 );
             }

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,7 +36,7 @@ public class LoginController {
     @PostMapping(value = APIMappingValue.API_LOGIN, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity getLoginData(
             @AuthenticationPrincipal
-            final Principal principal
+            final User user
     ) {
 
         final Map< String, String > loginData;
@@ -45,7 +46,7 @@ public class LoginController {
         final String role;
 
         try {
-            loginData = loginServiceApi.getLoginData(principal.getName());
+            loginData = loginServiceApi.getLoginData(user.getUsername());
 
             username = loginData.get("username");
             name = loginData.get("name");
@@ -79,9 +80,12 @@ public class LoginController {
 
     @GetMapping(value = APIMappingValue.API_LOGOUT)
     public ResponseEntity logout(
-            HttpSession session
+            HttpSession session,
+            @AuthenticationPrincipal
+            User user
     ) {
 
+        user.eraseCredentials();
         session.invalidate();
 
         return new ResponseEntity(HttpStatus.NO_CONTENT);
