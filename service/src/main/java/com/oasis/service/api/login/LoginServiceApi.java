@@ -1,4 +1,4 @@
-package com.oasis.service.api;
+package com.oasis.service.api.login;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;

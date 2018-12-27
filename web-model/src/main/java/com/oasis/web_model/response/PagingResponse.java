@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuppressWarnings("Lombok")
-public class PagingResponse< T >
+public class PagingResponse < T >
         extends BaseResponse {
 
     private T value;

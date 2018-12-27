@@ -30,7 +30,7 @@ public class AssetsRequestMapper {
             asset = new ObjectMapper().readTree(rawAssetData).path("asset");
         } catch (IOException exception) {
             logger.error("Failed to read attribute 'asset' from passed JSON data as IOException occurred with message: "
-                    + exception.getMessage());
+                         + exception.getMessage());
             throw new BadRequestException(INCORRECT_PARAMETER);
         }
 
@@ -57,7 +57,8 @@ public class AssetsRequestMapper {
                 );
             } else {
                 request = new SaveAssetRequest.Asset(asset.path("sku").textValue(), asset.path("name").textValue(),
-                                                     asset.path("location").textValue(), asset.path("brand").textValue(),
+                                                     asset.path("location").textValue(),
+                                                     asset.path("brand").textValue(),
                                                      asset.path("type").textValue(),
                                                      Long.valueOf(asset.path("quantity").textValue()),
                                                      Double.valueOf(asset.path("price").textValue()),
@@ -66,7 +67,7 @@ public class AssetsRequestMapper {
             }
         } catch (IOException | NumberFormatException exception) {
             logger.error("Failed to process data as IOException or NumberFormatException occurred with message: " +
-                    exception.getMessage());
+                         exception.getMessage());
             return null;
         }
 

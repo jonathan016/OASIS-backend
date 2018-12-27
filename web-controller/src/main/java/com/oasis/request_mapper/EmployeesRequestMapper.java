@@ -58,14 +58,15 @@ public class EmployeesRequestMapper {
                                                            employee.path("supervisorUsername").textValue()
                 );
             } else {
-                request = new SaveEmployeeRequest.Employee(employee.path("username").textValue(),
-                                                           employee.path("name").textValue(),
-                                                           employee.path("dob").textValue(),
-                                                           employee.path("phone").textValue(),
-                                                           employee.path("jobTitle").textValue(),
-                                                           employee.path("division").textValue(),
-                                                           employee.path("location").textValue(),
-                                                           employee.path("supervisorUsername").textValue()
+                request = new SaveEmployeeRequest.Employee(
+                        employee.path("username").textValue(),
+                        employee.path("name").textValue(),
+                        employee.path("dob").textValue(),
+                        employee.path("phone").textValue(),
+                        employee.path("jobTitle").textValue(),
+                        employee.path("division").textValue(),
+                        employee.path("location").textValue(),
+                        employee.path("supervisorUsername").textValue()
                 );
             }
 
@@ -81,7 +82,7 @@ public class EmployeesRequestMapper {
             employee.setDob(new SimpleDateFormat("yyyy-MM-dd").parse(request.getDob()));
         } catch (ParseException | NullPointerException exception) {
             logger.error("Failed to parse given DOB as ParseException or NullPointerException occurred with message: " +
-                    exception.getMessage());
+                         exception.getMessage());
         }
         employee.setPhone(request.getPhone());
         employee.setJobTitle(request.getJobTitle());

@@ -5,7 +5,7 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.response_mapper.LoginResponseMapper;
-import com.oasis.service.api.LoginServiceApi;
+import com.oasis.service.api.login.LoginServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 import java.util.Map;
@@ -26,13 +32,17 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class LoginController {
 
     @Autowired
-    private LoginServiceApi loginServiceApi;
-    @Autowired
     private LoginResponseMapper loginResponseMapper;
     @Autowired
     private FailedResponseMapper failedResponseMapper;
 
-    @PostMapping(value = APIMappingValue.API_LOGIN, produces = APPLICATION_JSON_VALUE)
+    @Autowired
+    private LoginServiceApi loginServiceApi;
+
+
+
+    @PostMapping(value = APIMappingValue.API_LOGIN,
+                 produces = APPLICATION_JSON_VALUE)
     public ResponseEntity getLoginData(
             @AuthenticationPrincipal
             final User user
@@ -52,21 +62,24 @@ public class LoginController {
             photo = loginData.get("photo");
             role = loginData.get("role");
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (UserNotAuthenticatedException userNotAuthenticatedException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 userNotAuthenticatedException
-                                                                                         .getErrorCode(),
-                                                                                 userNotAuthenticatedException
-                                                                                         .getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    userNotAuthenticatedException
+                            .getErrorCode(),
+                    userNotAuthenticatedException
+                            .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
 
         }
@@ -81,7 +94,7 @@ public class LoginController {
     public ResponseEntity logout(
             HttpSession session,
             @AuthenticationPrincipal
-            User user
+                    User user
     ) {
 
         user.eraseCredentials();
@@ -91,16 +104,17 @@ public class LoginController {
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    @RequestMapping(value = APIMappingValue.API_MISDIRECT, method = {
-            RequestMethod.GET,
-            RequestMethod.POST,
-            RequestMethod.PUT,
-            RequestMethod.DELETE,
-            RequestMethod.HEAD,
-            RequestMethod.OPTIONS,
-            RequestMethod.PATCH,
-            RequestMethod.TRACE
-    })
+    @RequestMapping(value = APIMappingValue.API_MISDIRECT,
+                    method = {
+                            RequestMethod.GET,
+                            RequestMethod.POST,
+                            RequestMethod.PUT,
+                            RequestMethod.DELETE,
+                            RequestMethod.HEAD,
+                            RequestMethod.OPTIONS,
+                            RequestMethod.PATCH,
+                            RequestMethod.TRACE
+                    })
     public ResponseEntity returnIncorrectMappingCalls(
             final MissingServletRequestParameterException exception
     ) {

@@ -1,6 +1,10 @@
 package com.oasis.tool.helper;
 
-import com.itextpdf.text.*;
+import com.itextpdf.text.BadElementException;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfPageEventHelper;
@@ -72,7 +76,7 @@ public class DocumentHeader
             PdfWriter writer, Document document
     ) {
 
-        table.writeSelectedRows(0, -1, document.left(), document.top() + ((document.topMargin() + tableHeight) / 2),
+        table.writeSelectedRows(0, -1, document.left(), document.top() + ( ( document.topMargin() + tableHeight ) / 2 ),
                                 writer.getDirectContent()
         );
     }

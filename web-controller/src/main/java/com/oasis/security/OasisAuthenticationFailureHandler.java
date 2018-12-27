@@ -39,7 +39,6 @@ public class OasisAuthenticationFailureHandler
 
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType(APPLICATION_JSON_VALUE);
         response.getWriter().write(String.valueOf(objectMapper.readTree(value).path("body")));
     }
 

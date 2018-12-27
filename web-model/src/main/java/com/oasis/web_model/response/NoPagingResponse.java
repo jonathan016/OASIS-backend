@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuppressWarnings("Lombok")
-public class NoPagingResponse< T >
+public class NoPagingResponse < T >
         extends BaseResponse {
 
     private T value;

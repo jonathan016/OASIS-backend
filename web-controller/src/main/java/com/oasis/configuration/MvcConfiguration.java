@@ -9,7 +9,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 @Configuration
 @ComponentScan(basePackages = "com.oasis")
-public class MvcConfiguration implements WebMvcConfigurer {
+public class MvcConfiguration
+        implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -17,9 +18,11 @@ public class MvcConfiguration implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost", "*")
                 .allowedHeaders("Content-Type", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers",
-                        "Authorization", "X-Requested-With", "requestId", "Correlation-Id", "X-Auth-Token")
+                                "Authorization", "X-Requested-With", "requestId", "Correlation-Id", "X-Auth-Token"
+                )
                 .exposedHeaders("Content-Type", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers",
-                        "Authorization", "X-Requested-With", "requestId", "Correlation-Id", "X-Auth-Token")
+                                "Authorization", "X-Requested-With", "requestId", "Correlation-Id", "X-Auth-Token"
+                )
                 .allowCredentials(false)
                 .maxAge(1800);
     }

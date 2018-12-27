@@ -1,11 +1,19 @@
 package com.oasis.web_controller;
 
-import com.oasis.exception.*;
+import com.oasis.exception.BadRequestException;
+import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.DuplicateDataException;
+import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.request_mapper.EmployeesRequestMapper;
 import com.oasis.response_mapper.EmployeesResponseMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
-import com.oasis.service.api.EmployeesServiceApi;
+import com.oasis.service.api.employees.EmployeeDeleteServiceApi;
+import com.oasis.service.api.employees.EmployeeDetailServiceApi;
+import com.oasis.service.api.employees.EmployeeListServiceApi;
+import com.oasis.service.api.employees.EmployeeSaveServiceApi;
+import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.tool.helper.ActiveComponentManager;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.employees.ChangePasswordRequest;
@@ -32,25 +40,40 @@ import static org.springframework.http.MediaType.*;
 public class EmployeesController {
 
     @Autowired
-    private EmployeesServiceApi employeesServiceApi;
-    @Autowired
-    private FailedResponseMapper failedResponseMapper;
-    @Autowired
-    private ActiveComponentManager activeComponentManager;
-    @Autowired
     private EmployeesRequestMapper employeesRequestMapper;
     @Autowired
     private EmployeesResponseMapper employeesResponseMapper;
+    @Autowired
+    private FailedResponseMapper failedResponseMapper;
+
+    @Autowired
+    private EmployeeDeleteServiceApi employeeDeleteServiceApi;
+    @Autowired
+    private EmployeeDetailServiceApi employeeDetailServiceApi;
+    @Autowired
+    private EmployeeListServiceApi employeeListServiceApi;
+    @Autowired
+    private EmployeeSaveServiceApi employeeSaveServiceApi;
+    @Autowired
+    private EmployeeUtilServiceApi employeeUtilServiceApi;
+
+    @Autowired
+    private ActiveComponentManager activeComponentManager;
+
+
 
     @SuppressWarnings("unchecked")
-    @GetMapping(value = APIMappingValue.API_LIST, produces = APPLICATION_JSON_VALUE,
+    @GetMapping(value = APIMappingValue.API_LIST,
+                produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesList(
-            @RequestParam(value = "query", required = false)
+            @RequestParam(value = "query",
+                          required = false)
             final String query,
             @RequestParam(value = "page")
             final int page,
-            @RequestParam(value = "sort", required = false)
+            @RequestParam(value = "sort",
+                          required = false)
             final String sort,
             @AuthenticationPrincipal
             final User user
@@ -63,21 +86,23 @@ public class EmployeesController {
         final long totalRecords;
 
         try {
-            employeesListData = employeesServiceApi.getEmployeesListData(user.getUsername(), query, page, sort);
+            employeesListData = employeeListServiceApi.getEmployeesListData(user.getUsername(), query, page, sort);
 
             employees = (List< EmployeeModel >) employeesListData.get("employees");
             supervisors = (List< EmployeeModel >) employeesListData.get("supervisors");
             employeePhotos = (List< String >) employeesListData.get("employeePhotos");
-            totalRecords = employeesServiceApi.getEmployeesCount(user.getUsername(), query);
+            totalRecords = employeeListServiceApi.getEmployeesCount(user.getUsername(), query);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         }
 
@@ -91,7 +116,8 @@ public class EmployeesController {
                                             ), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_DATA_EMPLOYEE, produces = APPLICATION_JSON_VALUE,
+    @GetMapping(value = APIMappingValue.API_DATA_EMPLOYEE,
+                produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeeDetailData(
             @PathVariable
@@ -104,26 +130,32 @@ public class EmployeesController {
         final EmployeeModel supervisor;
 
         try {
-            employee = employeesServiceApi.getEmployeeDetailData(username);
-            supervisor = employeesServiceApi.getEmployeeSupervisorData(username);
+            employee = employeeDetailServiceApi.getEmployeeDetailData(username);
+            supervisor = employeeDetailServiceApi.getEmployeeSupervisorData(username);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         }
 
-        String photo = employeesServiceApi.getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto());
+        String photo = employeeDetailServiceApi.getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto());
 
         return new ResponseEntity<>(employeesResponseMapper
-                .produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(),
-                        activeComponentManager.getEmployeeDetailActiveComponents(
-                                new ArrayList<>(user.getAuthorities()).get(0).getAuthority()),
-                        employee, photo, supervisor
-        ), HttpStatus.OK);
+                                            .produceEmployeeDetailSuccessResponse(HttpStatus.OK.value(),
+                                                                                  activeComponentManager
+                                                                                          .getEmployeeDetailActiveComponents(
+                                                                                                  new ArrayList<>(
+                                                                                                          user.getAuthorities())
+                                                                                                          .get(0)
+                                                                                                          .getAuthority()),
+                                                                                  employee, photo, supervisor
+                                            ), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_USERNAMES, produces = APPLICATION_JSON_VALUE,
+    @GetMapping(value = APIMappingValue.API_USERNAMES,
+                produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesUsernamesForSupervisorSelection(
             @RequestParam(value = "username")
@@ -135,14 +167,17 @@ public class EmployeesController {
         final List< String > usernames;
 
         try {
-            usernames = employeesServiceApi.getEmployeesUsernamesForSupervisorSelection(user.getUsername(), username);
+            usernames = employeeSaveServiceApi.getEmployeesUsernamesForSupervisorSelection(
+                    user.getUsername(), username);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
                     dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
@@ -151,7 +186,8 @@ public class EmployeesController {
         return new ResponseEntity<>(usernames, HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_PHOTO_EMPLOYEE, produces = { IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE },
+    @GetMapping(value = APIMappingValue.API_PHOTO_EMPLOYEE,
+                produces = { IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE },
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeePhoto(
             @PathVariable(value = "username")
@@ -162,15 +198,17 @@ public class EmployeesController {
             final String extension
     ) {
 
-        final byte[] photo = employeesServiceApi.getEmployeePhoto(username, photoGiven, extension);
+        final byte[] photo = employeeUtilServiceApi.getEmployeePhoto(username, photoGiven, extension);
 
         return new ResponseEntity<>(photo, HttpStatus.OK);
     }
 
-    @PostMapping(value = APIMappingValue.API_SAVE, produces = APPLICATION_JSON_VALUE,
+    @PostMapping(value = APIMappingValue.API_SAVE,
+                 produces = APPLICATION_JSON_VALUE,
                  consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity saveEmployee(
-            @RequestParam(value = "photo", required = false)
+            @RequestParam(value = "photo",
+                          required = false)
                     MultipartFile photoGiven,
             @RequestParam(value = "data")
             final String rawEmployeeData,
@@ -186,35 +224,41 @@ public class EmployeesController {
             adminUsername = user.getUsername();
             addEmployeeOperation = employeesRequestMapper.isAddEmployeeOperation(rawEmployeeData);
 
-            username = employeesServiceApi.saveEmployee(photoGiven, adminUsername, employeesRequestMapper
-                                                                .getEmployeeModelFromRawData(rawEmployeeData,
-                                                                                             addEmployeeOperation),
-                                                        employeesRequestMapper
-                                                                .getSupervisorUsernameFromRawData(rawEmployeeData),
-                                                        addEmployeeOperation
+            username = employeeSaveServiceApi.saveEmployee(photoGiven, adminUsername, employeesRequestMapper
+                                                                   .getEmployeeModelFromRawData(
+                                                                           rawEmployeeData,
+                                                                           addEmployeeOperation
+                                                                   ),
+                                                           employeesRequestMapper
+                                                                   .getSupervisorUsernameFromRawData(rawEmployeeData),
+                                                           addEmployeeOperation
             );
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorCode(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    unauthorizedOperationException
+                            .getErrorCode(),
+                    unauthorizedOperationException
+                            .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (DuplicateDataException duplicateDataException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.CONFLICT.value(),
-                                                                                 duplicateDataException.getErrorCode(),
-                                                                                 duplicateDataException
-                                                                                         .getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.CONFLICT.value(),
+                    duplicateDataException.getErrorCode(),
+                    duplicateDataException
+                            .getErrorMessage()
             ), HttpStatus.CONFLICT);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -231,7 +275,8 @@ public class EmployeesController {
         }
     }
 
-    @PostMapping(value = APIMappingValue.API_PASSWORD_CHANGE, produces = APPLICATION_JSON_VALUE,
+    @PostMapping(value = APIMappingValue.API_PASSWORD_CHANGE,
+                 produces = APPLICATION_JSON_VALUE,
                  consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity changePassword(
             @RequestBody
@@ -241,26 +286,29 @@ public class EmployeesController {
     ) {
 
         try {
-            employeesServiceApi
+            employeeSaveServiceApi
                     .changePassword(user.getUsername(), request.getOldPassword(), request.getNewPassword(),
                                     request.getNewPasswordConfirmation()
                     );
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (UserNotAuthenticatedException userNotAuthenticatedException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 userNotAuthenticatedException
-                                                                                         .getErrorCode(),
-                                                                                 userNotAuthenticatedException
-                                                                                         .getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    userNotAuthenticatedException
+                            .getErrorCode(),
+                    userNotAuthenticatedException
+                            .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -269,7 +317,8 @@ public class EmployeesController {
 
     }
 
-    @DeleteMapping(value = APIMappingValue.API_DELETE, produces = APPLICATION_JSON_VALUE,
+    @DeleteMapping(value = APIMappingValue.API_DELETE,
+                   produces = APPLICATION_JSON_VALUE,
                    consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity deleteEmployee(
             @RequestParam(value = "target")
@@ -279,23 +328,26 @@ public class EmployeesController {
     ) {
 
         try {
-            employeesServiceApi.deleteEmployee(user.getUsername(), employeeUsername);
+            employeeDeleteServiceApi.deleteEmployee(user.getUsername(), employeeUsername);
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorCode(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    unauthorizedOperationException
+                            .getErrorCode(),
+                    unauthorizedOperationException
+                            .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -303,7 +355,8 @@ public class EmployeesController {
                 employeesResponseMapper.produceEmployeeSaveUpdateSuccessResult(HttpStatus.OK.value()), HttpStatus.OK);
     }
 
-    @PostMapping(value = APIMappingValue.API_CHANGE_SUPERVISOR_ON_DELETE, produces = APPLICATION_JSON_VALUE,
+    @PostMapping(value = APIMappingValue.API_CHANGE_SUPERVISOR_ON_DELETE,
+                 produces = APPLICATION_JSON_VALUE,
                  consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity changeSupervisorOnPreviousSupervisorDeletion(
             @RequestBody
@@ -313,26 +366,30 @@ public class EmployeesController {
     ) {
 
         try {
-            employeesServiceApi.changeSupervisorOnPreviousSupervisorDeletion(user.getUsername(),
-                                                                             request.getOldSupervisorUsername(),
-                                                                             request.getNewSupervisorUsername()
+            employeeDeleteServiceApi.changeSupervisorOnPreviousSupervisorDeletion(
+                    user.getUsername(),
+                    request.getOldSupervisorUsername(),
+                    request.getNewSupervisorUsername()
             );
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorCode(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    unauthorizedOperationException
+                            .getErrorCode(),
+                    unauthorizedOperationException
+                            .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -341,16 +398,17 @@ public class EmployeesController {
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    @RequestMapping(value = APIMappingValue.API_MISDIRECT, method = {
-            RequestMethod.GET,
-            RequestMethod.POST,
-            RequestMethod.PUT,
-            RequestMethod.DELETE,
-            RequestMethod.HEAD,
-            RequestMethod.OPTIONS,
-            RequestMethod.PATCH,
-            RequestMethod.TRACE
-    })
+    @RequestMapping(value = APIMappingValue.API_MISDIRECT,
+                    method = {
+                            RequestMethod.GET,
+                            RequestMethod.POST,
+                            RequestMethod.PUT,
+                            RequestMethod.DELETE,
+                            RequestMethod.HEAD,
+                            RequestMethod.OPTIONS,
+                            RequestMethod.PATCH,
+                            RequestMethod.TRACE
+                    })
     public ResponseEntity returnIncorrectMappingCalls(
             final MissingServletRequestParameterException exception
     ) {

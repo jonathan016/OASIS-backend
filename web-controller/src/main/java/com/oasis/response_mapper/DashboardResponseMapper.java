@@ -65,16 +65,19 @@ public class DashboardResponseMapper {
         List< RequestOthersListResponse.RequestListObject > mappedRequests = new ArrayList<>();
         for (int i = 0; i < requests.size(); i++) {
             mappedRequests.add(new RequestOthersListResponse.RequestListObject(
-                    requestDataFactory.getMapperFacade(RequestModel.class,
-                                                       RequestOthersListResponse.RequestListObject.Request.class
-                    ).map(requests.get(i)), employeeDataFactory.getMapperFacade(EmployeeModel.class,
-                                                                                RequestOthersListResponse.RequestListObject.Employee.class
+                    requestDataFactory.getMapperFacade(
+                            RequestModel.class,
+                            RequestOthersListResponse.RequestListObject.Request.class
+                    ).map(requests.get(i)), employeeDataFactory.getMapperFacade(
+                    EmployeeModel.class,
+                    RequestOthersListResponse.RequestListObject.Employee.class
             ).map(employees.get(i)), assetDataFactory.getMapperFacade(
                     AssetModel.class, RequestOthersListResponse.RequestListObject.Asset.class).map(assets.get(i))));
 
             if (!mappedRequests.get(i).getRequest().getStatus().equals(StatusConstant.STATUS_REQUESTED)) {
                 mappedRequests.get(i).getRequest().setNote(
-                        (requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote().isEmpty())
+                        ( requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote()
+                                                                                  .isEmpty() )
                         ? "No transaction note" : requests.get(i).getTransactionNote());
             }
         }
@@ -109,27 +112,33 @@ public class DashboardResponseMapper {
                         .field("stock", "quantity").byDefault().register();
         List< RequestMyListResponse.RequestListObject > mappedRequests = new ArrayList<>();
         for (int i = 0; i < requests.size(); i++) {
-            mappedRequests.add(new RequestMyListResponse.RequestListObject(requestDataFactory
-                                                                                   .getMapperFacade(RequestModel.class,
-                                                                                                    RequestMyListResponse.RequestListObject.Request.class
-                                                                                   ).map(requests.get(i)),
-                                                                           employeeDataFactory
-                                                                                   .getMapperFacade(EmployeeModel.class,
-                                                                                                    RequestMyListResponse.RequestListObject.Employee.class
-                                                                                   ).map(employees.get(i)),
-                                                                           employeeDataFactory
-                                                                                   .getMapperFacade(EmployeeModel.class,
-                                                                                                    RequestMyListResponse.RequestListObject.Employee.class
-                                                                                   ).map(modifiers.get(i)),
-                                                                           assetDataFactory
-                                                                                   .getMapperFacade(AssetModel.class,
-                                                                                                    RequestMyListResponse.RequestListObject.Asset.class
-                                                                                   ).map(assets.get(i))
+            mappedRequests.add(new RequestMyListResponse.RequestListObject(
+                    requestDataFactory
+                            .getMapperFacade(
+                                    RequestModel.class,
+                                    RequestMyListResponse.RequestListObject.Request.class
+                            ).map(requests.get(i)),
+                    employeeDataFactory
+                            .getMapperFacade(
+                                    EmployeeModel.class,
+                                    RequestMyListResponse.RequestListObject.Employee.class
+                            ).map(employees.get(i)),
+                    employeeDataFactory
+                            .getMapperFacade(
+                                    EmployeeModel.class,
+                                    RequestMyListResponse.RequestListObject.Employee.class
+                            ).map(modifiers.get(i)),
+                    assetDataFactory
+                            .getMapperFacade(
+                                    AssetModel.class,
+                                    RequestMyListResponse.RequestListObject.Asset.class
+                            ).map(assets.get(i))
             ));
 
             if (!mappedRequests.get(i).getRequest().getStatus().equals(StatusConstant.STATUS_REQUESTED)) {
                 mappedRequests.get(i).getRequest().setNote(
-                        (requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote().isEmpty())
+                        ( requests.get(i).getTransactionNote() == null || requests.get(i).getTransactionNote()
+                                                                                  .isEmpty() )
                         ? "No transaction note" : requests.get(i).getTransactionNote());
             }
         }

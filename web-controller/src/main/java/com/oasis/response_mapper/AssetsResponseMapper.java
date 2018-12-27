@@ -73,7 +73,7 @@ public class AssetsResponseMapper {
                         .register();
         AssetDetailResponse mappedAsset = assetDataFactory.getMapperFacade(AssetModel.class, AssetDetailResponse.class)
                                                           .map(asset);
-        mappedAsset.setExpendable((asset.isExpendable()) ? "Yes" : "No");
+        mappedAsset.setExpendable(( asset.isExpendable() ) ? "Yes" : "No");
         mappedAsset.setImages(imageURLs);
 
         successResponse.setValue(mappedAsset);

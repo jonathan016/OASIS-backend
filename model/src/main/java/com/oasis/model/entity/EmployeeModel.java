@@ -56,13 +56,13 @@ public class EmployeeModel
     public boolean equals(Object object) {
 
         if (object instanceof EmployeeModel) {
-            return this.username.equals(((EmployeeModel) object).getUsername()) &&
-                   this.name.equals(((EmployeeModel) object).getName()) &&
-                   this.dob.equals(((EmployeeModel) object).getDob()) &&
-                   this.phone.equals(((EmployeeModel) object).getPhone()) &&
-                   this.jobTitle.equals(((EmployeeModel) object).getJobTitle()) &&
-                   this.division.equals(((EmployeeModel) object).getDivision()) &&
-                   this.location.equals(((EmployeeModel) object).getLocation());
+            return this.username.equals(( (EmployeeModel) object ).getUsername()) &&
+                   this.name.equals(( (EmployeeModel) object ).getName()) &&
+                   this.dob.equals(( (EmployeeModel) object ).getDob()) &&
+                   this.phone.equals(( (EmployeeModel) object ).getPhone()) &&
+                   this.jobTitle.equals(( (EmployeeModel) object ).getJobTitle()) &&
+                   this.division.equals(( (EmployeeModel) object ).getDivision()) &&
+                   this.location.equals(( (EmployeeModel) object ).getLocation());
         }
 
         return false;

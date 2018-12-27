@@ -7,7 +7,9 @@ import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.response_mapper.DashboardResponseMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
-import com.oasis.service.api.DashboardServiceApi;
+import com.oasis.service.api.dashboard.DashboardRequestUpdateServiceApi;
+import com.oasis.service.api.dashboard.DashboardStatusServiceApi;
+import com.oasis.service.api.dashboard.DashboardUtilServiceApi;
 import com.oasis.tool.constant.ServiceConstant;
 import com.oasis.tool.constant.StatusConstant;
 import com.oasis.tool.helper.ActiveComponentManager;
@@ -18,7 +20,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,15 +42,24 @@ import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 public class DashboardController {
 
     @Autowired
-    private DashboardServiceApi dashboardServiceApi;
+    private DashboardResponseMapper dashboardResponseMapper;
     @Autowired
     private FailedResponseMapper failedResponseMapper;
+
+    @Autowired
+    private DashboardRequestUpdateServiceApi dashboardRequestUpdateServiceApi;
+    @Autowired
+    private DashboardStatusServiceApi dashboardStatusServiceApi;
+    @Autowired
+    private DashboardUtilServiceApi dashboardUtilServiceApi;
+
     @Autowired
     private ActiveComponentManager activeComponentManager;
-    @Autowired
-    private DashboardResponseMapper dashboardResponseMapper;
 
-    @GetMapping(value = APIMappingValue.API_STATUS, produces = APPLICATION_JSON_VALUE,
+
+
+    @GetMapping(value = APIMappingValue.API_STATUS,
+                produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getStatusSectionData(
             @AuthenticationPrincipal
@@ -55,19 +72,21 @@ public class DashboardController {
         final long availableAssetsCount;
 
         try {
-            statuses = dashboardServiceApi.getStatusSectionData(user.getUsername());
+            statuses = dashboardStatusServiceApi.getStatusSectionData(user.getUsername());
             requestedRequestsCount = statuses.get("requestedRequestsCount");
             acceptedRequestsCount = statuses.get("acceptedRequestsCount");
             availableAssetsCount = statuses.get("availableAssetsCount");
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -79,7 +98,8 @@ public class DashboardController {
     }
 
     @SuppressWarnings("unchecked")
-    @GetMapping(value = APIMappingValue.API_REQUEST_UPDATE, produces = APPLICATION_JSON_VALUE,
+    @GetMapping(value = APIMappingValue.API_REQUEST_UPDATE,
+                produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getRequestUpdateSectionData(
             @RequestParam(value = "tab")
@@ -98,29 +118,32 @@ public class DashboardController {
         final long totalRecords;
 
         try {
-            requestsListData = dashboardServiceApi.getRequestUpdateSectionData(user.getUsername(), tab, page);
+            requestsListData = dashboardRequestUpdateServiceApi.getRequestUpdateSectionData(
+                    user.getUsername(), tab, page);
 
             requests = (List< RequestModel >) requestsListData.get("requests");
             employees = (List< EmployeeModel >) requestsListData.get("employees");
             assets = (List< AssetModel >) requestsListData.get("assets");
 
             if (tab.equals(ServiceConstant.TAB_OTHERS)) {
-                totalRecords = dashboardServiceApi
+                totalRecords = dashboardUtilServiceApi
                         .getRequestsCount("Others", user.getUsername(), StatusConstant.STATUS_REQUESTED, page);
             } else {
                 modifiers.addAll((List< EmployeeModel >) requestsListData.get("modifiers"));
-                totalRecords = dashboardServiceApi
+                totalRecords = dashboardUtilServiceApi
                         .getRequestsCount("Username", user.getUsername(), StatusConstant.STATUS_REQUESTED, page);
             }
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -142,7 +165,8 @@ public class DashboardController {
                                                                                         employees, modifiers, assets,
                                                                                         activeComponentManager
                                                                                                 .getRequestsListDataActiveComponents(
-                                                                                                        tab, user.getUsername(),
+                                                                                                        tab,
+                                                                                                        user.getUsername(),
                                                                                                         StatusConstant.STATUS_REQUESTED
                                                                                                 ), page, totalRecords
                                                 ), HttpStatus.OK);
@@ -150,16 +174,17 @@ public class DashboardController {
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    @RequestMapping(value = APIMappingValue.API_MISDIRECT, method = {
-            RequestMethod.GET,
-            RequestMethod.POST,
-            RequestMethod.PUT,
-            RequestMethod.DELETE,
-            RequestMethod.HEAD,
-            RequestMethod.OPTIONS,
-            RequestMethod.PATCH,
-            RequestMethod.TRACE
-    })
+    @RequestMapping(value = APIMappingValue.API_MISDIRECT,
+                    method = {
+                            RequestMethod.GET,
+                            RequestMethod.POST,
+                            RequestMethod.PUT,
+                            RequestMethod.DELETE,
+                            RequestMethod.HEAD,
+                            RequestMethod.OPTIONS,
+                            RequestMethod.PATCH,
+                            RequestMethod.TRACE
+                    })
     public ResponseEntity returnIncorrectMappingCalls(
             final MissingServletRequestParameterException exception
     ) {

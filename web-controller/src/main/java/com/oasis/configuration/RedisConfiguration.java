@@ -9,7 +9,8 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
-import org.springframework.session.web.http.*;
+import org.springframework.session.web.http.HeaderHttpSessionStrategy;
+import org.springframework.session.web.http.HttpSessionStrategy;
 
 @Configuration
 @EnableCaching
@@ -18,9 +19,9 @@ import org.springframework.session.web.http.*;
 public class RedisConfiguration {
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplateObject() {
+    public RedisTemplate< String, Object > redisTemplateObject() {
 
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        RedisTemplate< String, Object > template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory());
 
         return template;

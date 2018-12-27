@@ -14,7 +14,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @Configuration
 @PropertySource("classpath:environment.properties")
 @EnableMongoRepositories(basePackages = "com.oasis.repository")
-@ComponentScan(basePackages = {"com.oasis", "com.oasis.repository"})
+@ComponentScan(basePackages = { "com.oasis", "com.oasis.repository" })
 public class DatabaseConfiguration {
 
     @Value("${mongodb.host}")

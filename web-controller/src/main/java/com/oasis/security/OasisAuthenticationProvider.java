@@ -1,6 +1,6 @@
 package com.oasis.security;
 
-import com.oasis.service.api.OasisAuthenticationApi;
+import com.oasis.service.api.authentication.AuthenticationApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,7 +14,7 @@ public class OasisAuthenticationProvider
         implements AuthenticationProvider {
 
     @Autowired
-    private OasisAuthenticationApi oasisAuthenticationApi;
+    private AuthenticationApi authenticationApi;
 
     public OasisAuthenticationProvider() {
 
@@ -29,7 +29,7 @@ public class OasisAuthenticationProvider
         final String username = authentication.getName();
         final String password = authentication.getCredentials().toString();
 
-        return oasisAuthenticationApi.getAuthentication(username, password);
+        return authenticationApi.getAuthentication(username, password);
     }
 
     @Override

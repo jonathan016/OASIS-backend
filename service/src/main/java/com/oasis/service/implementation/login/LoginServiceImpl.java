@@ -1,10 +1,11 @@
-package com.oasis.service.implementation;
+package com.oasis.service.implementation.login;
 
 import com.oasis.exception.BadRequestException;
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.service.api.EmployeesServiceApi;
-import com.oasis.service.api.LoginServiceApi;
+import com.oasis.service.api.employees.EmployeeDetailServiceApi;
+import com.oasis.service.api.employees.EmployeeUtilServiceApi;
+import com.oasis.service.api.login.LoginServiceApi;
 import com.oasis.tool.helper.RoleDeterminer;
 import com.oasis.tool.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,19 +25,24 @@ public class LoginServiceImpl
         implements LoginServiceApi {
 
     @Autowired
-    private RoleDeterminer roleDeterminer;
+    private EmployeeDetailServiceApi employeeDetailServiceApi;
     @Autowired
-    private EmployeesServiceApi employeesServiceApi;
+    private EmployeeUtilServiceApi employeeUtilServiceApi;
+
+    @Autowired
+    private RoleDeterminer roleDeterminer;
+
+
 
     @Override
-    public Map<String, String> getLoginData(
+    public Map< String, String > getLoginData(
             final String username
     )
             throws
             DataNotFoundException,
             BadRequestException {
 
-        Map<String, String> loginData = new HashMap<>();
+        Map< String, String > loginData = new HashMap<>();
 
         loginData.put("username", getUsernameIfEmployeeWithCredentialExists(username));
         loginData.put("name", getFirstNameFromUsername(username));
@@ -65,10 +71,11 @@ public class LoginServiceImpl
                 final EmployeeModel employee;
 
                 if (validUsernameWithSuffix) {
-                    employee = employeesServiceApi
-                            .findByDeletedIsFalseAndUsername(username.toLowerCase().substring(0, username.indexOf('@')));
+                    employee = employeeUtilServiceApi
+                            .findByDeletedIsFalseAndUsername(
+                                    username.toLowerCase().substring(0, username.indexOf('@')));
                 } else {
-                    employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username.toLowerCase());
+                    employee = employeeUtilServiceApi.findByDeletedIsFalseAndUsername(username.toLowerCase());
                 }
 
                 if (employee == null) {
@@ -85,7 +92,7 @@ public class LoginServiceImpl
             final String username
     ) {
 
-        final EmployeeModel employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username);
+        final EmployeeModel employee = employeeUtilServiceApi.findByDeletedIsFalseAndUsername(username);
 
         final String name = employee.getName();
         final String firstName;
@@ -116,15 +123,10 @@ public class LoginServiceImpl
             final String username
     ) {
 
-        final EmployeeModel employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username);
+        final EmployeeModel employee = employeeUtilServiceApi.findByDeletedIsFalseAndUsername(username);
 
-        final String photoURL;
-
-        if (employee != null) {
-            photoURL = employeesServiceApi.getEmployeeDetailPhoto(employee.getUsername(), employee.getPhoto());
-        } else {
-            photoURL = employeesServiceApi.getEmployeeDetailPhoto(null, null);
-        }
+        final String photoURL = employeeDetailServiceApi.getEmployeeDetailPhoto(
+                employee.getUsername(), employee.getPhoto());
 
         return photoURL;
     }

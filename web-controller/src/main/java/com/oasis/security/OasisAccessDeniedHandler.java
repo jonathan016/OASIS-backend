@@ -17,7 +17,7 @@ import static com.oasis.exception.helper.ErrorCodeAndMessage.UNAUTHORIZED_OPERAT
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Component
-@SuppressWarnings({"SpringJavaAutowiredFieldsWarningInspection", "Duplicates"})
+@SuppressWarnings({ "SpringJavaAutowiredFieldsWarningInspection", "Duplicates" })
 public class OasisAccessDeniedHandler
         implements AccessDeniedHandler {
 

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-@SuppressWarnings({"SpringJavaAutowiredFieldsWarningInspection", "Duplicates"})
+@SuppressWarnings({ "SpringJavaAutowiredFieldsWarningInspection", "Duplicates" })
 public class ActiveComponentManager {
 
     private Logger logger = LoggerFactory.getLogger(ActiveComponentManager.class);

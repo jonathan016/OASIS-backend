@@ -8,7 +8,11 @@ import com.oasis.model.entity.AssetModel;
 import com.oasis.request_mapper.AssetsRequestMapper;
 import com.oasis.response_mapper.AssetsResponseMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
-import com.oasis.service.api.AssetsServiceApi;
+import com.oasis.service.api.assets.AssetDeleteServiceApi;
+import com.oasis.service.api.assets.AssetDetailServiceApi;
+import com.oasis.service.api.assets.AssetListServiceApi;
+import com.oasis.service.api.assets.AssetSaveServiceApi;
+import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.tool.helper.ActiveComponentManager;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.assets.DeleteAssetRequest;
@@ -33,24 +37,39 @@ import static org.springframework.http.MediaType.*;
 public class AssetsController {
 
     @Autowired
-    private AssetsServiceApi assetsServiceApi;
-    @Autowired
     private AssetsRequestMapper assetsRequestMapper;
     @Autowired
     private AssetsResponseMapper assetsResponseMapper;
     @Autowired
     private FailedResponseMapper failedResponseMapper;
+
+    @Autowired
+    private AssetDeleteServiceApi assetDeleteServiceApi;
+    @Autowired
+    private AssetDetailServiceApi assetDetailServiceApi;
+    @Autowired
+    private AssetListServiceApi assetListServiceApi;
+    @Autowired
+    private AssetSaveServiceApi assetSaveServiceApi;
+    @Autowired
+    private AssetUtilServiceApi assetUtilServiceApi;
+
     @Autowired
     private ActiveComponentManager activeComponentManager;
 
-    @GetMapping(value = APIMappingValue.API_LIST, produces = APPLICATION_JSON_VALUE,
+
+
+    @GetMapping(value = APIMappingValue.API_LIST,
+                produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAvailableAssetsList(
-            @RequestParam(value = "query", required = false)
+            @RequestParam(value = "query",
+                          required = false)
             final String query,
             @RequestParam(value = "page")
             final int page,
-            @RequestParam(value = "sort", required = false)
+            @RequestParam(value = "sort",
+                          required = false)
             final String sort,
             @AuthenticationPrincipal
             final User user
@@ -60,17 +79,19 @@ public class AssetsController {
         final long totalRecords;
 
         try {
-            availableAssets = assetsServiceApi.getAvailableAssetsList(query, page, sort);
-            totalRecords = assetsServiceApi.getAvailableAssetsCount(query, sort);
+            availableAssets = assetListServiceApi.getAvailableAssetsList(query, page, sort);
+            totalRecords = assetListServiceApi.getAvailableAssetsCount(query, sort);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         }
 
@@ -80,41 +101,59 @@ public class AssetsController {
                                                                                         .getAssetsListActiveComponents(
                                                                                                 new ArrayList<>(
                                                                                                         user.getAuthorities())
-                                                                                                        .get(0).getAuthority()
+                                                                                                        .get(0)
+                                                                                                        .getAuthority()
                                                                                         ), page, totalRecords
                                             ), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_DATA_ASSET, produces = APPLICATION_JSON_VALUE,
+    @GetMapping(value = APIMappingValue.API_DATA_ASSET,
+                produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAssetDetailData(
             @PathVariable(value = "identifier")
             final String sku,
             @AuthenticationPrincipal
             final User user
-            ) {
+    ) {
 
         final AssetModel asset;
 
         try {
-            asset = assetsServiceApi.getAssetDetailData(sku);
+            asset = assetDetailServiceApi.getAssetDetailData(sku);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         }
 
-        final List< String > imageURLs = assetsServiceApi
+        final List< String > imageURLs = assetDetailServiceApi
                 .getAssetDetailImages(asset.getSku(), asset.getImageDirectory());
 
         return new ResponseEntity<>(
                 assetsResponseMapper.produceViewAssetDetailSuccessResult(HttpStatus.OK.value(), activeComponentManager
-                        .getAssetDetailActiveComponents(new ArrayList<>(user.getAuthorities()).get(0).getAuthority()),
-                        asset, imageURLs), HttpStatus.OK);
+                                                                                 .getAssetDetailActiveComponents(new ArrayList<>(user.getAuthorities()).get(0).getAuthority()),
+                                                                         asset, imageURLs
+                ), HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_IMAGE_ASSET, produces = { IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE },
+    @GetMapping(value = APIMappingValue.API_PDF_ASSET,
+                produces = APPLICATION_PDF_VALUE,
+                consumes = APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity getAssetDetailInPdf(
+            @PathVariable(value = "identifier")
+            final String sku
+    ) {
+
+        final byte[] assetPdf = assetDetailServiceApi.getAssetDetailInPdf(sku);
+
+        return new ResponseEntity<>(assetPdf, HttpStatus.OK);
+    }
+
+    @GetMapping(value = APIMappingValue.API_IMAGE_ASSET,
+                produces = { IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE },
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getAssetImage(
             @PathVariable(value = "identifier")
@@ -125,24 +164,13 @@ public class AssetsController {
             final String extension
     ) {
 
-        final byte[] image = assetsServiceApi.getAssetImage(sku, imageName, extension);
+        final byte[] image = assetUtilServiceApi.getAssetImage(sku, imageName, extension);
 
         return new ResponseEntity<>(image, HttpStatus.OK);
     }
 
-    @GetMapping(value = APIMappingValue.API_PDF_ASSET, produces = APPLICATION_PDF_VALUE,
-                consumes = APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity getAssetDetailInPdf(
-            @PathVariable(value = "identifier")
-            final String sku
-    ) {
-
-        final byte[] assetPdf = assetsServiceApi.getAssetDetailInPdf(sku);
-
-        return new ResponseEntity<>(assetPdf, HttpStatus.OK);
-    }
-
-    @PostMapping(value = APIMappingValue.API_SAVE, produces = APPLICATION_JSON_VALUE,
+    @PostMapping(value = APIMappingValue.API_SAVE,
+                 produces = APPLICATION_JSON_VALUE,
                  consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity saveAsset(
             @RequestParam(value = "images")
@@ -158,38 +186,44 @@ public class AssetsController {
             final boolean addAssetOperation = assetsRequestMapper.isAddAssetOperationFromRawData(rawAssetData);
             final AssetModel asset = assetsRequestMapper.getAssetModelFromRawData(rawAssetData, addAssetOperation);
 
-            assetsServiceApi.saveAsset(images, username, asset, addAssetOperation);
+            assetSaveServiceApi.saveAsset(images, username, asset, addAssetOperation);
         } catch (DuplicateDataException duplicateDataException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.CONFLICT.value(),
-                                                                                 duplicateDataException.getErrorCode(),
-                                                                                 duplicateDataException
-                                                                                         .getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.CONFLICT.value(),
+                    duplicateDataException.getErrorCode(),
+                    duplicateDataException
+                            .getErrorMessage()
             ), HttpStatus.CONFLICT);
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.UNAUTHORIZED.value(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorCode(),
-                                                                                 unauthorizedOperationException
-                                                                                         .getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    unauthorizedOperationException
+                            .getErrorCode(),
+                    unauthorizedOperationException
+                            .getErrorMessage()
             ), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(assetsResponseMapper.produceAssetSaveSuccessResult(HttpStatus.CREATED.value()),
-                                    HttpStatus.CREATED
+        return new ResponseEntity<>(
+                assetsResponseMapper.produceAssetSaveSuccessResult(HttpStatus.CREATED.value()),
+                HttpStatus.CREATED
         );
     }
 
-    @DeleteMapping(value = APIMappingValue.API_DELETE, produces = APPLICATION_JSON_VALUE,
+    @DeleteMapping(value = APIMappingValue.API_DELETE,
+                   produces = APPLICATION_JSON_VALUE,
                    consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity deleteAssets(
             @RequestBody
@@ -199,35 +233,39 @@ public class AssetsController {
     ) {
 
         try {
-            assetsServiceApi.deleteAssets(request.getSkus(), user.getUsername());
+            assetDeleteServiceApi.deleteAssets(request.getSkus(), user.getUsername());
         } catch (DataNotFoundException dataNotFoundException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.NOT_FOUND.value(),
-                                                                                 dataNotFoundException.getErrorCode(),
-                                                                                 dataNotFoundException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.NOT_FOUND.value(),
+                    dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage()
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
-            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                                 badRequestException.getErrorCode(),
-                                                                                 badRequestException.getErrorMessage()
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.BAD_REQUEST.value(),
+                    badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage()
             ), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(assetsResponseMapper.produceAssetSaveSuccessResult(HttpStatus.OK.value()),
-                                    HttpStatus.OK
+        return new ResponseEntity<>(
+                assetsResponseMapper.produceAssetSaveSuccessResult(HttpStatus.OK.value()),
+                HttpStatus.OK
         );
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    @RequestMapping(value = APIMappingValue.API_MISDIRECT, method = {
-            RequestMethod.GET,
-            RequestMethod.POST,
-            RequestMethod.PUT,
-            RequestMethod.DELETE,
-            RequestMethod.HEAD,
-            RequestMethod.OPTIONS,
-            RequestMethod.PATCH,
-            RequestMethod.TRACE
-    })
+    @RequestMapping(value = APIMappingValue.API_MISDIRECT,
+                    method = {
+                            RequestMethod.GET,
+                            RequestMethod.POST,
+                            RequestMethod.PUT,
+                            RequestMethod.DELETE,
+                            RequestMethod.HEAD,
+                            RequestMethod.OPTIONS,
+                            RequestMethod.PATCH,
+                            RequestMethod.TRACE
+                    })
     public ResponseEntity returnIncorrectMappingCalls(
             final MissingServletRequestParameterException exception
     ) {

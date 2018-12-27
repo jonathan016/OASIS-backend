@@ -1,9 +1,9 @@
-package com.oasis.service.implementation;
+package com.oasis.service.implementation.authentication;
 
 import com.oasis.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
-import com.oasis.service.api.EmployeesServiceApi;
-import com.oasis.service.api.OasisAuthenticationApi;
+import com.oasis.service.api.authentication.AuthenticationApi;
+import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.tool.helper.RoleDeterminer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,22 +20,25 @@ import java.util.List;
 
 @Service
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-public class OasisAuthenticationImpl
-        implements OasisAuthenticationApi {
+public class AuthenticationImpl
+        implements AuthenticationApi {
 
     @Autowired
-    private BCryptPasswordEncoder encoder;
+    private EmployeeUtilServiceApi employeeUtilServiceApi;
+
     @Autowired
     private RoleDeterminer roleDeterminer;
     @Autowired
-    private EmployeesServiceApi employeesServiceApi;
+    private BCryptPasswordEncoder encoder;
+
+
 
     @Override
+    @SuppressWarnings("UnnecessaryLocalVariable")
     public Authentication getAuthentication(final String username, final String password) {
 
-        if (employeesServiceApi.existsEmployeeModelByDeletedIsFalseAndUsername(username)) {
-
-            final EmployeeModel employee = employeesServiceApi.findByDeletedIsFalseAndUsername(username);
+        if (employeeUtilServiceApi.existsEmployeeModelByDeletedIsFalseAndUsername(username)) {
+            final EmployeeModel employee = employeeUtilServiceApi.findByDeletedIsFalseAndUsername(username);
 
             if (encoder.matches(password, employee.getPassword())) {
                 try {
@@ -47,8 +50,9 @@ public class OasisAuthenticationImpl
 
                     final Authentication auth = new UsernamePasswordAuthenticationToken(
                             principal, password, grantedAuths);
+
                     return auth;
-                } catch (DataNotFoundException e) {
+                } catch (DataNotFoundException dataNotFoundException) {
                     return null;
                 }
             } else {
