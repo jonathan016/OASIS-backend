@@ -14,7 +14,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.web.cors.CorsConfiguration;
@@ -58,7 +59,7 @@ public class WebSecurityConfiguration
             throws
             Exception {
 
-        http.cors().configurationSource(corsConfigurationSource()).and().csrf().disable().anonymous().and().httpBasic()
+        http.cors().configurationSource(corsConfigurationSource()).and().csrf().disable().anonymous()
                 .and().authorizeRequests()
                 .antMatchers(HttpMethod.POST, API_LOGIN).permitAll()
                 .antMatchers(HttpMethod.POST, API_LOGOUT).authenticated()
@@ -83,11 +84,18 @@ public class WebSecurityConfiguration
                 .antMatchers(HttpMethod.GET, API_REQUEST.concat(API_MY_REQUESTS))
                 .hasAnyAuthority(ROLE_ADMINISTRATOR, ROLE_SUPERIOR)
                 .antMatchers(HttpMethod.POST, API_REQUEST.concat(API_SAVE))
-                .hasAnyAuthority(ROLE_ADMINISTRATOR, ROLE_SUPERIOR, ROLE_EMPLOYEE).anyRequest().authenticated().and()
-                .sessionManagement().maximumSessions(1).and().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .sessionAuthenticationFailureHandler(oasisAuthenticationFailureHandler).and().exceptionHandling()
-                .authenticationEntryPoint(oasisRestAuthenticationEntryPoint).accessDeniedHandler(oasisAccessDeniedHandler)
-                .and().requestCache().requestCache(new NullRequestCache());
+                .hasAnyAuthority(ROLE_ADMINISTRATOR, ROLE_SUPERIOR, ROLE_EMPLOYEE).anyRequest().authenticated()
+                .and().requestCache().requestCache(new NullRequestCache()).and().httpBasic()
+                .and().sessionManagement().maximumSessions(1).maxSessionsPreventsLogin(true)
+                .expiredUrl(API_LOGIN).sessionRegistry(sessionRegistry())
+                .and().sessionAuthenticationFailureHandler(oasisAuthenticationFailureHandler).and().exceptionHandling()
+                .authenticationEntryPoint(oasisRestAuthenticationEntryPoint).accessDeniedHandler(oasisAccessDeniedHandler);
+    }
+
+    @Bean
+    SessionRegistry sessionRegistry() {
+
+        return new SessionRegistryImpl();
     }
 
     @Bean
@@ -98,9 +106,9 @@ public class WebSecurityConfiguration
         configuration.setAllowedOrigins(Arrays.asList("http://localhost", "*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "DELETE"));
         configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Access-Control-Allow-Origin", "x-auth-token",
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Access-Control-Allow-Origin", "X-Auth-Token",
                 "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "requestId", "Correlation-Id"));
-        configuration.setExposedHeaders(Arrays.asList("Content-Type", "Access-Control-Allow-Origin", "x-auth-token",
+        configuration.setExposedHeaders(Arrays.asList("Content-Type", "Access-Control-Allow-Origin", "X-Auth-Token",
                 "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "requestId", "Correlation-Id"));
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -111,6 +119,7 @@ public class WebSecurityConfiguration
 
     @Override
     public void configure(WebSecurity web) throws Exception {
+
         web.ignoring().antMatchers(HttpMethod.GET, API_ASSET.concat(API_IMAGE_ASSET))
                 .antMatchers(HttpMethod.GET, API_EMPLOYEE.concat(API_PHOTO_EMPLOYEE));
     }

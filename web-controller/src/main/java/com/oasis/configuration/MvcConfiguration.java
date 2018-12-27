@@ -21,6 +21,7 @@ public class MvcConfiguration implements WebMvcConfigurer {
                 .exposedHeaders("Content-Type", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers",
                         "Authorization", "X-Requested-With", "requestId", "Correlation-Id", "X-Auth-Token")
                 .allowCredentials(false)
-                .maxAge(3600);
+                .maxAge(1800);
     }
+
 }

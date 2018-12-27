@@ -7,7 +7,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import org.springframework.session.web.http.*;
 
 @Configuration
 @EnableCaching
@@ -20,6 +22,7 @@ public class RedisConfiguration {
 
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory());
+
         return template;
     }
 
@@ -35,6 +38,21 @@ public class RedisConfiguration {
         RedisCacheManager redisCacheManager = new RedisCacheManager(redisTemplateObject());
         redisCacheManager.setTransactionAware(true);
         return redisCacheManager;
+    }
+
+    @Bean
+    public HttpSessionStrategy httpSessionStrategy() {
+
+        HeaderHttpSessionStrategy strategy = new HeaderHttpSessionStrategy();
+        strategy.setHeaderName("X-Auth-Token");
+
+        return strategy;
+    }
+
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+
+        return new HttpSessionEventPublisher();
     }
 
 }
