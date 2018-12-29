@@ -7,7 +7,7 @@ import com.oasis.model.entity.RequestModel;
 import com.oasis.repository.RequestRepository;
 import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
-import com.oasis.service.api.requests.RequestListOthersServiceApi;
+import com.oasis.service.api.requests.RequestOthersListServiceApi;
 import com.oasis.service.api.requests.RequestListServiceApi;
 import com.oasis.tool.helper.ImageHelper;
 import com.oasis.tool.util.Regex;
@@ -36,7 +36,7 @@ public class RequestListServiceImpl
     @Autowired
     private EmployeeUtilServiceApi employeeUtilServiceApi;
     @Autowired
-    private RequestListOthersServiceApi requestListOthersServiceApi;
+    private RequestOthersListServiceApi requestOthersListServiceApi;
 
     @Autowired
     private ImageHelper imageHelper;
@@ -88,7 +88,8 @@ public class RequestListServiceImpl
 
                         for (final AssetModel asset : assets) {
                             requestCount += requestRepository
-                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCase(username, asset.getSku());
+                                    .countAllByUsernameEqualsAndSkuContainsIgnoreCaseAndUsernameEqualsAndStatusEquals(
+                                            username, asset.getSku(), username, status);
                         }
 
                         return requestCount;
@@ -96,7 +97,7 @@ public class RequestListServiceImpl
                 }
             } else {
                 if (type.equals("Others")) {
-                    return requestListOthersServiceApi.getOthersRequestList(username, query, status, sort).size();
+                    return requestOthersListServiceApi.getOthersRequestList(username, query, status, sort).size();
                 }
             }
 
@@ -154,7 +155,7 @@ public class RequestListServiceImpl
             }
         }
 
-        return "http://localhost:8085/oasis/api/employees/" + username + "/image_not_found".concat("?extension=jpeg");
+        return "http://localhost:8085/oasis/api/employees/" + username + "/photo_not_found".concat("?extension=jpg");
     }
 
     @Override

@@ -118,6 +118,10 @@ public interface RequestRepository
             String username, String sku
     );
 
+    long countAllByUsernameEqualsAndSkuContainsIgnoreCaseAndUsernameEqualsAndStatusEquals(
+            String username1, String sku, String username2, String status
+    );
+
     RequestModel findBy_id(String _id);
 
     Page< RequestModel > findAllByUsernameEqualsAndStatusEqualsAndSkuContainsIgnoreCaseOrderByStatusAsc(

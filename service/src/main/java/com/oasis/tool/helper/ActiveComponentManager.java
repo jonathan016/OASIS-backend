@@ -1,6 +1,7 @@
 package com.oasis.tool.helper;
 
 import com.oasis.exception.DataNotFoundException;
+import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.tool.constant.RoleConstant;
 import com.oasis.tool.constant.ServiceConstant;
 import com.oasis.tool.constant.StatusConstant;
@@ -17,10 +18,14 @@ import java.util.Map;
 public class ActiveComponentManager {
 
     private Logger logger = LoggerFactory.getLogger(ActiveComponentManager.class);
+
+    @Autowired
+    private EmployeeUtilServiceApi employeeUtilServiceApi;
+
     @Autowired
     private RoleDeterminer roleDeterminer;
 
-    public Map< String, Boolean > getAssetsListActiveComponents(String role) {
+    public Map< String, Boolean > getAssetsListActiveComponents(final String username, final String role) {
 
         Map< String, Boolean > activeComponents = new HashMap<>();
 
@@ -33,7 +38,11 @@ public class ActiveComponentManager {
             activeComponents.put("editBtn", false);
             activeComponents.put("deleteBtn", false);
         }
-        activeComponents.put("requestBtn", true);
+        if (employeeUtilServiceApi.isEmployeeTopAdministrator(username)) {
+            activeComponents.put("requestBtn", false);
+        } else {
+            activeComponents.put("requestBtn", true);
+        }
 
         return activeComponents;
     }

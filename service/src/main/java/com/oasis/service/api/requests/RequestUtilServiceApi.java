@@ -14,7 +14,7 @@ public interface RequestUtilServiceApi {
 
     void save(final RequestModel request);
 
-    long countAllByUsername(final String username);
+    long countAllByUsernameEqualsAndStatusEquals(final String username, final String status);
 
     List< RequestModel > findAllByUsernameOrderByUpdatedDateDesc(final String username);
 

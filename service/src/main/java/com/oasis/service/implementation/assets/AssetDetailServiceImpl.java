@@ -209,40 +209,38 @@ public class AssetDetailServiceImpl
             final double price
     ) {
 
-        StringBuilder priceStringBuilder = new StringBuilder(String.format("%.2f", price));
-        priceStringBuilder.reverse();
+        StringBuilder priceStr = new StringBuilder(String.format("%.2f", price));
+        priceStr.reverse();
 
-        priceStringBuilder.replace(0, 3, "");
+        String fraction = String.valueOf(priceStr).substring(0, 3);
+        priceStr.replace(0, 3, "");
 
-        StringBuilder formattedPriceStringBuilder = new StringBuilder();
-        final int initialLength = priceStringBuilder.length();
+        StringBuilder formattedPriceStr = new StringBuilder();
 
-        while (priceStringBuilder.length() > 0) {
+        final int initialLength = priceStr.length();
+        while (priceStr.length() > 0) {
             StringBuilder temp;
 
-            if (priceStringBuilder.length() >= 3) {
-                temp = new StringBuilder(String.valueOf(priceStringBuilder).substring(0, 3));
-                priceStringBuilder.replace(0, 3, "");
+            if (priceStr.length() >= 3) {
+                temp = new StringBuilder(String.valueOf(priceStr).substring(0, 3));
+                priceStr.replace(0, 3, "");
             } else {
-                temp = new StringBuilder(String.valueOf(priceStringBuilder));
-                priceStringBuilder.replace(0, String.valueOf(priceStringBuilder).length(), "");
+                temp = new StringBuilder(String.valueOf(priceStr));
+                priceStr.replace(0, String.valueOf(priceStr).length(), "");
             }
 
             temp.reverse();
-
-            if (initialLength - 3 != priceStringBuilder.length()) {
+            if (initialLength - 3 != priceStr.length()) {
                 temp.append(",");
             }
-
-            formattedPriceStringBuilder.insert(0, temp);
+            formattedPriceStr.insert(0, temp);
         }
 
-        final String fraction = String.valueOf(priceStringBuilder).substring(0, 3);
-        formattedPriceStringBuilder.append(new StringBuilder(fraction).reverse());
+        formattedPriceStr.append(new StringBuilder(fraction).reverse());
 
-        formattedPriceStringBuilder.insert(0, "Rp. ");
+        formattedPriceStr.insert(0, "Rp. ");
 
-        return String.valueOf(formattedPriceStringBuilder);
+        return String.valueOf(formattedPriceStr);
     }
 
 }

@@ -41,9 +41,9 @@ public class RequestUtilServiceImpl
     }
 
     @Override
-    public long countAllByUsername(final String username) {
+    public long countAllByUsernameEqualsAndStatusEquals(final String username, final String status) {
 
-        return requestRepository.countAllByUsernameEquals(username);
+        return requestRepository.countAllByUsernameEqualsAndStatusEquals(username, status);
     }
 
     @Override

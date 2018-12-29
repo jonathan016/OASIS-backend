@@ -11,6 +11,7 @@ import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.api.employees.EmployeeDeleteServiceApi;
+import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.service.api.requests.RequestUtilServiceApi;
 import com.oasis.tool.constant.RoleConstant;
 import com.oasis.tool.constant.StatusConstant;
@@ -41,6 +42,8 @@ public class EmployeeDeleteServiceImpl
     @Autowired
     private SupervisionRepository supervisionRepository;
 
+    @Autowired
+    private EmployeeUtilServiceApi employeeUtilServiceApi;
     @Autowired
     private RequestUtilServiceApi requestUtilServiceApi;
 
@@ -176,43 +179,12 @@ public class EmployeeDeleteServiceImpl
                     if (employeeWithOldSupervisorUsernameDoesNotSupervise) {
                         throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
                     } else {
-                        demotePreviousSupervisorFromAdminIfNecessary(adminUsername, oldSupervisorUsername,
-                                                                     newSupervisorUsername, supervisions
+                        employeeUtilServiceApi.demotePreviousSupervisorFromAdminIfNecessary(
+                                adminUsername, oldSupervisorUsername, newSupervisorUsername, supervisions
                         );
                     }
                 }
             }
-        }
-    }
-
-    @SuppressWarnings("PointlessBooleanExpression")
-    private void demotePreviousSupervisorFromAdminIfNecessary(
-            final String adminUsername, final String oldSupervisorUsername, final String newSupervisorUsername,
-            final List< SupervisionModel > supervisions
-    ) {
-
-        boolean hadSupervisingEmployees = false;
-
-        for (SupervisionModel supervision : supervisions) {
-            final boolean correctAssumptionOfNotHavingSupervisingEmployees = ( hadSupervisingEmployees == false );
-            final boolean supervisedEmployeeFromSupervisionSupervises = supervisionRepository
-                    .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(
-                            supervision.getEmployeeUsername());
-
-            if (correctAssumptionOfNotHavingSupervisingEmployees && supervisedEmployeeFromSupervisionSupervises) {
-                hadSupervisingEmployees = true;
-
-                AdminModel demotedAdmin = adminRepository.findByDeletedIsFalseAndUsernameEquals(oldSupervisorUsername);
-
-                demotedAdmin.setDeleted(true);
-
-                adminRepository.save(demotedAdmin);
-            }
-            supervision.setSupervisorUsername(newSupervisorUsername);
-            supervision.setUpdatedDate(new Date());
-            supervision.setUpdatedBy(adminUsername);
-
-            supervisionRepository.save(supervision);
         }
     }
 

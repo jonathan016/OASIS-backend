@@ -10,7 +10,7 @@ import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.RequestRepository;
 import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
-import com.oasis.service.api.requests.RequestListOthersServiceApi;
+import com.oasis.service.api.requests.RequestOthersListServiceApi;
 import com.oasis.service.api.requests.RequestListServiceApi;
 import com.oasis.tool.constant.PageSizeConstant;
 import com.oasis.tool.constant.ServiceConstant;
@@ -31,8 +31,8 @@ import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER
 @Service
 @Transactional
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-public class RequestListOthersServiceImpl
-        implements RequestListOthersServiceApi {
+public class RequestOthersListServiceImpl
+        implements RequestOthersListServiceApi {
 
     @Autowired
     private RequestRepository requestRepository;

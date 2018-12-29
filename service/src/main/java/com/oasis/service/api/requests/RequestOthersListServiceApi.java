@@ -7,7 +7,7 @@ import com.oasis.model.entity.RequestModel;
 import java.util.List;
 import java.util.Map;
 
-public interface RequestListOthersServiceApi {
+public interface RequestOthersListServiceApi {
 
     Map< String, List< ? > > getOthersRequestListData(
             final String username, final String query, final String status, final int page, final String sort

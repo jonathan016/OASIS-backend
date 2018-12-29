@@ -100,7 +100,7 @@ public class EmployeeDetailServiceImpl
             }
         }
 
-        return "http://localhost:8085/oasis/api/employees/" + username + "/image_not_found".concat("?extension=jpeg");
+        return "http://localhost:8085/oasis/api/employees/" + username + "/photo_not_found".concat("?extension=jpg");
     }
 
 }

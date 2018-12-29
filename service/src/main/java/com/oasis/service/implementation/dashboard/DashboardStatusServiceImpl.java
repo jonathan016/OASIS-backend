@@ -52,21 +52,21 @@ public class DashboardStatusServiceImpl
             switch (roleDeterminer.determineRole(username)) {
                 case RoleConstant.ROLE_ADMINISTRATOR:
                     requestedRequestsCount += dashboardUtilServiceApi.getRequestsCount(
-                            "Others", username, StatusConstant.STATUS_REQUESTED, 1);
+                            "Others", username, StatusConstant.STATUS_REQUESTED);
                     acceptedRequestsCount += dashboardUtilServiceApi.getRequestsCount(
-                            "Others", username, StatusConstant.STATUS_ACCEPTED, 1);
+                            "Others", username, StatusConstant.STATUS_ACCEPTED);
                     break;
                 case RoleConstant.ROLE_SUPERIOR:
                     requestedRequestsCount += dashboardUtilServiceApi.getRequestsCount(
-                            "Others", username, StatusConstant.STATUS_REQUESTED, 1);
+                            "Others", username, StatusConstant.STATUS_REQUESTED);
                     acceptedRequestsCount += dashboardUtilServiceApi.getRequestsCount(
-                            "Username", username, StatusConstant.STATUS_ACCEPTED, 1);
+                            "Username", username, StatusConstant.STATUS_ACCEPTED);
                     break;
                 case RoleConstant.ROLE_EMPLOYEE:
                     requestedRequestsCount += dashboardUtilServiceApi.getRequestsCount(
-                            "Username", username, StatusConstant.STATUS_REQUESTED, 1);
+                            "Username", username, StatusConstant.STATUS_REQUESTED);
                     acceptedRequestsCount += dashboardUtilServiceApi.getRequestsCount(
-                            "Username", username, StatusConstant.STATUS_ACCEPTED, 1);
+                            "Username", username, StatusConstant.STATUS_ACCEPTED);
                     break;
             }
 

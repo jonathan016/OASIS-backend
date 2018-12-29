@@ -25,7 +25,7 @@ public class DashboardUtilServiceImpl
 
     @Override
     public long getRequestsCount(
-            final String type, final String username, final String status, final int page
+            final String type, final String username, final String status
     )
             throws
             BadRequestException {
@@ -37,7 +37,7 @@ public class DashboardUtilServiceImpl
         } else {
             switch (type) {
                 case "Username":
-                    return requestUtilServiceApi.countAllByUsername(username);
+                    return requestUtilServiceApi.countAllByUsernameEqualsAndStatusEquals(username, status);
                 case "Others":
                     return dashboardRequestUpdateServiceApi.getOthersRequestList(username, status).size();
                 default:

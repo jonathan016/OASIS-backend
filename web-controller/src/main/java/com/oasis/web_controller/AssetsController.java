@@ -99,6 +99,7 @@ public class AssetsController {
                                             .produceViewFoundAssetSuccessResult(HttpStatus.OK.value(), availableAssets,
                                                                                 activeComponentManager
                                                                                         .getAssetsListActiveComponents(
+                                                                                                user.getUsername(),
                                                                                                 new ArrayList<>(
                                                                                                         user.getAuthorities())
                                                                                                         .get(0)

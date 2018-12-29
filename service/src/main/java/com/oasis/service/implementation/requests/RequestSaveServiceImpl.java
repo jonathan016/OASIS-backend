@@ -8,6 +8,7 @@ import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.fieldname.AssetFieldName;
 import com.oasis.repository.RequestRepository;
+import com.oasis.service.api.assets.AssetDetailServiceApi;
 import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.service.api.requests.RequestSaveServiceApi;
@@ -46,6 +47,8 @@ public class RequestSaveServiceImpl
     private RequestRepository requestRepository;
 
     @Autowired
+    private AssetDetailServiceApi assetDetailServiceApi;
+    @Autowired
     private AssetUtilServiceApi assetUtilServiceApi;
     @Autowired
     private EmployeeUtilServiceApi employeeUtilServiceApi;
@@ -57,35 +60,6 @@ public class RequestSaveServiceImpl
 
 
 
-    private List< String > getAssetDetailImages(
-            final String sku, final String imageDirectory
-    ) {
-
-        List< String > imageURLs = new ArrayList<>();
-
-        if (imageDirectory.isEmpty()) {
-            imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/image_not_found?extension=jpeg");
-        } else {
-            final File directory = new File(imageDirectory);
-            final File[] images = directory.listFiles();
-
-            if (Files.exists(directory.toPath()) && images != null) {
-                for (int i = 0; i < images.length; i++) {
-                    final String extension = imageHelper.getExtensionFromFileName(images[ i ].getName());
-
-                    imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/" +
-                                  sku.concat("-").concat(String.valueOf(i + 1)).concat("?extension=")
-                                     .concat(extension));
-                }
-            } else {
-                imageURLs.add("http://localhost:8085/oasis/api/assets/" + sku + "/image_not_found?extension=jpeg");
-            }
-        }
-
-        return imageURLs;
-    }
-
-    /*-------------Save Request Methods-------------*/
     @Override
     public void saveRequests(
             final String username, final List< RequestModel > requests
@@ -262,7 +236,7 @@ public class RequestSaveServiceImpl
         List< List< String > > imageURLs = new ArrayList<>();
 
         for (final AssetModel asset : assets) {
-            imageURLs.add(getAssetDetailImages(asset.getSku(), asset.getImageDirectory()));
+            imageURLs.add(assetDetailServiceApi.getAssetDetailImages(asset.getSku(), asset.getImageDirectory()));
         }
 
         return imageURLs;

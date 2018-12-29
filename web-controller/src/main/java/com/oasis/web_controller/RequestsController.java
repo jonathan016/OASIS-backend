@@ -9,7 +9,7 @@ import com.oasis.model.entity.RequestModel;
 import com.oasis.request_mapper.RequestsRequestMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.response_mapper.RequestsResponseMapper;
-import com.oasis.service.api.requests.RequestListOthersServiceApi;
+import com.oasis.service.api.requests.RequestOthersListServiceApi;
 import com.oasis.service.api.requests.RequestListServiceApi;
 import com.oasis.service.api.requests.RequestMyListServiceApi;
 import com.oasis.service.api.requests.RequestSaveServiceApi;
@@ -55,7 +55,7 @@ public class RequestsController {
     @Autowired
     private RequestListServiceApi requestListServiceApi;
     @Autowired
-    private RequestListOthersServiceApi requestListOthersServiceApi;
+    private RequestOthersListServiceApi requestOthersListServiceApi;
     @Autowired
     private RequestMyListServiceApi requestMyListServiceApi;
     @Autowired
@@ -156,7 +156,7 @@ public class RequestsController {
         final long totalRecords;
 
         try {
-            othersRequestListData = requestListOthersServiceApi.getOthersRequestListData(
+            othersRequestListData = requestOthersListServiceApi.getOthersRequestListData(
                     user.getUsername(), query, status, page, sort);
 
             requests = (List< RequestModel >) othersRequestListData.get("requests");

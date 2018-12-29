@@ -53,6 +53,7 @@ public class RequestOthersListResponse {
             private String sku;
             private String name;
             private long quantity;
+            private boolean expendable;
 
         }
 

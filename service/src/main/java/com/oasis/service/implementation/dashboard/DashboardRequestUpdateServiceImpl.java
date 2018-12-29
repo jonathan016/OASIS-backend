@@ -179,10 +179,10 @@ public class DashboardRequestUpdateServiceImpl
             BadRequestException,
             DataNotFoundException {
 
-        final long requestsCount = requestUtilServiceApi.countAllByUsername(username);
+        final long requestsCount = requestUtilServiceApi.countAllByUsernameEqualsAndStatusEquals(username, StatusConstant.STATUS_REQUESTED);
         final boolean noRequests = ( requestsCount == 0 );
         final long totalPages = (long) Math.ceil(
-                (double) dashboardUtilServiceApi.getRequestsCount("Username", username, null, page) /
+                (double) dashboardUtilServiceApi.getRequestsCount("Username", username, StatusConstant.STATUS_REQUESTED) /
                 PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
         final boolean pageIndexOutOfBounds = ( ( page < 1 ) || ( page > totalPages ) );
 
@@ -194,8 +194,7 @@ public class DashboardRequestUpdateServiceImpl
                     .of(zeroBasedIndexPage, PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
 
             List< RequestModel > requests = new ArrayList<>(
-                    requestUtilServiceApi.findAllByUsernameOrderByUpdatedDateDesc(username, pageable)
-                                         .getContent());
+                    requestUtilServiceApi.findAllByUsernameOrderByUpdatedDateDesc(username, pageable).getContent());
 
             return requests;
         }
@@ -292,7 +291,7 @@ public class DashboardRequestUpdateServiceImpl
             }
         }
 
-        return "http://localhost:8085/oasis/api/employees/" + username + "/image_not_found".concat("?extension=jpeg");
+        return "http://localhost:8085/oasis/api/employees/" + username + "/photo_not_found".concat("?extension=jpg");
     }
 
 }
