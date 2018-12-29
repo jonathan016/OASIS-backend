@@ -1,12 +1,9 @@
 package com.oasis.tool.helper;
 
-import com.oasis.exception.DataNotFoundException;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.tool.constant.RoleConstant;
 import com.oasis.tool.constant.ServiceConstant;
 import com.oasis.tool.constant.StatusConstant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,31 +14,56 @@ import java.util.Map;
 @SuppressWarnings({ "SpringJavaAutowiredFieldsWarningInspection", "Duplicates" })
 public class ActiveComponentManager {
 
-    private Logger logger = LoggerFactory.getLogger(ActiveComponentManager.class);
+    private Map< String, Boolean > activeComponents = new HashMap<>();
 
     @Autowired
     private EmployeeUtilServiceApi employeeUtilServiceApi;
 
-    @Autowired
-    private RoleDeterminer roleDeterminer;
+
+
+    public Map< String, Boolean > getDashboardActiveComponents(final String username, final String role) {
+
+        switch (role) {
+            case RoleConstant.ROLE_EMPLOYEE:
+                activeComponents.put("btnNewRequestChangeTab", false);
+                activeComponents.put("sectionNewRequestOthers", false);
+                break;
+            case RoleConstant.ROLE_SUPERIOR:
+                activeComponents.put("btnNewRequestChangeTab", true);
+                activeComponents.put("sectionNewRequestOthers", true);
+                break;
+            case RoleConstant.ROLE_ADMINISTRATOR:
+                activeComponents.put("btnNewRequestChangeTab", true);
+                activeComponents.put("sectionNewRequestOthers", true);
+                break;
+        }
+
+        if (employeeUtilServiceApi.isEmployeeTopAdministrator(username)) {
+            activeComponents.put("btnNewRequestChangeTab", false);
+            activeComponents.put("sectionNewRequestMy", false);
+        } else {
+            activeComponents.put("sectionNewRequestMy", true);
+        }
+
+        return activeComponents;
+    }
 
     public Map< String, Boolean > getAssetsListActiveComponents(final String username, final String role) {
 
-        Map< String, Boolean > activeComponents = new HashMap<>();
-
         if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
-            activeComponents.put("addBtn", true);
-            activeComponents.put("editBtn", true);
-            activeComponents.put("deleteBtn", true);
+            activeComponents.put("btnAssetAddNew", true);
+            activeComponents.put("btnAssetEdit", true);
+            activeComponents.put("btnAssetDeleteBulk", true);
         } else {
-            activeComponents.put("addBtn", false);
-            activeComponents.put("editBtn", false);
-            activeComponents.put("deleteBtn", false);
+            activeComponents.put("btnAssetAddNew", false);
+            activeComponents.put("btnAssetEdit", false);
+            activeComponents.put("btnAssetDeleteBulk", false);
         }
+
         if (employeeUtilServiceApi.isEmployeeTopAdministrator(username)) {
-            activeComponents.put("requestBtn", false);
+            activeComponents.put("btnAssetRequest", false);
         } else {
-            activeComponents.put("requestBtn", true);
+            activeComponents.put("btnAssetRequest", true);
         }
 
         return activeComponents;
@@ -49,45 +71,27 @@ public class ActiveComponentManager {
 
     public Map< String, Boolean > getAssetDetailActiveComponents(final String role) {
 
-        Map< String, Boolean > activeComponents = new HashMap<>();
-
         if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
-            activeComponents.put("editBtn", true);
-            activeComponents.put("deleteBtn", true);
+            activeComponents.put("btnAssetDetailEditDelete", true);
         } else {
-            activeComponents.put("editBtn", false);
-            activeComponents.put("deleteBtn", false);
+            activeComponents.put("btnAssetDetailEditDelete", false);
         }
-        activeComponents.put("printBtn", true);
 
         return activeComponents;
     }
 
-    public Map< String, Boolean > getEmployeesListActiveComponents(final String username) {
+    public Map< String, Boolean > getEmployeesListActiveComponents(final String role) {
 
-        String role;
+        activeComponents.put("sectionEmployeeUpper", true);
+        activeComponents.put("btnEmployeeAdd", false);
+        activeComponents.put("btnEmployeeEdit", false);
+        activeComponents.put("btnEmployeeDelete", false);
 
-        try {
-            role = roleDeterminer.determineRole(username);
-        } catch (DataNotFoundException dataNotFoundException) {
-            logger.error(
-                    "Failed to get active components for requests list data as no employee with given username exists");
-            role = null;
-        }
-
-        Map< String, Boolean > activeComponents = new HashMap<>();
-
-        if (role != null) {
-            activeComponents.put("addBtn", false);
-            activeComponents.put("viewBtn", true);
-            activeComponents.put("editBtn", false);
-            activeComponents.put("deleteBtn", false);
-
-            if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
-                activeComponents.put("addBtn", true);
-                activeComponents.put("editBtn", true);
-                activeComponents.put("deleteBtn", true);
-            }
+        if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
+            activeComponents.put("sectionEmployeeUpper", false);
+            activeComponents.put("btnEmployeeAdd", true);
+            activeComponents.put("btnEmployeeEdit", true);
+            activeComponents.put("btnEmployeeDelete", true);
         }
 
         return activeComponents;
@@ -95,69 +99,27 @@ public class ActiveComponentManager {
 
     public Map< String, Boolean > getEmployeeDetailActiveComponents(final String role) {
 
-        Map< String, Boolean > activeComponents = new HashMap<>();
-
         if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
-            activeComponents.put("editBtn", true);
-            activeComponents.put("deleteBtn", true);
+            activeComponents.put("btnEmployeeDetailEditDelete", true);
         } else {
-            activeComponents.put("editBtn", false);
-            activeComponents.put("deleteBtn", false);
+            activeComponents.put("btnEmployeeDetailEditDelete", false);
         }
 
         return activeComponents;
     }
 
-    public Map< String, Boolean > getRequestsListDataActiveComponents(
-            final String tab, final String username, String status
-    ) {
+    public Map< String, Boolean > getSideBarActiveComponents(final String username, final String role) {
 
-        String role;
-
-        try {
-            role = roleDeterminer.determineRole(username);
-        } catch (DataNotFoundException dataNotFoundException) {
-            logger.error(
-                    "Failed to get active components for requests list data as no employee with given username exists");
-            role = null;
+        if (employeeUtilServiceApi.isEmployeeTopAdministrator(username)) {
+            activeComponents.put("sidebarRequestMy", false);
+        } else {
+            activeComponents.put("sidebarRequestMy", true);
         }
 
-        Map< String, Boolean > activeComponents = new HashMap<>();
-
-        if (role != null) {
-            activeComponents.put("cancelBtn", false);
-            activeComponents.put("acceptBtn", false);
-            activeComponents.put("rejectBtn", false);
-            activeComponents.put("deliverBtn", false);
-            activeComponents.put("returnBtn", false);
-
-            if (status != null) {
-                if (tab.equals(ServiceConstant.TAB_OTHERS)) {
-                    if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
-                        switch (status) {
-                            case StatusConstant.STATUS_REQUESTED:
-                                activeComponents.put("acceptBtn", true);
-                                activeComponents.put("rejectBtn", true);
-                                break;
-                            case StatusConstant.STATUS_ACCEPTED:
-                                activeComponents.put("deliverBtn", true);
-                                break;
-                            case StatusConstant.STATUS_DELIVERED:
-                                activeComponents.put("returnBtn", true);
-                                break;
-                        }
-                    } else if (role.equals(RoleConstant.ROLE_SUPERIOR)) {
-                        if (status.equals(StatusConstant.STATUS_REQUESTED)) {
-                            activeComponents.put("acceptBtn", true);
-                            activeComponents.put("rejectBtn", true);
-                        }
-                    }
-                } else {
-                    if (status.equals(StatusConstant.STATUS_REQUESTED)) {
-                        activeComponents.put("cancelBtn", true);
-                    }
-                }
-            }
+        if (role.equals(RoleConstant.ROLE_EMPLOYEE)) {
+            activeComponents.put("sidebarRequestOther", false);
+        } else {
+            activeComponents.put("sidebarRequestOther", true);
         }
 
         return activeComponents;

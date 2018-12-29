@@ -32,7 +32,7 @@ public interface EmployeeSaveServiceApi {
             BadRequestException;
 
     List< String > getEmployeesUsernamesForSupervisorSelection(
-            final String adminUsername, final String username
+            final String adminUsername, final String username, final String division
     )
             throws
             BadRequestException,

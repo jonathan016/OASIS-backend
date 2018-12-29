@@ -1,19 +1,15 @@
 package com.oasis.service.implementation.employees;
 
 import com.oasis.exception.*;
-import com.oasis.model.entity.AdminModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
-import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.api.employees.EmployeeSaveServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.tool.constant.ImageDirectoryConstant;
 import com.oasis.tool.constant.PrefixConstant;
-import com.oasis.tool.constant.RoleConstant;
 import com.oasis.tool.helper.ImageHelper;
-import com.oasis.tool.helper.RoleDeterminer;
 import com.oasis.tool.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +72,10 @@ public class EmployeeSaveServiceImpl
 
         if (supervisorUsername == null || supervisorUsername.isEmpty()) {
             supervisorUsername = username;
+        }
+
+        if (!addEmployeeOperation) {
+            supervisorUsername = supervisorUsername.replace(" (Default)", "");
         }
 
         if (!isSaveEmployeeParametersProper(photoGiven, employee, supervisorUsername, addEmployeeOperation)) {
@@ -173,7 +173,7 @@ public class EmployeeSaveServiceImpl
                 final boolean passwordsMatch = encoder.matches(oldPassword, employee.getPassword());
 
                 if (!passwordsMatch) {
-                    throw new UserNotAuthenticatedException(INVALID_PASSWORD);
+                    throw new UserNotAuthenticatedException(UNAUTHENTICATED_USER);
                 } else {
                     final boolean unchangedPassword = oldPassword.equals(newPassword);
                     final boolean newPasswordConfirmed = newPassword.equals(newPasswordConfirmation);
@@ -197,22 +197,22 @@ public class EmployeeSaveServiceImpl
     @Override
     @SuppressWarnings("UnnecessaryContinue")
     public List<String> getEmployeesUsernamesForSupervisorSelection(
-            final String adminUsername, final String username
+            final String adminUsername, final String username, final String division
     )
             throws
             BadRequestException,
             DataNotFoundException {
 
-        final boolean emptyUsernameGiven = username.isEmpty();
+        final boolean emptyUsernameGiven = (username != null && username.isEmpty());
 
         if (emptyUsernameGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
             Set<String> possibleSupervisorsUsernames = new LinkedHashSet<>();
             final List<EmployeeModel> employees = employeeRepository
-                    .findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
+                    .findAllByDeletedIsFalseAndUsernameIsNotNullAndDivisionEqualsOrderByUsernameAsc(division);
 
-            final boolean addEmployeeOperation = username.equals("-1");
+            final boolean addEmployeeOperation = (username == null);
 
             if (addEmployeeOperation) {
                 for (final EmployeeModel possibleSupervisor : employees) {

@@ -6,6 +6,7 @@ import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.response_mapper.LoginResponseMapper;
 import com.oasis.service.api.login.LoginServiceApi;
+import com.oasis.tool.helper.ActiveComponentManager;
 import com.oasis.web_model.constant.APIMappingValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -38,6 +40,9 @@ public class LoginController {
 
     @Autowired
     private LoginServiceApi loginServiceApi;
+
+    @Autowired
+    private ActiveComponentManager activeComponentManager;
 
 
 
@@ -101,6 +106,22 @@ public class LoginController {
         session.invalidate();
 
         return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping(value = APIMappingValue.API_SIDE_BAR,
+                produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity getSideBarActiveComponents(
+            @AuthenticationPrincipal
+                    User user
+    ) {
+
+        final Map< String, Boolean > activeComponents = activeComponentManager
+                .getSideBarActiveComponents(user.getUsername(),new ArrayList<>(user.getAuthorities()).get(0)
+                        .getAuthority());
+
+        return new ResponseEntity<>(loginResponseMapper.produceSideBarActiveComponentResponse(
+                HttpStatus.OK.value(), activeComponents
+        ), HttpStatus.OK);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)

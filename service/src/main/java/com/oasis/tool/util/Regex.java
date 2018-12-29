@@ -22,7 +22,7 @@ public class Regex {
 
     public static final String REGEX_UNIVERSAL_STRINGS = "^[A-Za-z0-9]+(( )?(.+)?[A-Za-z0-9]+)*$";
 
-    public static final String REGEX_DIVISIONS = "^(Technology|Finance|Operations|People Culture|Marketing)$";
+    public static final String REGEX_DIVISIONS = "^(Technology|Finance|Operations|Human Resources|Marketing)$";
 
     public static final String REGEX_EMPLOYEE_PHONE = "^(\\+62|0){1}([0-9]){10,12}$";
 

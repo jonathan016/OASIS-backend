@@ -12,6 +12,10 @@ import java.util.List;
 public interface RequestRepository
         extends MongoRepository< RequestModel, String > {
 
+    List< RequestModel > findAllBySkuEqualsAndStatusEquals(
+            String sku, String status
+    );
+
     List< RequestModel > findAllByUsernameEqualsAndStatusEquals(
             String username, String status
     );

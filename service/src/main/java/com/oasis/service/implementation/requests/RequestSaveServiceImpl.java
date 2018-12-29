@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -55,8 +56,6 @@ public class RequestSaveServiceImpl
 
     @Autowired
     private MongoOperations mongoOperations;
-    @Autowired
-    private ImageHelper imageHelper;
 
 
 
@@ -330,6 +329,16 @@ public class RequestSaveServiceImpl
             if (newRequestStatusIsAccepted) {
                 if (assetUtilServiceApi.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
                     savedRequest.getQuantity() < 0) {
+                    final List< RequestModel > requestsOfAssetWithSku = requestRepository
+                    .findAllBySkuEqualsAndStatusEquals(request.getSku(), StatusConstant.STATUS_REQUESTED);
+                    for (RequestModel requestOfAssetWithSku : requestsOfAssetWithSku) {
+                        requestOfAssetWithSku.setStatus(StatusConstant.STATUS_REJECTED);
+                        requestOfAssetWithSku.setTransactionNote("Asset stock is currently not available. Please try" +
+                                "again some other time.");
+
+                        saveRequests(username, Arrays.asList(requestOfAssetWithSku));
+                    }
+
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 }
 

@@ -19,7 +19,9 @@ public interface EmployeeRepository
             String username, String name
     );
 
-    List< EmployeeModel > findAllByDeletedIsFalseAndUsernameIsNotNullOrderByUsernameAsc();
+    List< EmployeeModel > findAllByDeletedIsFalseAndUsernameIsNotNullAndDivisionEqualsOrderByUsernameAsc(
+            String division
+    );
 
     Page< EmployeeModel > findAllByDeletedIsFalseAndUsernameIsNotOrderByNameAsc(
             String username, Pageable pageable

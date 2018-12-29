@@ -152,10 +152,12 @@ public class DashboardController {
                                                 .produceViewOthersFoundRequestSuccessResult(HttpStatus.OK.value(),
                                                                                             requests, employees, assets,
                                                                                             activeComponentManager
-                                                                                                    .getRequestsListDataActiveComponents(
-                                                                                                            tab,
+                                                                                                    .getDashboardActiveComponents(
                                                                                                             user.getUsername(),
-                                                                                                            StatusConstant.STATUS_REQUESTED
+                                                                                                            new ArrayList<>(
+                                                                                                                    user.getAuthorities())
+                                                                                                                    .get(0)
+                                                                                                                    .getAuthority()
                                                                                                     ), page,
                                                                                             totalRecords
                                                 ), HttpStatus.OK);
@@ -164,10 +166,12 @@ public class DashboardController {
                                                 .produceViewMyFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
                                                                                         employees, modifiers, assets,
                                                                                         activeComponentManager
-                                                                                                .getRequestsListDataActiveComponents(
-                                                                                                        tab,
+                                                                                                .getDashboardActiveComponents(
                                                                                                         user.getUsername(),
-                                                                                                        StatusConstant.STATUS_REQUESTED
+                                                                                                        new ArrayList<>(
+                                                                                                                user.getAuthorities())
+                                                                                                                .get(0)
+                                                                                                                .getAuthority()
                                                                                                 ), page, totalRecords
                                                 ), HttpStatus.OK);
         }

@@ -74,6 +74,7 @@ public class WebSecurityConfiguration
             .and().authorizeRequests()
             .antMatchers(HttpMethod.POST, API_LOGIN).permitAll()
             .antMatchers(HttpMethod.POST, API_LOGOUT).authenticated()
+            .antMatchers(HttpMethod.GET, API_SIDE_BAR).authenticated()
             .antMatchers(HttpMethod.GET, API_DASHBOARD.concat("/**")).authenticated()
             .antMatchers(HttpMethod.GET, API_ASSET.concat(API_LIST)).authenticated()
             .antMatchers(HttpMethod.POST, API_ASSET.concat(API_SAVE))
@@ -98,8 +99,7 @@ public class WebSecurityConfiguration
             .antMatchers(HttpMethod.POST, API_REQUEST.concat(API_SAVE))
             .hasAnyAuthority(ROLE_ADMINISTRATOR, ROLE_SUPERIOR, ROLE_EMPLOYEE).anyRequest().authenticated()
             .and().requestCache().requestCache(new NullRequestCache()).and().httpBasic()
-            .and().sessionManagement().maximumSessions(1).maxSessionsPreventsLogin(true)
-            .expiredUrl(API_LOGIN).sessionRegistry(sessionRegistry())
+            .and().sessionManagement().maximumSessions(1).maxSessionsPreventsLogin(true).sessionRegistry(sessionRegistry())
             .and().sessionAuthenticationFailureHandler(oasisAuthenticationFailureHandler).and().exceptionHandling()
             .authenticationEntryPoint(oasisRestAuthenticationEntryPoint).accessDeniedHandler(oasisAccessDeniedHandler);
     }

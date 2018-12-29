@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.UNAUTHORIZED_OPERATION;
+import static com.oasis.exception.helper.ErrorCodeAndMessage.UNAUTHENTICATED_USER;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Component
@@ -34,8 +34,8 @@ public final class OasisRestAuthenticationEntryPoint
 
         ObjectMapper objectMapper = new ObjectMapper();
         String value = objectMapper.writeValueAsString(new ResponseEntity<>(failedResponseMapper.produceFailedResult(
-                HttpStatus.UNAUTHORIZED.value(), UNAUTHORIZED_OPERATION.getErrorCode(),
-                UNAUTHORIZED_OPERATION.getErrorMessage()
+                HttpStatus.UNAUTHORIZED.value(), UNAUTHENTICATED_USER.getErrorCode(),
+                UNAUTHENTICATED_USER.getErrorMessage()
         ), HttpStatus.UNAUTHORIZED));
 
         response.setContentType(APPLICATION_JSON_VALUE);

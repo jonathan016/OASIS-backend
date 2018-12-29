@@ -8,6 +8,7 @@ public class APIMappingValue {
 
     public static final String API_LOGIN = "/api/login";
     public static final String API_LOGOUT = "/api/logout";
+    public static final String API_SIDE_BAR = "/api/sidebar";
     public static final String API_ASSET = "/api/assets";
     public static final String API_DASHBOARD = "/api/dashboard";
     public static final String API_EMPLOYEE = "/api/employees";
@@ -17,10 +18,12 @@ public class APIMappingValue {
     public static final String API_SAVE = "/save";
     public static final String API_DELETE = "/delete";
 
-    public static final String API_DATA_ASSET = "/{identifier:SKU-[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9]}";
+    public static final String API_DATA_ASSET
+            = "/{identifier:SKU-[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9]}";
     public static final String API_IMAGE_ASSET
-            = "/{identifier:SKU-[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9]}/{image:.+}";
-    public static final String API_PDF_ASSET = "/{identifier:SKU-[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9]}/pdf";
+            = "/{identifier:SKU-[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9]}/{image:.+}";
+    public static final String API_PDF_ASSET
+            = "/{identifier:SKU-[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9]}/pdf";
 
     public static final String API_STATUS = "/status";
     public static final String API_REQUEST_UPDATE = "/request-update";

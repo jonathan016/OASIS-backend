@@ -111,7 +111,10 @@ public class EmployeesController {
                                                                                     supervisors, employeePhotos,
                                                                                     activeComponentManager
                                                                                             .getEmployeesListActiveComponents(
-                                                                                                    user.getUsername()
+                                                                                                    new ArrayList<>(
+                                                                                                            user.getAuthorities())
+                                                                                                            .get(0)
+                                                                                                            .getAuthority()
                                                                                             ), page, totalRecords
                                             ), HttpStatus.OK);
     }
@@ -158,8 +161,11 @@ public class EmployeesController {
                 produces = APPLICATION_JSON_VALUE,
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesUsernamesForSupervisorSelection(
-            @RequestParam(value = "username")
+            @RequestParam(value = "username",
+                        required = false)
             final String username,
+            @RequestParam(value = "division")
+            final String division,
             @AuthenticationPrincipal
             final User user
     ) {
@@ -168,7 +174,7 @@ public class EmployeesController {
 
         try {
             usernames = employeeSaveServiceApi.getEmployeesUsernamesForSupervisorSelection(
-                    user.getUsername(), username);
+                    user.getUsername(), username, division);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),

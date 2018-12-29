@@ -22,9 +22,9 @@ public class ErrorCodeAndMessage {
             "Unauthorized operation attempted"
     );
 
-    public static final BaseError INVALID_PASSWORD = new BaseError(
-            "INVALID_PASSWORD",
-            "Invalid password given"
+    public static final BaseError UNAUTHENTICATED_USER = new BaseError(
+            "UNAUTHENTICATED_USER",
+            "User is not authenticated"
     );
 
 }

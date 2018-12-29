@@ -13,7 +13,6 @@ import com.oasis.service.api.requests.RequestOthersListServiceApi;
 import com.oasis.service.api.requests.RequestListServiceApi;
 import com.oasis.service.api.requests.RequestMyListServiceApi;
 import com.oasis.service.api.requests.RequestSaveServiceApi;
-import com.oasis.tool.helper.ActiveComponentManager;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.requests.AssetRequestDetailsRequest;
 import com.oasis.web_model.request.requests.SaveRequestRequest;
@@ -60,9 +59,6 @@ public class RequestsController {
     private RequestMyListServiceApi requestMyListServiceApi;
     @Autowired
     private RequestSaveServiceApi requestSaveServiceApi;
-
-    @Autowired
-    private ActiveComponentManager activeComponentManager;
 
     
 
@@ -120,12 +116,7 @@ public class RequestsController {
         return new ResponseEntity<>(requestsResponseMapper
                                             .produceViewMyFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
                                                                                     employees, modifiers, assets,
-                                                                                    activeComponentManager
-                                                                                            .getRequestsListDataActiveComponents(
-                                                                                                    "my",
-                                                                                                    user.getUsername(),
-                                                                                                    status
-                                                                                            ), page, totalRecords
+                                                                                    null, page, totalRecords
                                             ), HttpStatus.OK);
     }
 
@@ -181,12 +172,7 @@ public class RequestsController {
         return new ResponseEntity<>(requestsResponseMapper
                                             .produceViewOthersFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
                                                                                         employees, assets,
-                                                                                        activeComponentManager
-                                                                                                .getRequestsListDataActiveComponents(
-                                                                                                        "others",
-                                                                                                        user.getUsername(),
-                                                                                                        status
-                                                                                                ), page, totalRecords
+                                                                                        null, page, totalRecords
                                             ), HttpStatus.OK);
     }
 

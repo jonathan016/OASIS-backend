@@ -202,33 +202,33 @@ public class AssetSaveServiceImpl
         if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrandEqualsAndTypeEquals(brand, type)) {
             lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrandEqualsAndTypeEquals(brand, type);
 
-            int lastProductIdCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(12, 15));
+            int lastProductIdCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(16, 21));
             lastProductIdCode++;
 
-            sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 11));
-            sku.append(String.format("-%03d", lastProductIdCode));
+            sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 15));
+            sku.append(String.format("-%05d", lastProductIdCode));
         } else {
             if (lastUniqueIdentifierRepository.existsLastUniqueIdentifierModelByBrandEquals(brand)) {
                 lastUniqueIdentifier = lastUniqueIdentifierRepository.findByBrandEquals(brand);
 
-                int lastTypeCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(8, 11));
+                int lastTypeCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(10, 15));
                 lastTypeCode++;
 
-                sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 7));
-                sku.append(String.format("-%03d", lastTypeCode));
-                sku.append(String.format("-%03d", 1));
+                sku = new StringBuilder(lastUniqueIdentifier.getSku().substring(0, 9));
+                sku.append(String.format("-%05d", lastTypeCode));
+                sku.append(String.format("-%05d", 1));
             } else {
                 sku = new StringBuilder(PrefixConstant.PREFIX_SKU);
 
                 lastUniqueIdentifier = lastUniqueIdentifierRepository
                         .findFirstBySkuContainsOrderBySkuDesc(String.valueOf(sku));
 
-                int lastBrandCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(4, 7));
+                int lastBrandCode = Integer.parseInt(lastUniqueIdentifier.getSku().substring(4, 9));
                 lastBrandCode++;
 
-                sku.append(String.format("-%03d", lastBrandCode));
-                sku.append(String.format("-%03d", 1));
-                sku.append(String.format("-%03d", 1));
+                sku.append(String.format("-%05d", lastBrandCode));
+                sku.append(String.format("-%05d", 1));
+                sku.append(String.format("-%05d", 1));
             }
 
             lastUniqueIdentifier = new LastUniqueIdentifierModel();
