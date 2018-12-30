@@ -143,7 +143,8 @@ public class AssetsController {
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
                     dataNotFoundException.getErrorMessage(), activeComponentManager
-                            .getAssetDetailActiveComponents(new ArrayList<>(user.getAuthorities()).get(0).getAuthority())
+                            .getAssetDetailActiveComponents(new ArrayList<>(user.getAuthorities()).get(0)
+                                                                                                  .getAuthority())
             ), HttpStatus.NOT_FOUND);
         }
 
@@ -289,7 +290,7 @@ public class AssetsController {
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                              HttpStatus.BAD_REQUEST.name(), message,
-                null
+                                                                             null
         ), HttpStatus.BAD_REQUEST);
     }
 

@@ -179,10 +179,12 @@ public class DashboardRequestUpdateServiceImpl
             BadRequestException,
             DataNotFoundException {
 
-        final long requestsCount = requestUtilServiceApi.countAllByUsernameEqualsAndStatusEquals(username, StatusConstant.STATUS_REQUESTED);
+        final long requestsCount = requestUtilServiceApi.countAllByUsernameEqualsAndStatusEquals(
+                username, StatusConstant.STATUS_REQUESTED);
         final boolean noRequests = ( requestsCount == 0 );
         final long totalPages = (long) Math.ceil(
-                (double) dashboardUtilServiceApi.getRequestsCount("Username", username, StatusConstant.STATUS_REQUESTED) /
+                (double) dashboardUtilServiceApi
+                        .getRequestsCount("Username", username, StatusConstant.STATUS_REQUESTED) /
                 PageSizeConstant.DASHBOARD_REQUEST_UPDATE_PAGE_SIZE);
         final boolean pageIndexOutOfBounds = ( ( page < 1 ) || ( page > totalPages ) );
 

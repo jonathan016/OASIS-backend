@@ -12,7 +12,7 @@ public class FailedResponseMapper {
 
     public NoPagingResponse< FailedResponse > produceFailedResult(
             final int httpStatusCode, final String errorCode, final String errorMessage,
-            final Map<String, Boolean> components
+            final Map< String, Boolean > components
     ) {
 
         NoPagingResponse< FailedResponse > failedResponse = new NoPagingResponse<>();

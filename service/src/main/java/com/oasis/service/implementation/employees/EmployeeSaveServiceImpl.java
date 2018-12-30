@@ -1,6 +1,10 @@
 package com.oasis.service.implementation.employees;
 
-import com.oasis.exception.*;
+import com.oasis.exception.BadRequestException;
+import com.oasis.exception.DataNotFoundException;
+import com.oasis.exception.DuplicateDataException;
+import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.EmployeeRepository;
@@ -26,7 +30,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
 
@@ -56,9 +65,9 @@ public class EmployeeSaveServiceImpl
     @SuppressWarnings("PointlessBooleanExpression")
     @Caching(evict = {
             @CacheEvict(value = "employeeDetailData",
-                    key = "#employee.username"),
+                        key = "#employee.username"),
             @CacheEvict(value = "employeesListData",
-                    allEntries = true)
+                        allEntries = true)
     })
     public String saveEmployee(
             final MultipartFile photoGiven, final String username, final EmployeeModel employee,
@@ -155,9 +164,9 @@ public class EmployeeSaveServiceImpl
             UserNotAuthenticatedException,
             BadRequestException {
 
-        final boolean emptyUsernameGiven = (username == null || username.isEmpty());
-        final boolean emptyOldPasswordGiven = (oldPassword == null || oldPassword.isEmpty());
-        final boolean emptyNewPasswordGiven = (newPassword == null || newPassword.isEmpty());
+        final boolean emptyUsernameGiven = ( username == null || username.isEmpty() );
+        final boolean emptyOldPasswordGiven = ( oldPassword == null || oldPassword.isEmpty() );
+        final boolean emptyNewPasswordGiven = ( newPassword == null || newPassword.isEmpty() );
         final boolean emptyNewPasswordConfirmationGiven = (
                 newPasswordConfirmation == null || newPasswordConfirmation.isEmpty()
         );
@@ -196,24 +205,24 @@ public class EmployeeSaveServiceImpl
 
     @Override
     @SuppressWarnings("UnnecessaryContinue")
-    public List<String> getEmployeesUsernamesForSupervisorSelection(
+    public List< String > getEmployeesUsernamesForSupervisorSelection(
             final String adminUsername, final String username, final String division
     )
             throws
             BadRequestException,
             DataNotFoundException {
 
-        final boolean emptyUsernameGiven = (username != null && username.isEmpty());
+        final boolean emptyUsernameGiven = ( username != null && username.isEmpty() );
 
         if (emptyUsernameGiven) {
             throw new BadRequestException(INCORRECT_PARAMETER);
         } else {
-            Set<String> possibleSupervisorsUsernames = new LinkedHashSet<>();
-            final List<EmployeeModel> employees = employeeRepository
+            Set< String > possibleSupervisorsUsernames = new LinkedHashSet<>();
+            final List< EmployeeModel > employees = employeeRepository
                     .findAllByDeletedIsFalseAndUsernameIsNotNullAndDivisionEqualsOrDivisionEqualsOrderByUsernameAsc(
                             division, "");
 
-            final boolean addEmployeeOperation = (username == null);
+            final boolean addEmployeeOperation = ( username == null );
 
             if (addEmployeeOperation) {
                 for (final EmployeeModel possibleSupervisor : employees) {
@@ -227,8 +236,8 @@ public class EmployeeSaveServiceImpl
                 if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username)) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else {
-                    List<String> supervisedEmployeesUsernames = new ArrayList<>();
-                    final List<SupervisionModel> supervisions = supervisionRepository
+                    List< String > supervisedEmployeesUsernames = new ArrayList<>();
+                    final List< SupervisionModel > supervisions = supervisionRepository
                             .findAllByDeletedIsFalseAndSupervisorUsernameEquals(username);
 
                     for (final SupervisionModel supervision : supervisions) {
@@ -261,7 +270,7 @@ public class EmployeeSaveServiceImpl
         }
     }
 
-    @SuppressWarnings({"ConstantConditions", "RedundantIfStatement"})
+    @SuppressWarnings({ "ConstantConditions", "RedundantIfStatement" })
     private boolean isSaveEmployeeParametersProper(
             final MultipartFile photoGiven,
             final EmployeeModel employee,
@@ -272,7 +281,7 @@ public class EmployeeSaveServiceImpl
         if (photoGiven != null) {
             try {
                 if (!photoGiven.getOriginalFilename().matches(Regex.REGEX_JPEG_FILE_NAME) &&
-                        !photoGiven.getOriginalFilename().matches(Regex.REGEX_PNG_FILE_NAME)) {
+                    !photoGiven.getOriginalFilename().matches(Regex.REGEX_PNG_FILE_NAME)) {
                     return false;
                 }
             } catch (NullPointerException exception) {
@@ -430,13 +439,13 @@ public class EmployeeSaveServiceImpl
                 savedEmployee.setPhoto("");
             } else {
                 final String photoLocation = ImageDirectoryConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator)
-                        .concat(savedEmployee
-                                .getUsername())
-                        .concat(".")
-                        .concat(imageHelper
-                                .getExtensionFromFileName(
-                                        photoGiven
-                                                .getOriginalFilename()));
+                                                                                            .concat(savedEmployee
+                                                                                                            .getUsername())
+                                                                                            .concat(".")
+                                                                                            .concat(imageHelper
+                                                                                                            .getExtensionFromFileName(
+                                                                                                                    photoGiven
+                                                                                                                            .getOriginalFilename()));
 
                 savedEmployee.setPhoto(photoLocation);
 
@@ -477,10 +486,10 @@ public class EmployeeSaveServiceImpl
             try {
                 File photo = new File(
                         ImageDirectoryConstant.EMPLOYEE_PHOTO_DIRECTORY.concat(File.separator).concat(username)
-                                .concat(".").concat(imageHelper
-                                .getExtensionFromFileName(
-                                        photoGiven
-                                                .getOriginalFilename())));
+                                                                       .concat(".").concat(imageHelper
+                                                                                                   .getExtensionFromFileName(
+                                                                                                           photoGiven
+                                                                                                                   .getOriginalFilename())));
 
                 photoGiven.transferTo(photo);
             } catch (IOException ioException) {
@@ -490,7 +499,7 @@ public class EmployeeSaveServiceImpl
     }
 
     private boolean isSafeFromCyclicSupervising(
-            final String targetUsername, final List<String> usernames
+            final String targetUsername, final List< String > usernames
     ) {
 
         if (usernames.size() - 1 >= 1) {

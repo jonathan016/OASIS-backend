@@ -117,7 +117,9 @@ public class EmployeeUtilServiceImpl
     public void updateSupervisorDataOnEmployeeDataModification(
             final String adminUsername, final String employeeUsername, final String selectedSupervisorUsername,
             final boolean addEmployeeOperation
-    ) throws DataNotFoundException {
+    )
+            throws
+            DataNotFoundException {
 
         if (addEmployeeOperation) {
             createSupervision(employeeUsername, selectedSupervisorUsername, adminUsername);
@@ -127,15 +129,17 @@ public class EmployeeUtilServiceImpl
                 .findByDeletedIsFalseAndEmployeeUsernameEquals(selectedSupervisorUsername);
 
         if (supervisionOfSelectedSupervisor != null) {
-            final String supervisorUsernameOfSelectedSupervisor = supervisionOfSelectedSupervisor.getSupervisorUsername();
+            final String supervisorUsernameOfSelectedSupervisor = supervisionOfSelectedSupervisor
+                    .getSupervisorUsername();
 
             if (roleDeterminer.determineRole(supervisorUsernameOfSelectedSupervisor).equals(RoleConstant
-                    .ROLE_SUPERIOR)) {
+                                                                                                    .ROLE_SUPERIOR)) {
                 AdminModel demotedAdmin = adminRepository.findByDeletedIsTrueAndUsernameEquals(
                         supervisorUsernameOfSelectedSupervisor);
 
                 if (demotedAdmin != null) {
-                    final EmployeeModel supervisorOfSelectedSupervisor = employeeRepository.findByDeletedIsFalseAndUsernameEquals(supervisorUsernameOfSelectedSupervisor);
+                    final EmployeeModel supervisorOfSelectedSupervisor = employeeRepository
+                            .findByDeletedIsFalseAndUsernameEquals(supervisorUsernameOfSelectedSupervisor);
 
                     demotedAdmin.setPassword(supervisorOfSelectedSupervisor.getPassword());
                     demotedAdmin.setDeleted(false);
@@ -144,7 +148,8 @@ public class EmployeeUtilServiceImpl
 
                     adminRepository.save(demotedAdmin);
                 } else {
-                    final EmployeeModel supervisorOfSelectedSupervisor = employeeRepository.findByDeletedIsFalseAndUsernameEquals(supervisorUsernameOfSelectedSupervisor);
+                    final EmployeeModel supervisorOfSelectedSupervisor = employeeRepository
+                            .findByDeletedIsFalseAndUsernameEquals(supervisorUsernameOfSelectedSupervisor);
 
                     AdminModel newAdmin = new AdminModel();
 
@@ -166,12 +171,12 @@ public class EmployeeUtilServiceImpl
                 final String supervisorUsernameOfEmployee = supervisionOfEmployeeUsername.getSupervisorUsername();
 
                 final SupervisionModel supervisionOfSupervisor = supervisionRepository
-                .findByDeletedIsFalseAndEmployeeUsernameEquals(supervisorUsernameOfEmployee);
+                        .findByDeletedIsFalseAndEmployeeUsernameEquals(supervisorUsernameOfEmployee);
 
                 if (supervisionOfSupervisor != null) {
-                    List<SupervisionModel> supervisionsOfSelectedSupervisorSupervisor = supervisionRepository
+                    List< SupervisionModel > supervisionsOfSelectedSupervisorSupervisor = supervisionRepository
                             .findAllByDeletedIsFalseAndSupervisorUsernameEquals(supervisionOfSupervisor
-                                    .getSupervisorUsername());
+                                                                                        .getSupervisorUsername());
 
                     boolean hasSupervisingEmployee = false;
 
@@ -180,7 +185,7 @@ public class EmployeeUtilServiceImpl
                             continue;
                         }
                         if (!roleDeterminer.determineRole(supervision.getEmployeeUsername()).equals(RoleConstant
-                                .ROLE_EMPLOYEE)) {
+                                                                                                            .ROLE_EMPLOYEE)) {
                             hasSupervisingEmployee = true;
                             break;
                         }
@@ -189,10 +194,11 @@ public class EmployeeUtilServiceImpl
                     if (!hasSupervisingEmployee) {
                         AdminModel toBeDemotedAdmin = adminRepository
                                 .findByDeletedIsFalseAndUsernameEquals(supervisionOfSupervisor
-                                        .getSupervisorUsername());
+                                                                               .getSupervisorUsername());
 
                         if (employeeRepository.findByDeletedIsFalseAndUsernameEquals(supervisionOfSupervisor
-                                .getSupervisorUsername()).getSupervisionId() != null) {
+                                                                                             .getSupervisorUsername())
+                                              .getSupervisionId() != null) {
                             logger.info("Supervisor: " + supervisionOfSupervisor.getSupervisorUsername());
                             toBeDemotedAdmin.setDeleted(true);
                             toBeDemotedAdmin.setUpdatedBy(adminUsername);
@@ -215,22 +221,6 @@ public class EmployeeUtilServiceImpl
 
             supervisionRepository.save(supervision);
         }
-    }
-
-    private void createSupervision(
-            final String employeeUsername, final String supervisorUsername, final String adminUsername
-    ) {
-
-        SupervisionModel supervision = new SupervisionModel();
-
-        supervision.setSupervisorUsername(supervisorUsername);
-        supervision.setEmployeeUsername(employeeUsername);
-        supervision.setCreatedDate(new Date());
-        supervision.setUpdatedDate(new Date());
-        supervision.setCreatedBy(adminUsername);
-        supervision.setUpdatedBy(adminUsername);
-
-        supervisionRepository.save(supervision);
     }
 
     @Override
@@ -286,6 +276,22 @@ public class EmployeeUtilServiceImpl
 
         return supervisionRepository.existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(
                 supervisorUsername);
+    }
+
+    private void createSupervision(
+            final String employeeUsername, final String supervisorUsername, final String adminUsername
+    ) {
+
+        SupervisionModel supervision = new SupervisionModel();
+
+        supervision.setSupervisorUsername(supervisorUsername);
+        supervision.setEmployeeUsername(employeeUsername);
+        supervision.setCreatedDate(new Date());
+        supervision.setUpdatedDate(new Date());
+        supervision.setCreatedBy(adminUsername);
+        supervision.setUpdatedBy(adminUsername);
+
+        supervisionRepository.save(supervision);
     }
 
 }

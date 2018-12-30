@@ -20,7 +20,9 @@ public interface EmployeeUtilServiceApi {
     void updateSupervisorDataOnEmployeeDataModification(
             final String adminUsername, final String employeeUsername, final String supervisorUsername,
             final boolean addEmployeeOperation
-    ) throws DataNotFoundException;
+    )
+            throws
+            DataNotFoundException;
 
     boolean isEmployeeTopAdministrator(final String username);
 

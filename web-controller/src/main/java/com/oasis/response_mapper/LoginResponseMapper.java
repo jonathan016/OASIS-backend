@@ -26,7 +26,7 @@ public class LoginResponseMapper {
 
     public BaseResponse produceSideBarActiveComponentResponse(
             final int httpStatusCode, final Map< String, Boolean > activeComponents
-            ) {
+    ) {
 
         BaseResponse successResponse = new BaseResponse();
 

@@ -22,7 +22,10 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
@@ -282,11 +285,11 @@ public class RequestSaveServiceImpl
                 if (assetUtilServiceApi.findByDeletedIsFalseAndSkuEquals(savedRequest.getSku()).getStock() -
                     savedRequest.getQuantity() < 0) {
                     final List< RequestModel > requestsOfAssetWithSku = requestRepository
-                    .findAllBySkuEqualsAndStatusEquals(request.getSku(), StatusConstant.STATUS_REQUESTED);
+                            .findAllBySkuEqualsAndStatusEquals(request.getSku(), StatusConstant.STATUS_REQUESTED);
                     for (RequestModel requestOfAssetWithSku : requestsOfAssetWithSku) {
                         requestOfAssetWithSku.setStatus(StatusConstant.STATUS_REJECTED);
                         requestOfAssetWithSku.setTransactionNote("Asset stock is currently not available. Please try" +
-                                "again some other time.");
+                                                                 "again some other time.");
 
                         saveRequests(username, Collections.singletonList(requestOfAssetWithSku));
                     }

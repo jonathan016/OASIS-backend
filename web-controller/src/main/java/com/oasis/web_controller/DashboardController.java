@@ -220,7 +220,8 @@ public class DashboardController {
         }
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                             HttpStatus.BAD_REQUEST.name(), message, null
+                                                                             HttpStatus.BAD_REQUEST.name(), message,
+                                                                             null
         ), HttpStatus.BAD_REQUEST);
     }
 

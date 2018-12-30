@@ -19,8 +19,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
-
 @Service
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class AuthenticationImpl
@@ -39,6 +37,7 @@ public class AuthenticationImpl
     @Override
     @SuppressWarnings("UnnecessaryLocalVariable")
     public Authentication getAuthentication(String username, final String password) {
+
         final boolean validUsernameWithSuffix = username.matches(Regex.REGEX_USERNAME_LOGIN_SUFFIX);
         final boolean validUsernameWithoutSuffix = username.matches(Regex.REGEX_USERNAME_LOGIN_NO_SUFFIX);
 
@@ -58,7 +57,7 @@ public class AuthenticationImpl
                     try {
                         final String role = roleDeterminer.determineRole(username);
 
-                        final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+                        final List< GrantedAuthority > grantedAuths = new ArrayList<>();
                         grantedAuths.add(new SimpleGrantedAuthority(role));
                         final UserDetails principal = new User(username, password, grantedAuths);
 

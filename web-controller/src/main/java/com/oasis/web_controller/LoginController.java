@@ -117,8 +117,8 @@ public class LoginController {
     ) {
 
         final Map< String, Boolean > activeComponents = activeComponentManager
-                .getSideBarActiveComponents(user.getUsername(),new ArrayList<>(user.getAuthorities()).get(0)
-                        .getAuthority());
+                .getSideBarActiveComponents(user.getUsername(), new ArrayList<>(user.getAuthorities()).get(0)
+                                                                                                      .getAuthority());
 
         return new ResponseEntity<>(loginResponseMapper.produceSideBarActiveComponentResponse(
                 HttpStatus.OK.value(), activeComponents
@@ -151,7 +151,7 @@ public class LoginController {
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                              HttpStatus.BAD_REQUEST.name(), message,
-                null
+                                                                             null
         ), HttpStatus.BAD_REQUEST);
     }
 

@@ -182,7 +182,7 @@ public class EmployeesController {
                 consumes = APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity getEmployeesUsernamesForSupervisorSelection(
             @RequestParam(value = "username",
-                        required = false)
+                          required = false)
             final String username,
             @RequestParam(value = "division")
             final String division,
@@ -457,7 +457,7 @@ public class EmployeesController {
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                              HttpStatus.BAD_REQUEST.name(), message,
-                null
+                                                                             null
         ), HttpStatus.BAD_REQUEST);
     }
 

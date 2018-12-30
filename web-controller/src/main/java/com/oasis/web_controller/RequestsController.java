@@ -9,9 +9,9 @@ import com.oasis.model.entity.RequestModel;
 import com.oasis.request_mapper.RequestsRequestMapper;
 import com.oasis.response_mapper.FailedResponseMapper;
 import com.oasis.response_mapper.RequestsResponseMapper;
-import com.oasis.service.api.requests.RequestOthersListServiceApi;
 import com.oasis.service.api.requests.RequestListServiceApi;
 import com.oasis.service.api.requests.RequestMyListServiceApi;
+import com.oasis.service.api.requests.RequestOthersListServiceApi;
 import com.oasis.service.api.requests.RequestSaveServiceApi;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.requests.AssetRequestDetailsRequest;
@@ -60,7 +60,7 @@ public class RequestsController {
     @Autowired
     private RequestSaveServiceApi requestSaveServiceApi;
 
-    
+
 
     @SuppressWarnings("unchecked")
     @GetMapping(value = APIMappingValue.API_MY_REQUESTS,
@@ -175,7 +175,8 @@ public class RequestsController {
 
         return new ResponseEntity<>(requestsResponseMapper
                                             .produceViewOthersFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
-                                                                                        employees, assets, page, totalRecords
+                                                                                        employees, assets, page,
+                                                                                        totalRecords
                                             ), HttpStatus.OK);
     }
 
@@ -210,9 +211,10 @@ public class RequestsController {
         }
 
         return new ResponseEntity<>(requestsResponseMapper
-                                            .produceViewAssetRequestDetailsSuccessResult(HttpStatus.OK.value(),
-                                                                                         requestedAssets,
-                                                                                         requestedAssetsImages
+                                            .produceViewAssetRequestDetailsSuccessResult(
+                                                    HttpStatus.OK.value(),
+                                                    requestedAssets,
+                                                    requestedAssetsImages
                                             ), HttpStatus.OK);
     }
 
@@ -287,7 +289,7 @@ public class RequestsController {
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
                                                                              HttpStatus.BAD_REQUEST.name(), message,
-                null
+                                                                             null
         ), HttpStatus.BAD_REQUEST);
     }
 

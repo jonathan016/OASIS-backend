@@ -99,7 +99,8 @@ public class WebSecurityConfiguration
             .antMatchers(HttpMethod.POST, API_REQUEST.concat(API_SAVE))
             .hasAnyAuthority(ROLE_ADMINISTRATOR, ROLE_SUPERIOR, ROLE_EMPLOYEE).anyRequest().authenticated()
             .and().requestCache().requestCache(new NullRequestCache()).and().httpBasic()
-            .and().sessionManagement().maximumSessions(1).maxSessionsPreventsLogin(true).sessionRegistry(sessionRegistry())
+            .and().sessionManagement().maximumSessions(1).maxSessionsPreventsLogin(true).sessionRegistry(
+                sessionRegistry())
             .and().sessionAuthenticationFailureHandler(oasisAuthenticationFailureHandler).and().exceptionHandling()
             .authenticationEntryPoint(oasisRestAuthenticationEntryPoint).accessDeniedHandler(oasisAccessDeniedHandler);
     }
