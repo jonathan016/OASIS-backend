@@ -70,21 +70,22 @@ public class LoginController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(),
+                    null
             ), HttpStatus.NOT_FOUND);
         } catch (UserNotAuthenticatedException userNotAuthenticatedException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.UNAUTHORIZED.value(),
-                    userNotAuthenticatedException
-                            .getErrorCode(),
-                    userNotAuthenticatedException
-                            .getErrorMessage()
+                    userNotAuthenticatedException.getErrorCode(),
+                    userNotAuthenticatedException.getErrorMessage(),
+                    null
             ), HttpStatus.UNAUTHORIZED);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    badRequestException.getErrorMessage(),
+                    null
             ), HttpStatus.BAD_REQUEST);
 
         }
@@ -149,7 +150,8 @@ public class LoginController {
         }
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                             HttpStatus.BAD_REQUEST.name(), message
+                                                                             HttpStatus.BAD_REQUEST.name(), message,
+                null
         ), HttpStatus.BAD_REQUEST);
     }
 

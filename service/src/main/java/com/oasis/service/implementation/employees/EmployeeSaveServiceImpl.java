@@ -210,7 +210,8 @@ public class EmployeeSaveServiceImpl
         } else {
             Set<String> possibleSupervisorsUsernames = new LinkedHashSet<>();
             final List<EmployeeModel> employees = employeeRepository
-                    .findAllByDeletedIsFalseAndUsernameIsNotNullAndDivisionEqualsOrderByUsernameAsc(division);
+                    .findAllByDeletedIsFalseAndUsernameIsNotNullAndDivisionEqualsOrDivisionEqualsOrderByUsernameAsc(
+                            division, "");
 
             final boolean addEmployeeOperation = (username == null);
 

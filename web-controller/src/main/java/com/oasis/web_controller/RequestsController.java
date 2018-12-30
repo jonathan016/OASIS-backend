@@ -103,20 +103,22 @@ public class RequestsController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    badRequestException.getErrorMessage(),
+                    null
             ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(),
+                    null
             ), HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<>(requestsResponseMapper
                                             .produceViewMyFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
                                                                                     employees, modifiers, assets,
-                                                                                    null, page, totalRecords
+                                                                                    page, totalRecords
                                             ), HttpStatus.OK);
     }
 
@@ -159,20 +161,21 @@ public class RequestsController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    badRequestException.getErrorMessage(),
+                    null
             ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(),
+                    null
             ), HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<>(requestsResponseMapper
                                             .produceViewOthersFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
-                                                                                        employees, assets,
-                                                                                        null, page, totalRecords
+                                                                                        employees, assets, page, totalRecords
                                             ), HttpStatus.OK);
     }
 
@@ -194,13 +197,15 @@ public class RequestsController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    badRequestException.getErrorMessage(),
+                    null
             ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(),
+                    null
             ), HttpStatus.NOT_FOUND);
         }
 
@@ -230,21 +235,22 @@ public class RequestsController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(),
+                    null
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    badRequestException.getErrorMessage(),
+                    null
             ), HttpStatus.BAD_REQUEST);
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.UNAUTHORIZED.value(),
-                    unauthorizedOperationException
-                            .getErrorCode(),
-                    unauthorizedOperationException
-                            .getErrorMessage()
+                    unauthorizedOperationException.getErrorCode(),
+                    unauthorizedOperationException.getErrorMessage(),
+                    null
             ), HttpStatus.UNAUTHORIZED);
         }
 
@@ -280,7 +286,8 @@ public class RequestsController {
         }
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                             HttpStatus.BAD_REQUEST.name(), message
+                                                                             HttpStatus.BAD_REQUEST.name(), message,
+                null
         ), HttpStatus.BAD_REQUEST);
     }
 

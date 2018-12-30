@@ -34,7 +34,7 @@ public class OasisAccessDeniedHandler
         ObjectMapper objectMapper = new ObjectMapper();
         String value = objectMapper.writeValueAsString(new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                 HttpStatus.UNAUTHORIZED.value(), UNAUTHORIZED_OPERATION.getErrorCode(),
-                UNAUTHORIZED_OPERATION.getErrorMessage()
+                UNAUTHORIZED_OPERATION.getErrorMessage(), null
         ), HttpStatus.UNAUTHORIZED));
 
         response.setContentType(APPLICATION_JSON_VALUE);

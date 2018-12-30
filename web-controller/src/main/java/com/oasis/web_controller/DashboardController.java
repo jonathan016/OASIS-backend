@@ -80,13 +80,15 @@ public class DashboardController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(),
+                    null
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    badRequestException.getErrorMessage(),
+                    null
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -137,13 +139,29 @@ public class DashboardController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(),
+                    activeComponentManager
+                            .getDashboardActiveComponents(
+                                    user.getUsername(),
+                                    new ArrayList<>(
+                                            user.getAuthorities())
+                                            .get(0)
+                                            .getAuthority()
+                            )
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    badRequestException.getErrorMessage(),
+                    activeComponentManager
+                            .getDashboardActiveComponents(
+                                    user.getUsername(),
+                                    new ArrayList<>(
+                                            user.getAuthorities())
+                                            .get(0)
+                                            .getAuthority()
+                            )
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -202,7 +220,7 @@ public class DashboardController {
         }
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                             HttpStatus.BAD_REQUEST.name(), message
+                                                                             HttpStatus.BAD_REQUEST.name(), message, null
         ), HttpStatus.BAD_REQUEST);
     }
 

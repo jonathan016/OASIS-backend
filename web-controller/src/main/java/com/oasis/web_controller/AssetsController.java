@@ -85,13 +85,29 @@ public class AssetsController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    badRequestException.getErrorMessage(),
+                    activeComponentManager
+                            .getAssetsListActiveComponents(
+                                    user.getUsername(),
+                                    new ArrayList<>(
+                                            user.getAuthorities())
+                                            .get(0)
+                                            .getAuthority()
+                            )
             ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(),
+                    activeComponentManager
+                            .getAssetsListActiveComponents(
+                                    user.getUsername(),
+                                    new ArrayList<>(
+                                            user.getAuthorities())
+                                            .get(0)
+                                            .getAuthority()
+                            )
             ), HttpStatus.NOT_FOUND);
         }
 
@@ -126,7 +142,8 @@ public class AssetsController {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    dataNotFoundException.getErrorMessage(), activeComponentManager
+                            .getAssetDetailActiveComponents(new ArrayList<>(user.getAuthorities()).get(0).getAuthority())
             ), HttpStatus.NOT_FOUND);
         }
 
@@ -190,30 +207,23 @@ public class AssetsController {
             assetSaveServiceApi.saveAsset(images, username, asset, addAssetOperation);
         } catch (DuplicateDataException duplicateDataException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
-                    HttpStatus.CONFLICT.value(),
-                    duplicateDataException.getErrorCode(),
-                    duplicateDataException
-                            .getErrorMessage()
+                    HttpStatus.CONFLICT.value(), duplicateDataException.getErrorCode(),
+                    duplicateDataException.getErrorMessage(), null
             ), HttpStatus.CONFLICT);
         } catch (UnauthorizedOperationException unauthorizedOperationException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
-                    HttpStatus.UNAUTHORIZED.value(),
-                    unauthorizedOperationException
-                            .getErrorCode(),
-                    unauthorizedOperationException
-                            .getErrorMessage()
+                    HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(),
+                    unauthorizedOperationException.getErrorMessage(), null
             ), HttpStatus.UNAUTHORIZED);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
-                    HttpStatus.NOT_FOUND.value(),
-                    dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage(), null
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
-                    HttpStatus.BAD_REQUEST.value(),
-                    badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage(), null
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -237,15 +247,13 @@ public class AssetsController {
             assetDeleteServiceApi.deleteAssets(request.getSkus(), user.getUsername());
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
-                    HttpStatus.NOT_FOUND.value(),
-                    dataNotFoundException.getErrorCode(),
-                    dataNotFoundException.getErrorMessage()
+                    HttpStatus.NOT_FOUND.value(), dataNotFoundException.getErrorCode(),
+                    dataNotFoundException.getErrorMessage(), null
             ), HttpStatus.NOT_FOUND);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
-                    HttpStatus.BAD_REQUEST.value(),
-                    badRequestException.getErrorCode(),
-                    badRequestException.getErrorMessage()
+                    HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(),
+                    badRequestException.getErrorMessage(), null
             ), HttpStatus.BAD_REQUEST);
         }
 
@@ -280,7 +288,8 @@ public class AssetsController {
         }
 
         return new ResponseEntity<>(failedResponseMapper.produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-                                                                             HttpStatus.BAD_REQUEST.name(), message
+                                                                             HttpStatus.BAD_REQUEST.name(), message,
+                null
         ), HttpStatus.BAD_REQUEST);
     }
 

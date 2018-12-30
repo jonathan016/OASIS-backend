@@ -26,7 +26,7 @@ public class RequestsResponseMapper {
 
     public PagingResponse< RequestOthersListResponse > produceViewOthersFoundRequestSuccessResult(
             final int httpStatusCode, final List< RequestModel > requests, final List< EmployeeModel > employees,
-            final List< AssetModel > assets, final Map< String, Boolean > components, final int pageNumber,
+            final List< AssetModel > assets, final int pageNumber,
             final long totalRecords
     ) {
 
@@ -34,7 +34,6 @@ public class RequestsResponseMapper {
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
-        successResponse.setComponents(components);
 
         MapperFactory requestDataFactory = new DefaultMapperFactory.Builder().build();
         requestDataFactory.classMap(RequestModel.class, RequestOthersListResponse.RequestListObject.Request.class)
@@ -74,15 +73,14 @@ public class RequestsResponseMapper {
 
     public PagingResponse< RequestMyListResponse > produceViewMyFoundRequestSuccessResult(
             final int httpStatusCode, final List< RequestModel > requests, final List< EmployeeModel > employees,
-            final List< EmployeeModel > modifiers, final List< AssetModel > assets,
-            final Map< String, Boolean > components, final int pageNumber, final long totalRecords
+            final List< EmployeeModel > modifiers, final List< AssetModel > assets, final int pageNumber,
+            final long totalRecords
     ) {
 
         PagingResponse< RequestMyListResponse > successResponse = new PagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
-        successResponse.setComponents(components);
 
         MapperFactory requestDataFactory = new DefaultMapperFactory.Builder().build();
         requestDataFactory.classMap(RequestModel.class, RequestMyListResponse.RequestListObject.Request.class)

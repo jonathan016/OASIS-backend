@@ -34,7 +34,7 @@ public class OasisAuthenticationFailureHandler
         ObjectMapper objectMapper = new ObjectMapper();
         String value = objectMapper.writeValueAsString(new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                 HttpStatus.UNAUTHORIZED.value(), UNAUTHENTICATED_USER.getErrorCode(),
-                UNAUTHENTICATED_USER.getErrorMessage()
+                UNAUTHENTICATED_USER.getErrorMessage(), null
         ), HttpStatus.UNAUTHORIZED));
 
         response.setContentType(APPLICATION_JSON_VALUE);

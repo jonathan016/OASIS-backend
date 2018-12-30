@@ -2,8 +2,6 @@ package com.oasis.tool.helper;
 
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.tool.constant.RoleConstant;
-import com.oasis.tool.constant.ServiceConstant;
-import com.oasis.tool.constant.StatusConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,14 +12,14 @@ import java.util.Map;
 @SuppressWarnings({ "SpringJavaAutowiredFieldsWarningInspection", "Duplicates" })
 public class ActiveComponentManager {
 
-    private Map< String, Boolean > activeComponents = new HashMap<>();
-
     @Autowired
     private EmployeeUtilServiceApi employeeUtilServiceApi;
 
 
 
     public Map< String, Boolean > getDashboardActiveComponents(final String username, final String role) {
+
+        Map< String, Boolean > activeComponents = new HashMap<>();
 
         switch (role) {
             case RoleConstant.ROLE_EMPLOYEE:
@@ -50,6 +48,8 @@ public class ActiveComponentManager {
 
     public Map< String, Boolean > getAssetsListActiveComponents(final String username, final String role) {
 
+        Map< String, Boolean > activeComponents = new HashMap<>();
+
         if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
             activeComponents.put("btnAssetAddNew", true);
             activeComponents.put("btnAssetEdit", true);
@@ -71,6 +71,8 @@ public class ActiveComponentManager {
 
     public Map< String, Boolean > getAssetDetailActiveComponents(final String role) {
 
+        Map< String, Boolean > activeComponents = new HashMap<>();
+
         if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
             activeComponents.put("btnAssetDetailEditDelete", true);
         } else {
@@ -81,6 +83,8 @@ public class ActiveComponentManager {
     }
 
     public Map< String, Boolean > getEmployeesListActiveComponents(final String role) {
+
+        Map< String, Boolean > activeComponents = new HashMap<>();
 
         activeComponents.put("sectionEmployeeUpper", true);
         activeComponents.put("btnEmployeeAdd", false);
@@ -99,6 +103,8 @@ public class ActiveComponentManager {
 
     public Map< String, Boolean > getEmployeeDetailActiveComponents(final String role) {
 
+        Map< String, Boolean > activeComponents = new HashMap<>();
+
         if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
             activeComponents.put("btnEmployeeDetailEditDelete", true);
         } else {
@@ -109,6 +115,8 @@ public class ActiveComponentManager {
     }
 
     public Map< String, Boolean > getSideBarActiveComponents(final String username, final String role) {
+
+        Map< String, Boolean > activeComponents = new HashMap<>();
 
         if (employeeUtilServiceApi.isEmployeeTopAdministrator(username)) {
             activeComponents.put("sidebarRequestMy", false);
