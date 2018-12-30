@@ -12,13 +12,8 @@ import com.oasis.service.api.assets.AssetDetailServiceApi;
 import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.service.api.requests.RequestSaveServiceApi;
-import com.oasis.tool.constant.PageSizeConstant;
 import com.oasis.tool.constant.StatusConstant;
-import com.oasis.tool.helper.ImageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -27,12 +22,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
 import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
@@ -176,8 +166,8 @@ public class RequestSaveServiceImpl
 
     @Override
     @SuppressWarnings("UnnecessaryLocalVariable")
-    public Page< AssetModel > getAssetRequestDetailsData(
-            final List< String > skus, final int page
+    public List< AssetModel > getAssetRequestDetailsList(
+            final List< String > skus
     )
             throws
             BadRequestException,
@@ -197,34 +187,20 @@ public class RequestSaveServiceImpl
 
             final long assetRequestDetails = assetUtilServiceApi.countAllByDeletedIsFalseAndSkuIn(skus);
             final boolean noRequests = ( assetRequestDetails == 0 );
-            final long totalPages = (long) Math.ceil((double) getAssetRequestDetailsCount(skus, page) /
-                                                     PageSizeConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
-            final boolean pageIndexOutOfBounds = ( ( page < 1 ) || ( page > totalPages ) );
 
-            if (noRequests || pageIndexOutOfBounds) {
+            if (noRequests) {
                 throw new DataNotFoundException(DATA_NOT_FOUND);
             } else {
-                final int zeroBasedIndexPage = page - 1;
-                final Pageable pageable = PageRequest
-                        .of(zeroBasedIndexPage, PageSizeConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE);
+                final List< AssetModel > requestedAssets = assetUtilServiceApi
+                        .findAllByDeletedIsFalseAndStockGreaterThanZeroAndSkuIn(skus);
 
-                final Page< AssetModel > requestedAssets = assetUtilServiceApi
-                        .findAllByDeletedIsFalseAndSkuIn(skus, pageable);
-
-                return requestedAssets;
+                if (skus.size() != requestedAssets.size()) {
+                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                } else {
+                    return requestedAssets;
+                }
             }
         }
-    }
-
-    @Override
-    public List< AssetModel > getAssetRequestDetailsList(
-            final List< String > skus, final int page
-    )
-            throws
-            BadRequestException,
-            DataNotFoundException {
-
-        return getAssetRequestDetailsData(skus, page).getContent();
     }
 
     @Override
@@ -239,30 +215,6 @@ public class RequestSaveServiceImpl
         }
 
         return imageURLs;
-    }
-
-    @Override
-    public long getAssetRequestDetailsCount(
-            final List< String > skus, final int page
-    )
-            throws
-            BadRequestException,
-            DataNotFoundException {
-
-        if (skus == null || skus.isEmpty()) {
-            throw new BadRequestException(INCORRECT_PARAMETER);
-        } else {
-            for (final String sku : skus) {
-                final boolean requestedAssetExists = assetUtilServiceApi.existsAssetModelByDeletedIsFalseAndSkuEquals(
-                        sku);
-
-                if (!requestedAssetExists) {
-                    throw new DataNotFoundException(DATA_NOT_FOUND);
-                }
-            }
-
-            return assetUtilServiceApi.countAllByDeletedIsFalseAndSkuIn(skus);
-        }
     }
 
     private boolean isNewRequestsValid(final List< RequestModel > requests)
@@ -336,7 +288,7 @@ public class RequestSaveServiceImpl
                         requestOfAssetWithSku.setTransactionNote("Asset stock is currently not available. Please try" +
                                 "again some other time.");
 
-                        saveRequests(username, Arrays.asList(requestOfAssetWithSku));
+                        saveRequests(username, Collections.singletonList(requestOfAssetWithSku));
                     }
 
                     throw new DataNotFoundException(DATA_NOT_FOUND);

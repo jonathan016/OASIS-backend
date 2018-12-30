@@ -16,7 +16,7 @@ public interface AssetUtilServiceApi {
 
     long countAllByDeletedIsFalseAndSkuIn(final List< String > skus);
 
-    Page< AssetModel > findAllByDeletedIsFalseAndSkuIn(final List< String > skus, final Pageable pageable);
+    List< AssetModel > findAllByDeletedIsFalseAndStockGreaterThanZeroAndSkuIn(final List< String > skus);
 
     AssetModel findByDeletedIsFalseAndSkuEquals(final String sku);
 

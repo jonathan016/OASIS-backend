@@ -5,7 +5,6 @@ import com.oasis.exception.DataNotFoundException;
 import com.oasis.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.RequestModel;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -19,15 +18,8 @@ public interface RequestSaveServiceApi {
             BadRequestException,
             UnauthorizedOperationException;
 
-    Page< AssetModel > getAssetRequestDetailsData(
-            final List< String > skus, final int page
-    )
-            throws
-            BadRequestException,
-            DataNotFoundException;
-
     List< AssetModel > getAssetRequestDetailsList(
-            final List< String > skus, final int page
+            final List< String > skus
     )
             throws
             BadRequestException,
@@ -36,12 +28,5 @@ public interface RequestSaveServiceApi {
     List< List< String > > getAssetRequestDetailsImages(
             final List< AssetModel > assets
     );
-
-    long getAssetRequestDetailsCount(
-            final List< String > skus, final int page
-    )
-            throws
-            BadRequestException,
-            DataNotFoundException;
 
 }

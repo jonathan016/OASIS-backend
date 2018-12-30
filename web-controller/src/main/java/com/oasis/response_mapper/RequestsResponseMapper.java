@@ -7,6 +7,7 @@ import com.oasis.tool.constant.PageSizeConstant;
 import com.oasis.tool.constant.StatusConstant;
 import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.BaseResponse;
+import com.oasis.web_model.response.NoPagingResponse;
 import com.oasis.web_model.response.Paging;
 import com.oasis.web_model.response.PagingResponse;
 import com.oasis.web_model.response.success.requests.AssetRequestDetailsResponse;
@@ -132,12 +133,12 @@ public class RequestsResponseMapper {
         return successResponse;
     }
 
-    public PagingResponse< AssetRequestDetailsResponse > produceViewAssetRequestDetailsSuccessResult(
+    public NoPagingResponse< AssetRequestDetailsResponse > produceViewAssetRequestDetailsSuccessResult(
             final int httpStatusCode, final List< AssetModel > requestedAssets,
-            final List< List< String > > requestedAssetsImages, final int pageNumber, final long totalRecords
+            final List< List< String > > requestedAssetsImages
     ) {
 
-        PagingResponse< AssetRequestDetailsResponse > successResponse = new PagingResponse<>();
+        NoPagingResponse< AssetRequestDetailsResponse > successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
@@ -162,9 +163,6 @@ public class RequestsResponseMapper {
                                       .setImages(requestedAssetsImages.get(i));
         }
         successResponse.setValue(new AssetRequestDetailsResponse(requestedAssetsListObjects));
-
-        successResponse.setPaging(new Paging(pageNumber, requestedAssets.size(), (int) Math
-                .ceil((double) totalRecords / PageSizeConstant.ASSET_REQUEST_DETAILS_LIST_PAGE_SIZE), totalRecords));
 
         return successResponse;
     }

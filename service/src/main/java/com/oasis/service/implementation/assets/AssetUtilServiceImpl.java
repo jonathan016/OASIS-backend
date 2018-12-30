@@ -4,13 +4,12 @@ import com.oasis.model.entity.AssetModel;
 import com.oasis.repository.AssetRepository;
 import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.tool.constant.ImageDirectoryConstant;
+import com.oasis.tool.constant.ServiceConstant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,10 +81,9 @@ public class AssetUtilServiceImpl
         return assetRepository.countAllByDeletedIsFalseAndSkuIn(skus);
     }
 
-    @Override
-    public Page< AssetModel > findAllByDeletedIsFalseAndSkuIn(final List< String > skus, final Pageable pageable) {
+    public List< AssetModel > findAllByDeletedIsFalseAndStockGreaterThanZeroAndSkuIn(final List< String > skus) {
 
-        return assetRepository.findAllByDeletedIsFalseAndSkuIn(skus, pageable);
+        return assetRepository.findAllByDeletedIsFalseAndStockGreaterThanAndSkuIn(ServiceConstant.ZERO, skus);
     }
 
     @Override

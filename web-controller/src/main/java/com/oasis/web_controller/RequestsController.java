@@ -181,19 +181,15 @@ public class RequestsController {
                  consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity getAssetRequestDetailsData(
             @RequestBody
-            final AssetRequestDetailsRequest request,
-            @RequestParam(value = "page")
-            final int page
+            final AssetRequestDetailsRequest request
     ) {
 
         final List< AssetModel > requestedAssets;
         final List< List< String > > requestedAssetsImages;
-        final long totalRecords;
 
         try {
-            requestedAssets = requestSaveServiceApi.getAssetRequestDetailsList(request.getSkus(), page);
+            requestedAssets = requestSaveServiceApi.getAssetRequestDetailsList(request.getSkus());
             requestedAssetsImages = requestSaveServiceApi.getAssetRequestDetailsImages(requestedAssets);
-            totalRecords = requestSaveServiceApi.getAssetRequestDetailsCount(request.getSkus(), page);
         } catch (BadRequestException badRequestException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.BAD_REQUEST.value(),
@@ -211,8 +207,7 @@ public class RequestsController {
         return new ResponseEntity<>(requestsResponseMapper
                                             .produceViewAssetRequestDetailsSuccessResult(HttpStatus.OK.value(),
                                                                                          requestedAssets,
-                                                                                         requestedAssetsImages, page,
-                                                                                         totalRecords
+                                                                                         requestedAssetsImages
                                             ), HttpStatus.OK);
     }
 
