@@ -53,7 +53,7 @@ public class EmployeeDeleteServiceImpl
 
 
     @Override
-    @CacheEvict(value = { "employeesList", "employeeDetailData" },
+    @CacheEvict(value = { "employeesListData", "employeeDetailData" },
                 allEntries = true)
     public void deleteEmployee(
             final String adminUsername, final String employeeUsername
@@ -139,7 +139,7 @@ public class EmployeeDeleteServiceImpl
     }
 
     @Override
-    @CacheEvict(value = { "employeesList", "employeeDetailData" },
+    @CacheEvict(value = { "employeesListData", "employeeDetailData" },
                 allEntries = true)
     public void changeSupervisorOnPreviousSupervisorDeletion(
             final String adminUsername, final String oldSupervisorUsername, final String newSupervisorUsername
