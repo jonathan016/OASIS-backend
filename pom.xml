@@ -45,6 +45,12 @@
         <spring-security-web.version>5.1.2.RELEASE</spring-security-web.version>
         <spring-security-config.version>5.1.2.RELEASE</spring-security-config.version>
 
+        <fongo.version>2.1.0</fongo.version>
+        <nosqlunit-mongodb.version>0.7.6</nosqlunit-mongodb.version>
+        <spring-test.version>5.0.8.RELEASE</spring-test.version>
+        <junit.version>4.12</junit.version>
+        <mockito-all.version>1.10.19</mockito-all.version>
+
         <commons-fileupload.version>1.3.3</commons-fileupload.version>
         <itextpdf.version>5.5.13</itextpdf.version>
 
@@ -162,6 +168,37 @@
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-config</artifactId>
                 <version>${spring-security-config.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.fakemongo</groupId>
+                <artifactId>fongo</artifactId>
+                <version>${fongo.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.lordofthejars</groupId>
+                <artifactId>nosqlunit-mongodb</artifactId>
+                <version>${nosqlunit-mongodb.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-test</artifactId>
+                <version>${spring-test.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>${mockito-all.version}</version>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
