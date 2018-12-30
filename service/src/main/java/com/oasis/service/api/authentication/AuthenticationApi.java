@@ -4,6 +4,6 @@ import org.springframework.security.core.Authentication;
 
 public interface AuthenticationApi {
 
-    Authentication getAuthentication(final String username, final String password);
+    Authentication getAuthentication(String username, final String password);
 
 }
