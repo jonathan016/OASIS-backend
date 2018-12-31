@@ -66,7 +66,7 @@ public class LoginServiceImpl
             final boolean validUsernameWithoutSuffix = username.matches(Regex.REGEX_USERNAME_LOGIN_NO_SUFFIX);
 
             if (!validUsernameWithSuffix && !validUsernameWithoutSuffix) {
-                throw new DataNotFoundException(DATA_NOT_FOUND);
+                throw new BadRequestException(INCORRECT_PARAMETER);
             } else {
                 final EmployeeModel employee;
 
