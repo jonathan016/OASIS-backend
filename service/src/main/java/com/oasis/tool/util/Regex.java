@@ -10,9 +10,9 @@ public class Regex {
 
     public static final String REGEX_EMPLOYEE_NAME = "^([A-Za-z]+ ?)*[A-Za-z]+$";
 
-    public static final String REGEX_USERNAME_LOGIN_SUFFIX = "^[A-Za-z]+(\\.?[A-Za-z]+[0-9]*)*$@gdn-commerce.com$";
+    public static final String REGEX_USERNAME_LOGIN_SUFFIX = "^([A-Za-z]\\.?)+([A-Za-z]+[0-9]*)?@gdn-commerce.com$";
 
-    public static final String REGEX_USERNAME_LOGIN_NO_SUFFIX = "^[A-Za-z]+(\\.?[A-Za-z]+[0-9]*)*$";
+    public static final String REGEX_USERNAME_LOGIN_NO_SUFFIX = "^([A-Za-z]\\.?)+([A-Za-z]+[0-9]*)?$";
 
     public static final String REGEX_REQUEST_SORT = "^[AD]-(status|updatedDate)$";
 
