@@ -49,6 +49,8 @@ public interface EmployeeRepository
 
     boolean existsEmployeeModelByDeletedIsFalseAndUsernameEquals(String username);
 
+    boolean existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndDivisionEquals(String username, String division);
+
     boolean existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndSupervisionIdIsNull(String username);
 
 }

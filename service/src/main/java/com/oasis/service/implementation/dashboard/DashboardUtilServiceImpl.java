@@ -1,6 +1,6 @@
 package com.oasis.service.implementation.dashboard;
 
-import com.oasis.exception.BadRequestException;
+import com.oasis.model.exception.BadRequestException;
 import com.oasis.service.api.dashboard.DashboardRequestUpdateServiceApi;
 import com.oasis.service.api.dashboard.DashboardUtilServiceApi;
 import com.oasis.service.api.requests.RequestUtilServiceApi;
@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.INCORRECT_PARAMETER;
 
 @Service
 @Transactional

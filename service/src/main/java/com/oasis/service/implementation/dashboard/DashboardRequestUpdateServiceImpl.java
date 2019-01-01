@@ -1,8 +1,8 @@
 package com.oasis.service.implementation.dashboard;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
-import com.oasis.model.BaseEntity;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.base.BaseEntity;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
@@ -12,11 +12,11 @@ import com.oasis.service.api.dashboard.DashboardRequestUpdateServiceApi;
 import com.oasis.service.api.dashboard.DashboardUtilServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.service.api.requests.RequestUtilServiceApi;
-import com.oasis.tool.constant.PageSizeConstant;
-import com.oasis.tool.constant.ServiceConstant;
-import com.oasis.tool.constant.StatusConstant;
-import com.oasis.tool.helper.ImageHelper;
-import com.oasis.tool.util.Regex;
+import com.oasis.model.constant.service_constant.PageSizeConstant;
+import com.oasis.model.constant.service_constant.ServiceConstant;
+import com.oasis.model.constant.service_constant.StatusConstant;
+import com.oasis.service.tool.helper.ImageHelper;
+import com.oasis.service.tool.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.PageRequest;
@@ -32,8 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DATA_NOT_FOUND;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.INCORRECT_PARAMETER;
 
 @Service
 @Transactional

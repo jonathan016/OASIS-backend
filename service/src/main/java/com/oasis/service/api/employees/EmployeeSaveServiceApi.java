@@ -1,10 +1,10 @@
 package com.oasis.service.api.employees;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.DuplicateDataException;
-import com.oasis.exception.UnauthorizedOperationException;
-import com.oasis.exception.UserNotAuthenticatedException;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.exception.DuplicateDataException;
+import com.oasis.model.exception.UnauthorizedOperationException;
+import com.oasis.model.exception.UserNotAuthenticatedException;
 import com.oasis.model.entity.EmployeeModel;
 import org.springframework.web.multipart.MultipartFile;
 

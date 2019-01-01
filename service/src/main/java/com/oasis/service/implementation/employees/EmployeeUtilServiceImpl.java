@@ -1,6 +1,6 @@
 package com.oasis.service.implementation.employees;
 
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.entity.AdminModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
@@ -8,9 +8,9 @@ import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
-import com.oasis.tool.constant.ImageDirectoryConstant;
-import com.oasis.tool.constant.RoleConstant;
-import com.oasis.tool.helper.RoleDeterminer;
+import com.oasis.model.constant.service_constant.ImageDirectoryConstant;
+import com.oasis.model.constant.service_constant.RoleConstant;
+import com.oasis.service.tool.helper.RoleDeterminer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

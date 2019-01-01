@@ -1,6 +1,6 @@
 package com.oasis.service.api.assets;
 
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.entity.AssetModel;
 
 import java.util.List;

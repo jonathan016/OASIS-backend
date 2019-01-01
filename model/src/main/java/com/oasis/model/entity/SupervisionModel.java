@@ -1,8 +1,8 @@
 package com.oasis.model.entity;
 
-import com.oasis.model.BaseEntity;
-import com.oasis.model.CollectionName;
-import com.oasis.model.fieldname.SupervisionFieldName;
+import com.oasis.model.base.BaseEntity;
+import com.oasis.model.constant.entity_constant.CollectionName;
+import com.oasis.model.constant.entity_constant.field_name.SupervisionFieldName;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;

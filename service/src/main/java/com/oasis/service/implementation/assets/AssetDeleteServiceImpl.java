@@ -1,7 +1,7 @@
 package com.oasis.service.implementation.assets;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.repository.AssetRepository;
 import com.oasis.service.api.assets.AssetDeleteServiceApi;
@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DATA_NOT_FOUND;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.INCORRECT_PARAMETER;
 
 @Service
 @Transactional

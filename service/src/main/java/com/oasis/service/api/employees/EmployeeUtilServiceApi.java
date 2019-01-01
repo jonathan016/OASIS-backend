@@ -1,6 +1,6 @@
 package com.oasis.service.api.employees;
 
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 

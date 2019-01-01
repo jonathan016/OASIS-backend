@@ -1,20 +1,20 @@
 package com.oasis.service.implementation.assets;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.DuplicateDataException;
-import com.oasis.exception.UnauthorizedOperationException;
-import com.oasis.model.CollectionName;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.exception.DuplicateDataException;
+import com.oasis.model.exception.UnauthorizedOperationException;
+import com.oasis.model.constant.entity_constant.CollectionName;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.LastUniqueIdentifierModel;
-import com.oasis.model.fieldname.AssetFieldName;
+import com.oasis.model.constant.entity_constant.field_name.AssetFieldName;
 import com.oasis.repository.AssetRepository;
 import com.oasis.repository.LastUniqueIdentifierRepository;
 import com.oasis.service.api.assets.AssetSaveServiceApi;
-import com.oasis.tool.constant.ImageDirectoryConstant;
-import com.oasis.tool.constant.PrefixConstant;
-import com.oasis.tool.helper.ImageHelper;
-import com.oasis.tool.util.Regex;
+import com.oasis.model.constant.service_constant.ImageDirectoryConstant;
+import com.oasis.model.constant.service_constant.PrefixConstant;
+import com.oasis.service.tool.helper.ImageHelper;
+import com.oasis.service.tool.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +37,10 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.DUPLICATE_DATA_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.UNAUTHORIZED_OPERATION;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DATA_NOT_FOUND;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DUPLICATE_DATA_FOUND;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.INCORRECT_PARAMETER;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.UNAUTHORIZED_OPERATION;
 
 @Service
 @Transactional
