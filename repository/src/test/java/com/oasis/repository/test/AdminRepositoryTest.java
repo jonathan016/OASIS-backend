@@ -32,10 +32,14 @@ import static org.junit.Assert.assertTrue;
 
 @WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
-@ActiveProfiles({"mvc-test", "db-test", "security-test"})
+@ActiveProfiles({ "mvc-test", "db-test", "security-test" })
 @ContextConfiguration(classes = MvcTestConfiguration.class)
 @EnableMongoRepositories(basePackageClasses = AdminRepository.class)
 public class AdminRepositoryTest {
+
+    final String[] names = new String[]{ "admin", "jonathan", "s.tan", "d.william", "s.dewanto" };
+    final String[] password = new String[]{ "admin", "jonathan", "stellitan", "davidwilliam", "stephendewanto" };
+    final boolean[] deleted = new boolean[]{ false, false, false, true, true };
 
     @Rule
     public MongoDbRule mongoDbRule = newMongoDbRule().defaultSpringMongoDb("oasis-test");
@@ -54,11 +58,13 @@ public class AdminRepositoryTest {
     @Before
     public void setUp() {
 
-        mongoTemplate.insert(generateAdmins(), "admins");
+        mongoTemplate.createCollection("admins");
     }
 
     @Test
     public void findByDeletedIsFalseAndUsernameEquals_AdminExists_AdminNotNull() {
+
+        fillDatabaseWithAdmins();
 
         AdminModel admin = adminRepository.findByDeletedIsFalseAndUsernameEquals("jonathan");
 
@@ -68,6 +74,8 @@ public class AdminRepositoryTest {
     @Test
     public void findByDeletedIsFalseAndUsernameEquals_AdminDoesNotExist_AdminNull() {
 
+        fillDatabaseWithAdmins();
+
         AdminModel admin = adminRepository.findByDeletedIsFalseAndUsernameEquals("a.wan");
 
         assertNull(admin);
@@ -75,6 +83,8 @@ public class AdminRepositoryTest {
 
     @Test
     public void findByDeletedIsFalseAndUsernameEquals_AdminIsDeleted_AdminNull() {
+
+        fillDatabaseWithAdmins();
 
         AdminModel admin = adminRepository.findByDeletedIsFalseAndUsernameEquals("d.william");
 
@@ -84,6 +94,8 @@ public class AdminRepositoryTest {
     @Test
     public void findByDeletedIsTrueAndUsernameEquals_AdminExists_AdminNotNull() {
 
+        fillDatabaseWithAdmins();
+
         AdminModel admin = adminRepository.findByDeletedIsTrueAndUsernameEquals("d.william");
 
         assertNotNull(admin);
@@ -91,6 +103,8 @@ public class AdminRepositoryTest {
 
     @Test
     public void findByDeletedIsTrueAndUsernameEquals_AdminDoesNotExist_AdminNull() {
+
+        fillDatabaseWithAdmins();
 
         AdminModel admin = adminRepository.findByDeletedIsTrueAndUsernameEquals("a.wan");
 
@@ -100,13 +114,17 @@ public class AdminRepositoryTest {
     @Test
     public void findByDeletedIsTrueAndUsernameEquals_AdminIsNotDeleted_AdminNull() {
 
+        fillDatabaseWithAdmins();
+
         AdminModel admin = adminRepository.findByDeletedIsTrueAndUsernameEquals("s.tan");
 
         assertNull(admin);
     }
 
     @Test
-    public void existsAdminModelByDeletedIsFalseAndUsernameEquals_AdminExists_True() {
+    public void existsAdminModelByDeletedIsFalseAndUsernameEquals_AdminExists_ReturnsTrue() {
+
+        fillDatabaseWithAdmins();
 
         boolean adminExist = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals("admin");
 
@@ -114,7 +132,9 @@ public class AdminRepositoryTest {
     }
 
     @Test
-    public void existsAdminModelByDeletedIsFalseAndUsernameEquals_AdminDoesNotExist_False() {
+    public void existsAdminModelByDeletedIsFalseAndUsernameEquals_AdminDoesNotExist_ReturnsFalse() {
+
+        fillDatabaseWithAdmins();
 
         boolean adminExist = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals("a.wan");
 
@@ -122,7 +142,9 @@ public class AdminRepositoryTest {
     }
 
     @Test
-    public void existsAdminModelByDeletedIsFalseAndUsernameEquals_AdminIsDeleted_False() {
+    public void existsAdminModelByDeletedIsFalseAndUsernameEquals_AdminIsDeleted_ReturnsFalse() {
+
+        fillDatabaseWithAdmins();
 
         boolean adminExist = adminRepository.existsAdminModelByDeletedIsFalseAndUsernameEquals("s.dewanto");
 
@@ -130,7 +152,9 @@ public class AdminRepositoryTest {
     }
 
     @Test
-    public void existsAdminModelByDeletedIsTrueAndUsernameEquals_AdminExists_True() {
+    public void existsAdminModelByDeletedIsTrueAndUsernameEquals_AdminExists_ReturnsTrue() {
+
+        fillDatabaseWithAdmins();
 
         boolean adminExist = adminRepository.existsAdminModelByDeletedIsTrueAndUsernameEquals("s.dewanto");
 
@@ -138,7 +162,9 @@ public class AdminRepositoryTest {
     }
 
     @Test
-    public void existsAdminModelByDeletedIsTrueAndUsernameEquals_AdminDoesNotExist_False() {
+    public void existsAdminModelByDeletedIsTrueAndUsernameEquals_AdminDoesNotExist_ReturnsFalse() {
+
+        fillDatabaseWithAdmins();
 
         boolean adminExist = adminRepository.existsAdminModelByDeletedIsTrueAndUsernameEquals("a.wan");
 
@@ -146,7 +172,9 @@ public class AdminRepositoryTest {
     }
 
     @Test
-    public void existsAdminModelByDeletedIsTrueAndUsernameEquals_AdminIsNotDeleted_False() {
+    public void existsAdminModelByDeletedIsTrueAndUsernameEquals_AdminIsNotDeleted_ReturnsFalse() {
+
+        fillDatabaseWithAdmins();
 
         boolean adminExist = adminRepository.existsAdminModelByDeletedIsTrueAndUsernameEquals("jonathan");
 
@@ -156,6 +184,7 @@ public class AdminRepositoryTest {
     @After
     public void tearDown() {
 
+        mongoTemplate.dropCollection("admins");
         mongoTemplate.getDb().drop();
     }
 
@@ -163,16 +192,12 @@ public class AdminRepositoryTest {
 
         List< AdminModel > admins = new ArrayList<>();
 
-        String[] names = new String[]{"admin", "jonathan", "s.tan", "d.william", "s.dewanto"};
-        String[] password = new String[]{"admin", "jonathan", "stellitan", "davidwilliam", "stephendewanto"};
-        boolean[] deleted = new boolean[]{false,false,false,true,true};
-
-        for(int i = 0; i < names.length; i++) {
+        for (int i = 0; i < names.length; i++) {
             AdminModel admin = new AdminModel();
 
-            admin.setUsername(names[i]);
-            admin.setPassword(encoder.encode(password[i]));
-            admin.setDeleted(deleted[i]);
+            admin.setUsername(names[ i ]);
+            admin.setPassword(encoder.encode(password[ i ]));
+            admin.setDeleted(deleted[ i ]);
             admin.setCreatedDate(new Date());
             admin.setUpdatedDate(new Date());
 
@@ -180,8 +205,8 @@ public class AdminRepositoryTest {
                 admin.setCreatedBy("");
                 admin.setUpdatedBy("");
             } else {
-                admin.setCreatedBy(names[0]);
-                admin.setUpdatedBy(names[0]);
+                admin.setCreatedBy(names[ 0 ]);
+                admin.setUpdatedBy(names[ 0 ]);
             }
 
             admins.add(admin);
@@ -189,4 +214,12 @@ public class AdminRepositoryTest {
 
         return admins;
     }
+
+    private void fillDatabaseWithAdmins() {
+
+        for (final AdminModel admin : generateAdmins()) {
+            mongoTemplate.insert(admin, "admins");
+        }
+    }
+
 }
