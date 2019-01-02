@@ -1,4 +1,4 @@
-package com.oasis.web_controller.test;
+package com.oasis.web_controller.test.controller;
 
 import com.oasis.model.constant.service_constant.RoleConstant;
 import com.oasis.model.exception.BadRequestException;

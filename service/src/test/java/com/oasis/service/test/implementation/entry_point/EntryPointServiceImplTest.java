@@ -1,4 +1,4 @@
-package com.oasis.service.test.login;
+package com.oasis.service.test.implementation.entry_point;
 
 import com.oasis.model.constant.service_constant.RoleConstant;
 import com.oasis.model.entity.EmployeeModel;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings("Duplicates")
 @RunWith(MockitoJUnitRunner.class)
-public class EntryPointServiceTest {
+public class EntryPointServiceImplTest {
 
     private final String[] notDeletedUsernames = new String[]{ "o.s.kindy", "r.sianipar", "d.william" };
     private final String[] deletedUsernames = new String[]{ "a.p.lim", "s.dewanto", "a.wijaya" };

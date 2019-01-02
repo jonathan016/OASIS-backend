@@ -46,13 +46,13 @@ public class AdminRepositoryTest {
     @Autowired
     private ApplicationContext applicationContext;
 
-
-
     @Inject
     private AdminRepository adminRepository;
 
+
+
     @Before
-    public void init() {
+    public void setUp() {
 
         mongoTemplate.insert(generateAdmins(), "admins");
     }
@@ -154,7 +154,7 @@ public class AdminRepositoryTest {
     }
 
     @After
-    public void destroy() {
+    public void tearDown() {
 
         mongoTemplate.getDb().drop();
     }
