@@ -1,19 +1,19 @@
 package com.oasis.web_controller.test;
 
-import com.oasis.configuration.MvcConfiguration;
-import com.oasis.configuration.WebSecurityConfiguration;
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.UserNotAuthenticatedException;
-import com.oasis.response_mapper.FailedResponseMapper;
-import com.oasis.response_mapper.LoginResponseMapper;
-import com.oasis.service.api.login.LoginServiceApi;
-import com.oasis.tool.constant.RoleConstant;
-import com.oasis.tool.helper.ActiveComponentManager;
+import com.oasis.model.constant.service_constant.RoleConstant;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.exception.UserNotAuthenticatedException;
+import com.oasis.service.api.entry_point.EntryPointServiceApi;
+import com.oasis.service.tool.helper.ActiveComponentManager;
+import com.oasis.web_controller.configuration.MvcConfiguration;
+import com.oasis.web_controller.configuration.WebSecurityConfiguration;
+import com.oasis.web_controller.mapper.response.EntryPointResponseMapper;
+import com.oasis.web_controller.mapper.response.FailedResponseMapper;
 import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.NoPagingResponse;
 import com.oasis.web_model.response.failed.FailedResponse;
-import com.oasis.web_model.response.success.login.LoginResponse;
+import com.oasis.web_model.response.success.entry_point.EntryPointResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,10 +31,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.UNAUTHENTICATED_USER;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.UNAUTHENTICATED_USER;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -47,19 +44,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebAppConfiguration
 @ContextConfiguration(classes = { WebSecurityConfiguration.class, MvcConfiguration.class })
 @RunWith(SpringJUnit4ClassRunner.class)
-public class LoginControllerTest {
+public class EntryPointControllerTest {
 
     final private String incorrectMappingOrMethodMessage = "Incorrect mapping/method!";
 
     private MockMvc mockMvc;
 
     @Mock
-    private LoginResponseMapper loginResponseMapper;
+    private EntryPointResponseMapper entryPointResponseMapper;
     @Mock
     private FailedResponseMapper failedResponseMapper;
 
     @Mock
-    private LoginServiceApi loginServiceApi;
+    private EntryPointServiceApi entryPointServiceApi;
 
     @Mock
     private ActiveComponentManager activeComponentManager;
@@ -75,23 +72,27 @@ public class LoginControllerTest {
     }
 
     @Test
-    public void getLoginData_UserIsAuthenticated_ReturnsLoginResponse()
+    public void getLoginData_UserIsAuthenticatedWithoutPhoto_ReturnsLoginResponse()
             throws
             Exception {
 
-        mockLoginRequest("jonathan", "Jonathan",
-                         "\"http://localhost:8085/oasis/api/employees/jonathan/photo_not_found?extension=jpg\"",
-                         RoleConstant.ROLE_ADMINISTRATOR
-        );
-        mockSuccessResponse();
+        final String username = "admin";
+        final String password = "GDNadmin";
+        final String name = "Administrator";
+        final String role = RoleConstant.ROLE_ADMINISTRATOR;
 
-        mockMvc.perform(post("/api/login").with(httpBasic("jonathan", "jonathanw"))).andExpect(status().isOk())
+        mockLoginRequest(username, name,
+                         "\"http://localhost:8085/oasis/api/employees/jonathan/photo_not_found?extension=jpg\"",
+                         role
+        );
+        mockSuccessResponse(username, name, role);
+
+        mockMvc.perform(post("/api/login").with(httpBasic(username, password))).andExpect(status().isOk())
                .andExpect(
                        content().string("{\"code\":200,\"success\":\"true\",\"components\":null," +
-                                        "\"value\":{\"username\":\"jonathan\",\"name\":\"Jonathan\"," +
-                                        "\"photo\":\"http://localhost:8085/oasis/api/employees/jonathan" +
-                                        "/photo_not_found" +
-                                        "?extension=jpg\",\"role\":\"ADMINISTRATOR\"}}"
+                                        "\"value\":{\"username\":\"" + username + "\",\"name\":\"" + name + "\"," +
+                                        "\"photo\":\"http://localhost:8085/oasis/api/employees/admin" +
+                                        "/photo_not_found?extension=jpg\",\"role\":\"" + role + "\"}}"
                        ));
     }
 
@@ -128,11 +129,11 @@ public class LoginControllerTest {
                         "\"value\":{\"errorCode\":\"BAD_REQUEST\",\"errorMessage\":\"Incorrect mapping/method!\"}}"
                 ));
 
-//        verify(failedResponseMapper, times(1)).produceFailedResult(HttpStatus.BAD_REQUEST.value(),
-//                                                                   HttpStatus.BAD_REQUEST.name(),
-//                                                                   incorrectMappingOrMethodMessage, null
-//        );
-//        verifyNoMoreInteractions(failedResponseMapper);
+        //        verify(failedResponseMapper, times(1)).produceFailedResult(HttpStatus.BAD_REQUEST.value(),
+        //                                                                   HttpStatus.BAD_REQUEST.name(),
+        //                                                                   incorrectMappingOrMethodMessage, null
+        //        );
+        //        verifyNoMoreInteractions(failedResponseMapper);
     }
 
     private void mockLoginRequest(final String username, final String name, final String photoURL, final String role)
@@ -148,24 +149,23 @@ public class LoginControllerTest {
         data.put("photo", photoURL);
         data.put("role", role);
 
-        when(loginServiceApi.getLoginData(username)).thenReturn(data);
+        when(entryPointServiceApi.getLoginData(username)).thenReturn(data);
     }
 
-    private void mockSuccessResponse() {
+    private void mockSuccessResponse(final String username, final String name, final String role) {
 
-        NoPagingResponse< LoginResponse > successResponse = new NoPagingResponse<>();
+        NoPagingResponse< EntryPointResponse > successResponse = new NoPagingResponse<>();
 
         successResponse.setCode(HttpStatus.OK.value());
         successResponse.setSuccess(ResponseStatus.SUCCESS);
-        successResponse.setValue(new LoginResponse("jonathan", "Jonathan",
-                                                   "http://localhost:8085/oasis/api/employees/jonathan" +
-                                                   "/photo_not_found?extension=jpg", RoleConstant.ROLE_ADMINISTRATOR
+        successResponse.setValue(new EntryPointResponse(username, name,
+                                                        "http://localhost:8085/oasis/api/employees/" + username +
+                                                        "/photo_not_found?extension=jpg", role
         ));
 
-        when(loginResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), "jonathan", "Jonathan",
-                                                             "http://localhost:8085/oasis/api/employees/jonathan" +
-                                                             "/photo_not_found?extension=jpg",
-                                                             RoleConstant.ROLE_ADMINISTRATOR
+        when(entryPointResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), username, name,
+                                                                  "http://localhost:8085/oasis/api/employees/" +
+                                                                  username + "/photo_not_found?extension=jpg", role
         )).thenReturn(successResponse);
     }
 

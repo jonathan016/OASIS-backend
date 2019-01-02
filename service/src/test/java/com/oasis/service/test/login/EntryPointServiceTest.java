@@ -1,13 +1,13 @@
 package com.oasis.service.test.login;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.constant.service_constant.RoleConstant;
 import com.oasis.model.entity.EmployeeModel;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.service.api.employees.EmployeeDetailServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
-import com.oasis.service.implementation.login.LoginServiceImpl;
-import com.oasis.tool.constant.RoleConstant;
-import com.oasis.tool.helper.RoleDeterminer;
+import com.oasis.service.implementation.entry_point.EntryPointServiceImpl;
+import com.oasis.service.tool.helper.RoleDeterminer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings("Duplicates")
 @RunWith(MockitoJUnitRunner.class)
-public class LoginServiceTest {
+public class EntryPointServiceTest {
 
     private final String[] notDeletedUsernames = new String[]{ "o.s.kindy", "r.sianipar", "d.william" };
     private final String[] deletedUsernames = new String[]{ "a.p.lim", "s.dewanto", "a.wijaya" };
@@ -46,7 +46,7 @@ public class LoginServiceTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
     @InjectMocks
-    private LoginServiceImpl loginService;
+    private EntryPointServiceImpl entryPointService;
     @Mock
     private EmployeeDetailServiceApi employeeDetailServiceApi;
     @Mock
@@ -66,7 +66,7 @@ public class LoginServiceTest {
                                   "/photo_not_found?extension=jpg", roles[ i ]
             );
 
-            Map< String, String > loginData = loginService.getLoginData(notDeletedUsernames[ i ]);
+            Map< String, String > loginData = entryPointService.getLoginData(notDeletedUsernames[ i ]);
 
             assertEquals(notDeletedUsernames[ i ], loginData.get("username"));
             assertEquals(notDeletedNames[ i ].split(" ")[ 0 ], loginData.get("name"));
@@ -102,7 +102,7 @@ public class LoginServiceTest {
         );
 
         thrown.expect(DataNotFoundException.class);
-        loginService.getLoginData(deletedUsernames[ 0 ]);
+        entryPointService.getLoginData(deletedUsernames[ 0 ]);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class LoginServiceTest {
         );
 
         thrown.expect(DataNotFoundException.class);
-        loginService.getLoginData(deletedUsernames[ 1 ]);
+        entryPointService.getLoginData(deletedUsernames[ 1 ]);
     }
 
     @Test
@@ -132,7 +132,7 @@ public class LoginServiceTest {
         );
 
         thrown.expect(DataNotFoundException.class);
-        loginService.getLoginData(deletedUsernames[ 2 ]);
+        entryPointService.getLoginData(deletedUsernames[ 2 ]);
     }
 
     @Test
@@ -147,7 +147,7 @@ public class LoginServiceTest {
                                   "/photo_not_found?extension=jpg", roles[ i ]
             );
 
-            Map< String, String > loginData = loginService.getLoginData(notDeletedUsernames[ i ]);
+            Map< String, String > loginData = entryPointService.getLoginData(notDeletedUsernames[ i ]);
 
             assertEquals(notDeletedUsernames[ i ], loginData.get("username"));
             assertEquals(notDeletedNames[ i ].split(" ")[ 0 ], loginData.get("name"));
@@ -183,7 +183,7 @@ public class LoginServiceTest {
         );
 
         thrown.expect(DataNotFoundException.class);
-        loginService.getLoginData(nonExistingUsername);
+        entryPointService.getLoginData(nonExistingUsername);
     }
 
     @Test
@@ -193,7 +193,7 @@ public class LoginServiceTest {
             BadRequestException {
 
         thrown.expect(DataNotFoundException.class);
-        loginService.getLoginData(nonExistingUsername);
+        entryPointService.getLoginData(nonExistingUsername);
     }
 
     @Test
@@ -203,7 +203,7 @@ public class LoginServiceTest {
             BadRequestException {
 
         thrown.expect(BadRequestException.class);
-        loginService.getLoginData(null);
+        entryPointService.getLoginData(null);
     }
 
     @Test
@@ -220,7 +220,7 @@ public class LoginServiceTest {
                                   roles[ i ]
             );
 
-            Map< String, String > loginData = loginService.getLoginData(notDeletedUsernames[ i ]);
+            Map< String, String > loginData = entryPointService.getLoginData(notDeletedUsernames[ i ]);
 
             assertEquals(notDeletedUsernames[ i ], loginData.get("username"));
             assertEquals(notDeletedNames[ i ].split(" ")[ 0 ], loginData.get("name"));
@@ -260,7 +260,7 @@ public class LoginServiceTest {
         );
 
         thrown.expect(DataNotFoundException.class);
-        loginService.getLoginData(deletedUsernames[ 0 ]);
+        entryPointService.getLoginData(deletedUsernames[ 0 ]);
     }
 
     @Test
@@ -277,7 +277,7 @@ public class LoginServiceTest {
         );
 
         thrown.expect(DataNotFoundException.class);
-        loginService.getLoginData(deletedUsernames[ 1 ]);
+        entryPointService.getLoginData(deletedUsernames[ 1 ]);
     }
 
     @Test
@@ -294,7 +294,7 @@ public class LoginServiceTest {
         );
 
         thrown.expect(DataNotFoundException.class);
-        loginService.getLoginData(deletedUsernames[ 2 ]);
+        entryPointService.getLoginData(deletedUsernames[ 2 ]);
     }
 
     private void mockLoginEmployeeData(
