@@ -85,7 +85,9 @@ public class EmployeeSaveServiceImpl
         }
 
         if (!addEmployeeOperation) {
-            supervisorUsername = supervisorUsername.replace(" (Default)", "");
+            if (supervisorUsername.contains(" ")) {
+                throw new BadRequestException(INCORRECT_PARAMETER);
+            }
         }
 
         if (!isSaveEmployeeParametersProper(photoGiven, employee, supervisorUsername, addEmployeeOperation)) {
@@ -241,20 +243,16 @@ public class EmployeeSaveServiceImpl
                         username, division)) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else {
-                    List< String > supervisedEmployeesUsernames = new ArrayList<>();
-
                     final List< SupervisionModel > supervisions = supervisionRepository
                             .findAllByDeletedIsFalseAndSupervisorUsernameEquals(username);
 
-                    for (final SupervisionModel supervision : supervisions) {
-                        supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
-                        final List< SupervisionModel > supervisionsBySupervisedEmployee = supervisionRepository
-                                .findAllByDeletedIsFalseAndSupervisorUsernameEquals(supervision.getEmployeeUsername());
+                    final List< EmployeeModel > supervisedEmployees = new ArrayList<>(
+                            recursivelyGetSupervisedEmployees(supervisions));
 
-                        for (final SupervisionModel supervisionBySupervisedEmployee :
-                                supervisionsBySupervisedEmployee) {
-                            supervisedEmployeesUsernames.add(supervisionBySupervisedEmployee.getEmployeeUsername());
-                        }
+                    List< String > supervisedEmployeesUsernames = new ArrayList<>();
+
+                    for (final EmployeeModel supervisedEmployee : supervisedEmployees) {
+                        supervisedEmployeesUsernames.add(supervisedEmployee.getUsername());
                     }
 
                     Collections.sort(supervisedEmployeesUsernames);
@@ -513,6 +511,29 @@ public class EmployeeSaveServiceImpl
         }
 
         return true;
+    }
+
+    private Set< EmployeeModel > recursivelyGetSupervisedEmployees(
+            final List< SupervisionModel > supervisionsByUsername
+    ) {
+
+        Set< EmployeeModel > supervisedEmployees = new LinkedHashSet<>();
+
+        for (final SupervisionModel supervision : supervisionsByUsername) {
+            supervisedEmployees.add(
+                    employeeRepository.findByDeletedIsFalseAndUsernameEquals(supervision.getEmployeeUsername()));
+
+            final String supervisedEmployeeUsername = supervision.getEmployeeUsername();
+            final List< SupervisionModel > supervisionsBySupervisedEmployee =
+                    supervisionRepository.findAllByDeletedIsFalseAndSupervisorUsernameEquals(
+                            supervisedEmployeeUsername);
+
+            if (!supervisionsBySupervisedEmployee.isEmpty()) {
+                supervisedEmployees.addAll(recursivelyGetSupervisedEmployees(supervisionsBySupervisedEmployee));
+            }
+        }
+
+        return supervisedEmployees;
     }
 
 }
