@@ -4,7 +4,6 @@ import com.oasis.web_controller.configuration.DatabaseConfiguration;
 import com.oasis.web_controller.configuration.MultipartResolverConfiguration;
 import com.oasis.web_controller.configuration.MvcConfiguration;
 import com.oasis.web_controller.configuration.RedisConfiguration;
-import com.oasis.web_controller.configuration.ResourceHandlerConfiguration;
 import com.oasis.web_controller.configuration.WebSecurityConfiguration;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
@@ -18,7 +17,6 @@ public class ApplicationInitializer
                 DatabaseConfiguration.class,
                 MultipartResolverConfiguration.class,
                 RedisConfiguration.class,
-                ResourceHandlerConfiguration.class,
                 WebSecurityConfiguration.class
         };
     }

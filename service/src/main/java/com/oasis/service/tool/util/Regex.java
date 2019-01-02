@@ -16,7 +16,7 @@ public class Regex {
 
     public static final String REGEX_REQUEST_SORT = "^[AD]-(status|updatedDate)$";
 
-    public static final String REGEX_JPEG_FILE_NAME = "^.+\\.[jJ][pP][eE][gG]$";
+    public static final String REGEX_JPEG_FILE_NAME = "^.+\\.[jJ][pP][eE]?[gG]$";
 
     public static final String REGEX_PNG_FILE_NAME = "^.+\\.[pP][nN][gG]$";
 

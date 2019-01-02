@@ -45,7 +45,6 @@ public class EmployeesRequestMapper {
         final SaveEmployeeRequest.Employee request;
 
         try {
-
             final JsonNode employee = new ObjectMapper().readTree(rawEmployeeData).path("employee");
 
             if (addEmployeeOperation) {

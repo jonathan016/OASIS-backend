@@ -23,7 +23,7 @@ public class RequestModel
     private String sku;
 
     @Field(RequestFieldName.QUANTITY)
-    private int quantity;
+    private long quantity;
 
     @Field(RequestFieldName.STATUS)
     private String status;
