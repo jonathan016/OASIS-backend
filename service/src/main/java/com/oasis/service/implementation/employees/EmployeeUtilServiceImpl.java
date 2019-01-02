@@ -224,6 +224,30 @@ public class EmployeeUtilServiceImpl
     }
 
     @Override
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    public boolean hasCyclicSupervising(
+            final String employeeUsername, String supervisorUsername
+    ) {
+
+        final String supervisorOfSupervisorUsername;
+
+        try {
+            supervisorOfSupervisorUsername = supervisionRepository
+                    .findByDeletedIsFalseAndEmployeeUsernameEquals(supervisorUsername).getSupervisorUsername();
+        } catch (NullPointerException exception) {
+            // Entering this block means for the specified supervisorUsername, there is no supervision, inferring
+            // that the specified supervisorUsername is the username of top of the top administrator. This is why
+            // upon catching NullPointerException due to call of .getSupervisorUsername() on null object, we return
+            // false, as there can be no cyclic supervising for top of the top administrator.
+            return false;
+        }
+
+        final boolean employeeIsSupervisorOfSupervisor = supervisorOfSupervisorUsername.equals(employeeUsername);
+
+        return employeeIsSupervisorOfSupervisor;
+    }
+
+    @Override
     public boolean isEmployeeTopAdministrator(final String username) {
 
         return employeeRepository.findByDeletedIsFalseAndUsernameEquals(username).getSupervisionId() == null;

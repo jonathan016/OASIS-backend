@@ -24,6 +24,10 @@ public interface EmployeeUtilServiceApi {
             throws
             DataNotFoundException;
 
+    boolean hasCyclicSupervising(
+            final String employeeUsername, String supervisorUsername
+    );
+
     boolean isEmployeeTopAdministrator(final String username);
 
     EmployeeModel findByDeletedIsFalseAndUsername(final String username);
