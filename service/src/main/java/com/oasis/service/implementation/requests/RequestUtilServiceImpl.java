@@ -23,9 +23,9 @@ public class RequestUtilServiceImpl
 
 
     @Override
-    public boolean existsRequestModelsBySku(final String sku) {
+    public boolean existsRequestModelsBySkuAndStatusIn(final String sku, final List< String > statuses) {
 
-        return requestRepository.existsRequestModelsBySkuEquals(sku);
+        return requestRepository.existsRequestModelsBySkuEqualsAndStatusIn(sku, statuses);
     }
 
     @Override

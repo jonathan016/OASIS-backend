@@ -20,7 +20,7 @@ public interface RequestRepository
             String username, String status
     );
 
-    boolean existsRequestModelsBySkuEquals(String sku);
+    boolean existsRequestModelsBySkuEqualsAndStatusIn(String sku, List< String > statuses);
 
     List< RequestModel > findAllByUsernameEqualsAndStatusContainsOrderByStatusAsc(
             String username, String status

@@ -1,19 +1,19 @@
 package com.oasis.web_controller.controller;
 
+import com.oasis.model.entity.AssetModel;
 import com.oasis.model.exception.BadRequestException;
 import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.exception.DuplicateDataException;
 import com.oasis.model.exception.UnauthorizedOperationException;
-import com.oasis.model.entity.AssetModel;
-import com.oasis.web_controller.mapper.request.AssetsRequestMapper;
-import com.oasis.web_controller.mapper.response.AssetsResponseMapper;
-import com.oasis.web_controller.mapper.response.FailedResponseMapper;
 import com.oasis.service.api.assets.AssetDeleteServiceApi;
 import com.oasis.service.api.assets.AssetDetailServiceApi;
 import com.oasis.service.api.assets.AssetListServiceApi;
 import com.oasis.service.api.assets.AssetSaveServiceApi;
 import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.service.tool.helper.ActiveComponentManager;
+import com.oasis.web_controller.mapper.request.AssetsRequestMapper;
+import com.oasis.web_controller.mapper.response.AssetsResponseMapper;
+import com.oasis.web_controller.mapper.response.FailedResponseMapper;
 import com.oasis.web_model.constant.APIMappingValue;
 import com.oasis.web_model.request.assets.DeleteAssetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,6 +256,11 @@ public class AssetsController {
                     HttpStatus.BAD_REQUEST.value(), badRequestException.getErrorCode(),
                     badRequestException.getErrorMessage(), null
             ), HttpStatus.BAD_REQUEST);
+        } catch (UnauthorizedOperationException unauthorizedOperationException) {
+            return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
+                    HttpStatus.UNAUTHORIZED.value(), unauthorizedOperationException.getErrorCode(),
+                    unauthorizedOperationException.getErrorMessage(), null
+            ), HttpStatus.UNAUTHORIZED);
         }
 
         return new ResponseEntity<>(

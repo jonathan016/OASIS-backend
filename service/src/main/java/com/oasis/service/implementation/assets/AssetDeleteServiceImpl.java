@@ -1,8 +1,9 @@
 package com.oasis.service.implementation.assets;
 
+import com.oasis.model.entity.AssetModel;
 import com.oasis.model.exception.BadRequestException;
 import com.oasis.model.exception.DataNotFoundException;
-import com.oasis.model.entity.AssetModel;
+import com.oasis.model.exception.UnauthorizedOperationException;
 import com.oasis.repository.AssetRepository;
 import com.oasis.service.api.assets.AssetDeleteServiceApi;
 import com.oasis.service.api.requests.RequestUtilServiceApi;
@@ -12,10 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DATA_NOT_FOUND;
 import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.INCORRECT_PARAMETER;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.UNAUTHORIZED_OPERATION;
+import static com.oasis.model.constant.service_constant.StatusConstant.STATUS_ACCEPTED;
+import static com.oasis.model.constant.service_constant.StatusConstant.STATUS_DELIVERED;
 
 @Service
 @Transactional
@@ -40,7 +45,8 @@ public class AssetDeleteServiceImpl
     )
             throws
             BadRequestException,
-            DataNotFoundException {
+            DataNotFoundException,
+            UnauthorizedOperationException {
 
         if (skus.isEmpty() || skus.contains(null)) {
             throw new BadRequestException(INCORRECT_PARAMETER);
@@ -49,12 +55,15 @@ public class AssetDeleteServiceImpl
 
             for (final String sku : skus) {
                 final AssetModel asset = assetRepository.findByDeletedIsFalseAndSkuEquals(sku);
-                final boolean assetRequested = requestUtilServiceApi.existsRequestModelsBySku(sku);
+                final boolean assetRequested = requestUtilServiceApi.existsRequestModelsBySkuAndStatusIn(
+                        sku,
+                        Arrays.asList(STATUS_ACCEPTED, STATUS_DELIVERED)
+                );
 
                 if (asset == null) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else if (assetRequested) {
-                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                    throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
                 } else {
                     selectedAssets.add(asset);
                 }

@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface RequestUtilServiceApi {
 
-    boolean existsRequestModelsBySku(final String sku);
+    boolean existsRequestModelsBySkuAndStatusIn(final String sku, final List< String > statuses);
 
     List< RequestModel > findAllByUsernameAndStatus(final String username, final String status);
 
