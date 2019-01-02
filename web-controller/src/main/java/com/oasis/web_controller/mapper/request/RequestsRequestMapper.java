@@ -22,7 +22,7 @@ public class RequestsRequestMapper {
             requestModel.set_id(requestObject.get_id());
             requestModel.setUsername(username);
             requestModel.setSku(requestObject.getSku());
-            requestModel.setQuantity((int) requestObject.getQuantity());
+            requestModel.setQuantity(requestObject.getQuantity());
             requestModel.setStatus(requestObject.getStatus());
             requestModel.setRequestNote(requestObject.getRequestNote());
             requestModel.setTransactionNote(requestObject.getTransactionNote());

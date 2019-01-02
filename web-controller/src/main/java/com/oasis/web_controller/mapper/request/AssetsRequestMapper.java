@@ -2,8 +2,8 @@ package com.oasis.web_controller.mapper.request;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oasis.model.exception.BadRequestException;
 import com.oasis.model.entity.AssetModel;
+import com.oasis.model.exception.BadRequestException;
 import com.oasis.web_model.request.assets.SaveAssetRequest;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
@@ -18,7 +18,7 @@ import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.IN
 @Component
 public class AssetsRequestMapper {
 
-    private Logger logger = LoggerFactory.getLogger(EmployeesRequestMapper.class);
+    private Logger logger = LoggerFactory.getLogger(AssetsRequestMapper.class);
 
     public boolean isAddAssetOperationFromRawData(final String rawAssetData)
             throws
@@ -44,15 +44,14 @@ public class AssetsRequestMapper {
         final SaveAssetRequest.Asset request;
 
         try {
-
             JsonNode asset = new ObjectMapper().readTree(rawAssetData).path("asset");
 
             if (addAssetOperation) {
                 request = new SaveAssetRequest.Asset(null, asset.path("name").textValue(),
                                                      asset.path("location").textValue(),
                                                      asset.path("brand").textValue(), asset.path("type").textValue(),
-                                                     Long.valueOf(asset.path("quantity").textValue()),
-                                                     Double.valueOf(asset.path("price").textValue()),
+                                                     asset.path("quantity").asLong(),
+                                                     asset.path("price").asDouble(),
                                                      asset.path("expendable").asBoolean()
                 );
             } else {
@@ -60,14 +59,14 @@ public class AssetsRequestMapper {
                                                      asset.path("location").textValue(),
                                                      asset.path("brand").textValue(),
                                                      asset.path("type").textValue(),
-                                                     Long.valueOf(asset.path("quantity").textValue()),
-                                                     Double.valueOf(asset.path("price").textValue()),
+                                                     asset.path("quantity").asLong(),
+                                                     asset.path("price").asDouble(),
                                                      asset.path("expendable").asBoolean()
                 );
             }
         } catch (IOException | NumberFormatException exception) {
             logger.error("Failed to process data as IOException or NumberFormatException occurred with message: " +
-                         exception.getMessage());
+                         exception.getCause());
             return null;
         }
 

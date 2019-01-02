@@ -1,18 +1,18 @@
 package com.oasis.service.implementation.assets;
 
+import com.oasis.model.constant.entity_constant.CollectionName;
+import com.oasis.model.constant.entity_constant.field_name.AssetFieldName;
+import com.oasis.model.constant.service_constant.ImageDirectoryConstant;
+import com.oasis.model.constant.service_constant.PrefixConstant;
+import com.oasis.model.entity.AssetModel;
+import com.oasis.model.entity.LastUniqueIdentifierModel;
 import com.oasis.model.exception.BadRequestException;
 import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.exception.DuplicateDataException;
 import com.oasis.model.exception.UnauthorizedOperationException;
-import com.oasis.model.constant.entity_constant.CollectionName;
-import com.oasis.model.entity.AssetModel;
-import com.oasis.model.entity.LastUniqueIdentifierModel;
-import com.oasis.model.constant.entity_constant.field_name.AssetFieldName;
 import com.oasis.repository.AssetRepository;
 import com.oasis.repository.LastUniqueIdentifierRepository;
 import com.oasis.service.api.assets.AssetSaveServiceApi;
-import com.oasis.model.constant.service_constant.ImageDirectoryConstant;
-import com.oasis.model.constant.service_constant.PrefixConstant;
 import com.oasis.service.tool.helper.ImageHelper;
 import com.oasis.service.tool.util.Regex;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.UN
 public class AssetSaveServiceImpl
         implements AssetSaveServiceApi {
 
-    private Logger logger = LoggerFactory.getLogger(AssetUtilServiceImpl.class);
+    private Logger logger = LoggerFactory.getLogger(AssetSaveServiceImpl.class);
 
     @Autowired
     private AssetRepository assetRepository;
