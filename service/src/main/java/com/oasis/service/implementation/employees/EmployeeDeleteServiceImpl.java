@@ -165,40 +165,44 @@ public class EmployeeDeleteServiceImpl
             if (!validAdministrator || selfSupervisorChangeOnDeletionAttempt) {
                 throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
             } else {
-                final boolean employeeWithOldSupervisorUsernameExists = employeeRepository
-                        .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(oldSupervisorUsername);
-                final boolean employeeWithNewSupervisorUsernameExists = employeeRepository
-                        .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(newSupervisorUsername);
-
-                if (!employeeWithOldSupervisorUsernameExists || !employeeWithNewSupervisorUsernameExists) {
-                    throw new DataNotFoundException(DATA_NOT_FOUND);
+                if (newSupervisorUsername.contains(" ")) {
+                    throw new BadRequestException(INCORRECT_PARAMETER);
                 } else {
-                    List< SupervisionModel > supervisions = supervisionRepository
-                            .findAllByDeletedIsFalseAndSupervisorUsernameEquals(oldSupervisorUsername);
+                    final boolean employeeWithOldSupervisorUsernameExists = employeeRepository
+                            .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(oldSupervisorUsername);
+                    final boolean employeeWithNewSupervisorUsernameExists = employeeRepository
+                            .existsEmployeeModelByDeletedIsFalseAndUsernameEquals(newSupervisorUsername);
 
-                    final boolean employeeWithOldSupervisorUsernameDoesNotSupervise = supervisions.isEmpty();
-
-                    if (employeeWithOldSupervisorUsernameDoesNotSupervise) {
-                        throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                    if (!employeeWithOldSupervisorUsernameExists || !employeeWithNewSupervisorUsernameExists) {
+                        throw new DataNotFoundException(DATA_NOT_FOUND);
                     } else {
-                        final List< String > supervisedEmployeesUsernames = new ArrayList<>();
+                        List< SupervisionModel > supervisions = supervisionRepository
+                                .findAllByDeletedIsFalseAndSupervisorUsernameEquals(oldSupervisorUsername);
 
-                        for (final SupervisionModel supervision : supervisions) {
-                            supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
-                        }
+                        final boolean employeeWithOldSupervisorUsernameDoesNotSupervise = supervisions.isEmpty();
 
-                        for (final String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
-                            if (employeeUtilServiceApi.hasCyclicSupervising(
-                                    supervisedEmployeeUsername,
-                                    newSupervisorUsername
-                            )) {
-                                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                        if (employeeWithOldSupervisorUsernameDoesNotSupervise) {
+                            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                        } else {
+                            final List< String > supervisedEmployeesUsernames = new ArrayList<>();
+
+                            for (final SupervisionModel supervision : supervisions) {
+                                supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
                             }
-                        }
 
-                        employeeUtilServiceApi.demotePreviousSupervisorFromAdminIfNecessary(
-                                adminUsername, oldSupervisorUsername, newSupervisorUsername, supervisions
-                        );
+                            for (final String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
+                                if (employeeUtilServiceApi.hasCyclicSupervising(
+                                        supervisedEmployeeUsername,
+                                        newSupervisorUsername
+                                )) {
+                                    throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                                }
+                            }
+
+                            employeeUtilServiceApi.demotePreviousSupervisorFromAdminIfNecessary(
+                                    adminUsername, oldSupervisorUsername, newSupervisorUsername, supervisions
+                            );
+                        }
                     }
                 }
             }
