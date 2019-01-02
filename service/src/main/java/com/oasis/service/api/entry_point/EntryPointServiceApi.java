@@ -1,4 +1,4 @@
-package com.oasis.service.api.endpoint;
+package com.oasis.service.api.entry_point;
 
 import com.oasis.model.exception.BadRequestException;
 import com.oasis.model.exception.DataNotFoundException;
@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.User;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 
-public interface EndpointServiceApi {
+public interface EntryPointServiceApi {
 
     Map< String, String > getLoginData(
             final String username

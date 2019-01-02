@@ -4,8 +4,8 @@ import com.oasis.model.exception.BadRequestException;
 import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.exception.UserNotAuthenticatedException;
 import com.oasis.web_controller.mapper.response.FailedResponseMapper;
-import com.oasis.web_controller.mapper.response.EndpointResponseMapper;
-import com.oasis.service.api.endpoint.EndpointServiceApi;
+import com.oasis.web_controller.mapper.response.EntryPointResponseMapper;
+import com.oasis.service.api.entry_point.EntryPointServiceApi;
 import com.oasis.service.tool.helper.ActiveComponentManager;
 import com.oasis.web_model.constant.APIMappingValue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +32,15 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @CrossOrigin(origins = APIMappingValue.CROSS_ORIGIN_LINK)
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-public class EndpointController {
+public class EntryPointController {
 
     @Autowired
-    private EndpointResponseMapper endpointResponseMapper;
+    private EntryPointResponseMapper entryPointResponseMapper;
     @Autowired
     private FailedResponseMapper failedResponseMapper;
 
     @Autowired
-    private EndpointServiceApi endpointServiceApi;
+    private EntryPointServiceApi entryPointServiceApi;
 
     @Autowired
     private ActiveComponentManager activeComponentManager;
@@ -61,7 +61,7 @@ public class EndpointController {
         final String role;
 
         try {
-            loginData = endpointServiceApi.getLoginData(user.getUsername());
+            loginData = entryPointServiceApi.getLoginData(user.getUsername());
 
             username = loginData.get("username");
             name = loginData.get("name");
@@ -92,7 +92,7 @@ public class EndpointController {
         }
 
         return new ResponseEntity<>(
-                endpointResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), username, name, photo, role),
+                entryPointResponseMapper.produceLoginSuccessResponse(HttpStatus.OK.value(), username, name, photo, role),
                 HttpStatus.OK
         );
     }
@@ -104,7 +104,7 @@ public class EndpointController {
             final User user
     ) {
 
-        endpointServiceApi.logout(session, user);
+        entryPointServiceApi.logout(session, user);
 
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
@@ -121,7 +121,7 @@ public class EndpointController {
                 .getSideBarActiveComponents(user.getUsername(), new ArrayList<>(user.getAuthorities()).get(0)
                                                                                                       .getAuthority());
 
-        return new ResponseEntity<>(endpointResponseMapper.produceSideBarActiveComponentResponse(
+        return new ResponseEntity<>(entryPointResponseMapper.produceSideBarActiveComponentResponse(
                 HttpStatus.OK.value(), activeComponents
         ), HttpStatus.OK);
     }

@@ -1,11 +1,11 @@
-package com.oasis.service.implementation.endpoint;
+package com.oasis.service.implementation.entry_point;
 
 import com.oasis.model.exception.BadRequestException;
 import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.service.api.employees.EmployeeDetailServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
-import com.oasis.service.api.endpoint.EndpointServiceApi;
+import com.oasis.service.api.entry_point.EntryPointServiceApi;
 import com.oasis.service.tool.helper.RoleDeterminer;
 import com.oasis.service.tool.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +24,8 @@ import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.IN
 @Service
 @Transactional
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-public class EndpointServiceImpl
-        implements EndpointServiceApi {
+public class EntryPointServiceImpl
+        implements EntryPointServiceApi {
 
     @Autowired
     private EmployeeDetailServiceApi employeeDetailServiceApi;
