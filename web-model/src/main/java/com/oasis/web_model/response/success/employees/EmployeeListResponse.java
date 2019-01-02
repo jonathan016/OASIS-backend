@@ -22,6 +22,7 @@ public class EmployeeListResponse {
         private String name;
         private String photo;
         private String jobTitle;
+        private String division;
         private String location;
         private EmployeeListResponse.Employee.Supervisor supervisor;
 

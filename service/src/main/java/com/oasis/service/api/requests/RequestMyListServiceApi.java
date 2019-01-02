@@ -1,7 +1,7 @@
 package com.oasis.service.api.requests;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
 
 import java.util.List;
 import java.util.Map;

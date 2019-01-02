@@ -1,6 +1,7 @@
 package com.oasis.service.api.employees;
 
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 
 public interface EmployeeDetailServiceApi {
@@ -9,7 +10,8 @@ public interface EmployeeDetailServiceApi {
             final String username
     )
             throws
-            DataNotFoundException;
+            DataNotFoundException,
+            UnauthorizedOperationException;
 
     EmployeeModel getEmployeeSupervisorData(
             final String username

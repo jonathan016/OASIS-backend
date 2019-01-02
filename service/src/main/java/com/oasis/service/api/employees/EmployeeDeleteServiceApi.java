@@ -1,8 +1,8 @@
 package com.oasis.service.api.employees;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.exception.UnauthorizedOperationException;
 
 public interface EmployeeDeleteServiceApi {
 

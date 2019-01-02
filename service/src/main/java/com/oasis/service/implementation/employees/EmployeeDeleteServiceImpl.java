@@ -1,21 +1,21 @@
 package com.oasis.service.implementation.employees;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.UnauthorizedOperationException;
+import com.oasis.model.constant.service_constant.RoleConstant;
+import com.oasis.model.constant.service_constant.StatusConstant;
 import com.oasis.model.entity.AdminModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
 import com.oasis.model.entity.SupervisionModel;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.exception.UnauthorizedOperationException;
 import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.api.employees.EmployeeDeleteServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.service.api.requests.RequestUtilServiceApi;
-import com.oasis.tool.constant.RoleConstant;
-import com.oasis.tool.constant.StatusConstant;
-import com.oasis.tool.helper.RoleDeterminer;
+import com.oasis.service.tool.helper.RoleDeterminer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
-import static com.oasis.exception.helper.ErrorCodeAndMessage.UNAUTHORIZED_OPERATION;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DATA_NOT_FOUND;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.INCORRECT_PARAMETER;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.UNAUTHORIZED_OPERATION;
 
 @Service
 @Transactional
@@ -76,9 +76,11 @@ public class EmployeeDeleteServiceImpl
                     .existsSupervisionModelsByDeletedIsFalseAndSupervisorUsernameEquals(employeeUsername);
             final boolean allDeliveredAssetsHaveBeenReturned = requestUtilServiceApi
                     .findAllByUsernameAndStatus(employeeUsername, StatusConstant.STATUS_DELIVERED).isEmpty();
+            final boolean targetEmployeeIsTopAdministrator =
+                    employeeUtilServiceApi.isEmployeeTopAdministrator(employeeUsername);
 
             if (!validAdministrator || selfDeletionAttempt || employeeWithEmployeeUsernameStillSupervises ||
-                !allDeliveredAssetsHaveBeenReturned) {
+                !allDeliveredAssetsHaveBeenReturned || targetEmployeeIsTopAdministrator) {
                 throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
             } else {
                 EmployeeModel targetEmployee = employeeRepository.findByDeletedIsFalseAndUsernameEquals(
@@ -179,6 +181,21 @@ public class EmployeeDeleteServiceImpl
                     if (employeeWithOldSupervisorUsernameDoesNotSupervise) {
                         throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
                     } else {
+                        final List< String > supervisedEmployeesUsernames = new ArrayList<>();
+
+                        for (final SupervisionModel supervision : supervisions) {
+                            supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
+                        }
+
+                        for (final String supervisedEmployeeUsername : supervisedEmployeesUsernames) {
+                            if (employeeUtilServiceApi.hasCyclicSupervising(
+                                    supervisedEmployeeUsername,
+                                    newSupervisorUsername
+                            )) {
+                                throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
+                            }
+                        }
+
                         employeeUtilServiceApi.demotePreviousSupervisorFromAdminIfNecessary(
                                 adminUsername, oldSupervisorUsername, newSupervisorUsername, supervisions
                         );

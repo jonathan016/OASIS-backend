@@ -1,13 +1,15 @@
 package com.oasis.service.implementation.employees;
 
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.exception.UnauthorizedOperationException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 import com.oasis.repository.AdminRepository;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.api.employees.EmployeeDetailServiceApi;
-import com.oasis.tool.helper.ImageHelper;
+import com.oasis.service.api.employees.EmployeeUtilServiceApi;
+import com.oasis.service.tool.helper.ImageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.nio.file.Files;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.DATA_NOT_FOUND;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DATA_NOT_FOUND;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.UNAUTHORIZED_OPERATION;
 
 @Service
 @Transactional
@@ -32,6 +35,9 @@ public class EmployeeDetailServiceImpl
     private SupervisionRepository supervisionRepository;
 
     @Autowired
+    private EmployeeUtilServiceApi employeeUtilServiceApi;
+
+    @Autowired
     private ImageHelper imageHelper;
 
 
@@ -43,7 +49,8 @@ public class EmployeeDetailServiceImpl
             final String username
     )
             throws
-            DataNotFoundException {
+            DataNotFoundException,
+            UnauthorizedOperationException {
 
         final EmployeeModel employee = employeeRepository.findByDeletedIsFalseAndUsernameEquals(username);
 
@@ -51,6 +58,8 @@ public class EmployeeDetailServiceImpl
 
         if (!employeeWithUsernameExists) {
             throw new DataNotFoundException(DATA_NOT_FOUND);
+        } else if (employeeUtilServiceApi.isEmployeeTopAdministrator(username)) {
+            throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
         } else {
             return employee;
         }

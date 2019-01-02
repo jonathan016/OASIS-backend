@@ -1,20 +1,20 @@
 package com.oasis.service.implementation.employees;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
-import com.oasis.exception.DuplicateDataException;
-import com.oasis.exception.UnauthorizedOperationException;
-import com.oasis.exception.UserNotAuthenticatedException;
+import com.oasis.model.constant.service_constant.ImageDirectoryConstant;
+import com.oasis.model.constant.service_constant.PrefixConstant;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
+import com.oasis.model.exception.DuplicateDataException;
+import com.oasis.model.exception.UnauthorizedOperationException;
+import com.oasis.model.exception.UserNotAuthenticatedException;
 import com.oasis.repository.EmployeeRepository;
 import com.oasis.repository.SupervisionRepository;
 import com.oasis.service.api.employees.EmployeeSaveServiceApi;
 import com.oasis.service.api.employees.EmployeeUtilServiceApi;
-import com.oasis.tool.constant.ImageDirectoryConstant;
-import com.oasis.tool.constant.PrefixConstant;
-import com.oasis.tool.helper.ImageHelper;
-import com.oasis.tool.util.Regex;
+import com.oasis.service.tool.helper.ImageHelper;
+import com.oasis.service.tool.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +32,13 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.*;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.*;
 
 @Service
 @Transactional
@@ -134,7 +135,10 @@ public class EmployeeSaveServiceImpl
                 }
             }
 
-            if (!addEmployeeOperation && hasCyclicSupervising(savedEmployee.getUsername(), supervisorUsername)) {
+            if (!addEmployeeOperation && employeeUtilServiceApi.hasCyclicSupervising(
+                    savedEmployee.getUsername(),
+                    supervisorUsername
+            )) {
                 throw new UnauthorizedOperationException(UNAUTHORIZED_OPERATION);
             } else {
                 employeeUtilServiceApi.updateSupervisorDataOnEmployeeDataModification(
@@ -143,7 +147,7 @@ public class EmployeeSaveServiceImpl
                 validateAndSavePhoto(photoGiven, addEmployeeOperation, savedEmployee);
 
                 savedEmployee.setSupervisionId(
-                        getSupervisionId(employee.getUsername(), supervisorUsername, username));
+                        getSupervisionId(employee.getUsername(), supervisorUsername));
                 savedEmployee.setUpdatedDate(new Date());
                 savedEmployee.setUpdatedBy(username);
 
@@ -233,22 +237,35 @@ public class EmployeeSaveServiceImpl
                     }
                 }
             } else {
-                if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username)) {
+                if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndDivisionEquals(
+                        username, division)) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else {
                     List< String > supervisedEmployeesUsernames = new ArrayList<>();
+
                     final List< SupervisionModel > supervisions = supervisionRepository
                             .findAllByDeletedIsFalseAndSupervisorUsernameEquals(username);
 
                     for (final SupervisionModel supervision : supervisions) {
                         supervisedEmployeesUsernames.add(supervision.getEmployeeUsername());
+                        final List< SupervisionModel > supervisionsBySupervisedEmployee = supervisionRepository
+                                .findAllByDeletedIsFalseAndSupervisorUsernameEquals(supervision.getEmployeeUsername());
+
+                        for (final SupervisionModel supervisionBySupervisedEmployee :
+                                supervisionsBySupervisedEmployee) {
+                            supervisedEmployeesUsernames.add(supervisionBySupervisedEmployee.getEmployeeUsername());
+                        }
                     }
+
+                    Collections.sort(supervisedEmployeesUsernames);
 
                     for (final EmployeeModel possibleSupervisor : employees) {
                         final String currentCandidateUsername = possibleSupervisor.getUsername();
                         final boolean selfUsername = username.equals(currentCandidateUsername);
 
                         if (selfUsername) {
+                            continue;
+                        } else if (supervisedEmployeesUsernames.contains(currentCandidateUsername)) {
                             continue;
                         } else {
                             final boolean safeFromCyclicSupervising = isSafeFromCyclicSupervising(
@@ -398,7 +415,7 @@ public class EmployeeSaveServiceImpl
     }
 
     private String getSupervisionId(
-            final String employeeUsername, final String supervisorUsername, final String adminUsername
+            final String employeeUsername, final String supervisorUsername
     )
             throws
             DataNotFoundException {
@@ -452,29 +469,6 @@ public class EmployeeSaveServiceImpl
                 savePhoto(photoGiven, savedEmployee.getUsername());
             }
         }
-    }
-
-    @SuppressWarnings("UnnecessaryLocalVariable")
-    private boolean hasCyclicSupervising(
-            final String employeeUsername, String supervisorUsername
-    ) {
-
-        final String supervisorOfSupervisorUsername;
-
-        try {
-            supervisorOfSupervisorUsername = supervisionRepository
-                    .findByDeletedIsFalseAndEmployeeUsernameEquals(supervisorUsername).getSupervisorUsername();
-        } catch (NullPointerException exception) {
-            // Entering this block means for the specified supervisorUsername, there is no supervison, inferring
-            // that the specified supervisorUsername is the username of top of the top administrator. This is why
-            // upon catching NullPointerException due to call of .getSupervisorUsername() on null object, we return
-            // false, as there can be no cyclic supervising for top of the top administrator.
-            return false;
-        }
-
-        final boolean isEmployeeSupervisorOfSupervisor = supervisorOfSupervisorUsername.equals(employeeUsername);
-
-        return isEmployeeSupervisorOfSupervisor;
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

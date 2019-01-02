@@ -1,6 +1,6 @@
 package com.oasis.service.api.employees;
 
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.SupervisionModel;
 
@@ -23,6 +23,10 @@ public interface EmployeeUtilServiceApi {
     )
             throws
             DataNotFoundException;
+
+    boolean hasCyclicSupervising(
+            final String employeeUsername, String supervisorUsername
+    );
 
     boolean isEmployeeTopAdministrator(final String username);
 

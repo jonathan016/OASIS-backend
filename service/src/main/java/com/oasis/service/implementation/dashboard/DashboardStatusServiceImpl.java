@@ -1,15 +1,15 @@
 package com.oasis.service.implementation.dashboard;
 
-import com.oasis.exception.BadRequestException;
-import com.oasis.exception.DataNotFoundException;
+import com.oasis.model.exception.BadRequestException;
+import com.oasis.model.exception.DataNotFoundException;
 import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.service.api.dashboard.DashboardStatusServiceApi;
 import com.oasis.service.api.dashboard.DashboardUtilServiceApi;
-import com.oasis.tool.constant.RoleConstant;
-import com.oasis.tool.constant.ServiceConstant;
-import com.oasis.tool.constant.StatusConstant;
-import com.oasis.tool.helper.RoleDeterminer;
-import com.oasis.tool.util.Regex;
+import com.oasis.model.constant.service_constant.RoleConstant;
+import com.oasis.model.constant.service_constant.ServiceConstant;
+import com.oasis.model.constant.service_constant.StatusConstant;
+import com.oasis.service.tool.helper.RoleDeterminer;
+import com.oasis.service.tool.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.oasis.exception.helper.ErrorCodeAndMessage.INCORRECT_PARAMETER;
+import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.INCORRECT_PARAMETER;
 
 @Service
 @Transactional
