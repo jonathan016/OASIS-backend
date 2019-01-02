@@ -27,8 +27,8 @@ import static com.lordofthejars.nosqlunit.mongodb.MongoDbRule.MongoDbRuleBuilder
 import static org.junit.Assert.*;
 
 @WebAppConfiguration
-@ActiveProfiles({ "mvc-test", "db-test", "security-test" })
 @RunWith(SpringJUnit4ClassRunner.class)
+@ActiveProfiles({ "mvc-test", "db-test" })
 @ContextConfiguration(classes = MvcTestConfiguration.class)
 @EnableMongoRepositories(basePackageClasses = LastUniqueIdentifierRepository.class)
 public class LastUniqueIdentifierRepositoryTest {

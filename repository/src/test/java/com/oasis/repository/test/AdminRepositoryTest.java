@@ -31,8 +31,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @WebAppConfiguration
-@ActiveProfiles({"mvc-test", "db-test", "security-test"})
 @RunWith(SpringJUnit4ClassRunner.class)
+@ActiveProfiles({"mvc-test", "db-test", "security-test"})
 @ContextConfiguration(classes = MvcTestConfiguration.class)
 @EnableMongoRepositories(basePackageClasses = AdminRepository.class)
 public class AdminRepositoryTest {
