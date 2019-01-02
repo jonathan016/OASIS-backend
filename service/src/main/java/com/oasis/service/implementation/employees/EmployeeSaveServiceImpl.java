@@ -239,8 +239,7 @@ public class EmployeeSaveServiceImpl
                     }
                 }
             } else {
-                if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEqualsAndDivisionEquals(
-                        username, division)) {
+                if (!employeeRepository.existsEmployeeModelByDeletedIsFalseAndUsernameEquals(username)) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
                 } else {
                     final List< SupervisionModel > supervisions = supervisionRepository
