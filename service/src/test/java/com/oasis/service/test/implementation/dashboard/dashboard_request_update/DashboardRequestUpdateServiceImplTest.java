@@ -1,4 +1,4 @@
-package com.oasis.service.test.implementation.dashboard;
+package com.oasis.service.test.implementation.dashboard.dashboard_request_update;
 
 import org.junit.After;
 import org.junit.Before;
@@ -19,13 +19,6 @@ public class DashboardRequestUpdateServiceImplTest {
 
     }
 
-    @After
-    public void tearDown()
-            throws
-            Exception {
-
-    }
-
     @Test
     public void getRequestUpdateSectionData() {
 
@@ -33,6 +26,13 @@ public class DashboardRequestUpdateServiceImplTest {
 
     @Test
     public void getOthersRequestList() {
+
+    }
+
+    @After
+    public void tearDown()
+            throws
+            Exception {
 
     }
 
