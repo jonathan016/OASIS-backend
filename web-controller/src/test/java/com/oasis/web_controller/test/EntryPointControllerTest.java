@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.UNAUTHENTICATED_USER;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -42,8 +44,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebAppConfiguration
-@ContextConfiguration(classes = { WebSecurityConfiguration.class, MvcConfiguration.class })
 @RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = { WebSecurityConfiguration.class, MvcConfiguration.class })
 public class EntryPointControllerTest {
 
     final private String incorrectMappingOrMethodMessage = "Incorrect mapping/method!";
@@ -114,8 +116,8 @@ public class EntryPointControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "jonathan",
-                  password = "jonathanw",
+    @WithMockUser(username = "admin",
+                  password = "GDNadmin",
                   authorities = RoleConstant.ROLE_ADMINISTRATOR)
     public void returnIncorrectMappingCalls_AuthenticatedUserRequestedIncorrectMappingOrMethod_ReturnsFailedResponse()
             throws
@@ -123,7 +125,7 @@ public class EntryPointControllerTest {
 
         mockLoginFailedResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.name(), incorrectMappingOrMethodMessage);
 
-        mockMvc.perform(get("/api/test")).andExpect(status().isBadRequest()).andExpect(
+        mockMvc.perform(get("/api/login")).andExpect(status().isBadRequest()).andExpect(
                 content().string(
                         "{\"code\":400,\"success\":\"false\",\"components\":null," +
                         "\"value\":{\"errorCode\":\"BAD_REQUEST\",\"errorMessage\":\"Incorrect mapping/method!\"}}"
