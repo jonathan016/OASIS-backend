@@ -13,6 +13,7 @@ import com.oasis.model.exception.UnauthorizedOperationException;
 import com.oasis.repository.AssetRepository;
 import com.oasis.repository.LastUniqueIdentifierRepository;
 import com.oasis.service.api.assets.AssetSaveServiceApi;
+import com.oasis.service.api.assets.AssetUtilServiceApi;
 import com.oasis.service.tool.helper.ImageHelper;
 import com.oasis.service.tool.util.Regex;
 import org.slf4j.Logger;
@@ -34,8 +35,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DATA_NOT_FOUND;
 import static com.oasis.model.constant.exception_constant.ErrorCodeAndMessage.DUPLICATE_DATA_FOUND;
@@ -54,6 +58,9 @@ public class AssetSaveServiceImpl
     private AssetRepository assetRepository;
     @Autowired
     private LastUniqueIdentifierRepository lastUniqueIdentifierRepository;
+
+    @Autowired
+    private AssetUtilServiceApi assetUtilServiceApi;
 
     @Autowired
     private MongoOperations mongoOperations;
@@ -88,8 +95,7 @@ public class AssetSaveServiceImpl
                 savedAsset = asset;
 
                 if (assetRepository.existsAssetModelByDeletedIsFalseAndNameEqualsAndBrandEqualsAndTypeEquals(
-                        savedAsset.getName(),
-                        savedAsset.getBrand(), savedAsset.getType()
+                        savedAsset.getName(), savedAsset.getBrand(), savedAsset.getType()
                 )) {
                     throw new DuplicateDataException(DUPLICATE_DATA_FOUND);
                 } else {
@@ -103,8 +109,6 @@ public class AssetSaveServiceImpl
 
                 if (savedAsset == null) {
                     throw new DataNotFoundException(DATA_NOT_FOUND);
-                } else if (savedAsset.equals(asset)) {
-                    throw new BadRequestException(INCORRECT_PARAMETER);
                 } else {
                     final boolean nameChanged = !savedAsset.getName().equals(asset.getName());
                     final boolean brandChanged = !savedAsset.getBrand().equals(asset.getBrand());

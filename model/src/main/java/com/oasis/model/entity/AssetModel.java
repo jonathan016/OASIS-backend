@@ -46,21 +46,4 @@ public class AssetModel
     @Field(AssetFieldName.DELETED)
     private boolean deleted;
 
-    @Override
-    public boolean equals(Object object) {
-
-        if (object instanceof AssetModel) {
-            return this.sku.equals(( (AssetModel) object ).getSku()) &&
-                   this.name.equals(( (AssetModel) object ).getName()) &&
-                   this.location.equals(( (AssetModel) object ).getLocation()) &&
-                   this.price == ( (AssetModel) object ).getPrice() &&
-                   this.stock == ( (AssetModel) object ).getStock() &&
-                   this.brand.equals(( (AssetModel) object ).getBrand()) &&
-                   this.type.equals(( (AssetModel) object ).getType()) &&
-                   this.expendable == ( (AssetModel) object ).isExpendable();
-        }
-
-        return false;
-    }
-
 }
