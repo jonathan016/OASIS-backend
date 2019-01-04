@@ -1,10 +1,12 @@
 package com.oasis.service.tool.helper;
 
-import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import com.oasis.model.constant.service_constant.RoleConstant;
+import com.oasis.model.constant.service_constant.StatusConstant;
+import com.oasis.service.api.employees.EmployeeUtilServiceApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,6 +114,22 @@ public class ActiveComponentManager {
         }
 
         return activeComponents;
+    }
+
+    public Map< String, Boolean > getRequestsListActiveComponents(final String status, final String role) {
+
+        Map< String, Boolean > activeComponents = new HashMap<>();
+
+        if (Arrays.asList(StatusConstant.STATUS_ACCEPTED, StatusConstant.STATUS_DELIVERED).contains(status)) {
+            if (role.equals(RoleConstant.ROLE_ADMINISTRATOR)) {
+                activeComponents.put("btnDeliverReturnOtherRequest", true);
+            } else {
+                activeComponents.put("btnDeliverReturnOtherRequest", false);
+            }
+            return activeComponents;
+        } else {
+            return null;
+        }
     }
 
     public Map< String, Boolean > getSideBarActiveComponents(final String username, final String role) {

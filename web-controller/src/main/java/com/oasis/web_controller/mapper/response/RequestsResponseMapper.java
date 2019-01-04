@@ -1,10 +1,10 @@
 package com.oasis.web_controller.mapper.response;
 
+import com.oasis.model.constant.service_constant.PageSizeConstant;
+import com.oasis.model.constant.service_constant.StatusConstant;
 import com.oasis.model.entity.AssetModel;
 import com.oasis.model.entity.EmployeeModel;
 import com.oasis.model.entity.RequestModel;
-import com.oasis.model.constant.service_constant.PageSizeConstant;
-import com.oasis.model.constant.service_constant.StatusConstant;
 import com.oasis.web_model.constant.ResponseStatus;
 import com.oasis.web_model.response.BaseResponse;
 import com.oasis.web_model.response.NoPagingResponse;
@@ -19,20 +19,22 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class RequestsResponseMapper {
 
     public PagingResponse< RequestOthersListResponse > produceViewOthersFoundRequestSuccessResult(
             final int httpStatusCode, final List< RequestModel > requests, final List< EmployeeModel > employees,
-            final List< AssetModel > assets, final int pageNumber,
-            final long totalRecords
-    ) {
+            final List< AssetModel > assets, final int pageNumber, final long totalRecords,
+            final Map< String, Boolean > components
+            ) {
 
         PagingResponse< RequestOthersListResponse > successResponse = new PagingResponse<>();
 
         successResponse.setCode(httpStatusCode);
         successResponse.setSuccess(ResponseStatus.SUCCESS);
+        successResponse.setComponents(components);
 
         MapperFactory requestDataFactory = new DefaultMapperFactory.Builder().build();
         requestDataFactory.classMap(RequestModel.class, RequestOthersListResponse.RequestListObject.Request.class)

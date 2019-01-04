@@ -10,6 +10,7 @@ import com.oasis.service.api.requests.RequestListServiceApi;
 import com.oasis.service.api.requests.RequestMyListServiceApi;
 import com.oasis.service.api.requests.RequestOthersListServiceApi;
 import com.oasis.service.api.requests.RequestSaveServiceApi;
+import com.oasis.service.tool.helper.ActiveComponentManager;
 import com.oasis.web_controller.mapper.request.RequestsRequestMapper;
 import com.oasis.web_controller.mapper.response.FailedResponseMapper;
 import com.oasis.web_controller.mapper.response.RequestsResponseMapper;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +61,9 @@ public class RequestsController {
     private RequestMyListServiceApi requestMyListServiceApi;
     @Autowired
     private RequestSaveServiceApi requestSaveServiceApi;
+
+    @Autowired
+    private ActiveComponentManager activeComponentManager;
 
 
 
@@ -162,21 +167,31 @@ public class RequestsController {
                     HttpStatus.BAD_REQUEST.value(),
                     badRequestException.getErrorCode(),
                     badRequestException.getErrorMessage(),
-                    null
+                    activeComponentManager.getRequestsListActiveComponents(status, new ArrayList<>(
+                            user.getAuthorities()).get(0).getAuthority())
             ), HttpStatus.BAD_REQUEST);
         } catch (DataNotFoundException dataNotFoundException) {
             return new ResponseEntity<>(failedResponseMapper.produceFailedResult(
                     HttpStatus.NOT_FOUND.value(),
                     dataNotFoundException.getErrorCode(),
                     dataNotFoundException.getErrorMessage(),
-                    null
+                    activeComponentManager.getRequestsListActiveComponents(status, new ArrayList<>(
+                            user.getAuthorities()).get(0).getAuthority())
             ), HttpStatus.NOT_FOUND);
         }
 
         return new ResponseEntity<>(requestsResponseMapper
                                             .produceViewOthersFoundRequestSuccessResult(HttpStatus.OK.value(), requests,
                                                                                         employees, assets, page,
-                                                                                        totalRecords
+                                                                                        totalRecords,
+                                                                                        activeComponentManager
+                                                                                                .getRequestsListActiveComponents(
+                                                                                                        status,
+                                                                                                        new ArrayList<>(
+                                                                                                                user.getAuthorities())
+                                                                                                                .get(0)
+                                                                                                                .getAuthority()
+                                                                                                )
                                             ), HttpStatus.OK);
     }
 
